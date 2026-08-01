@@ -26,7 +26,7 @@ pub struct Mortgage {
     pub price: f64,
     pub down: f64,
     pub loan: f64,                         // total loan amount
-    pub rate: f64,                         // rate in decimal, e.g 0.059
+    pub rate: f64,                         // rate in decimal, e.g 5.9
     pub term: u32,                         // term in years
     pub base_payment: f64,                 // base payment each month
     pub extra_payments: HashMap<u32, f64>, // extra payment schedule
@@ -77,7 +77,7 @@ impl Mortgage {
             loan: price - down,
             rate,
             term,
-            base_payment: monthly_payment(price - down, rate, term),
+            base_payment: monthly_payment(price - down, rate / 100.0, term),
             extra_payments: HashMap::new(),
             schedule: HashMap::new(),
         };
@@ -89,7 +89,7 @@ impl Mortgage {
     // Recalculate the amortization schedule internally
     pub fn recalculate(&mut self) {
         self.schedule.clear();
-        let monthly_rate: f64 = self.rate / 12.0;
+        let monthly_rate: f64 = self.rate / 100.0 / 12.0;
         let total_months: u32 = self.term * 12;
         let mut balance: f64 = self.loan;
 
@@ -99,11 +99,10 @@ impl Mortgage {
             }
 
             let interest_due: f64 = balance * monthly_rate;
-            let mut principal_due: f64 = self.base_payment - interest_due;
+            let scheduled_principal_due: f64 = self.base_payment - interest_due;
 
-            if balance <= principal_due {
-                principal_due = balance;
-                balance = 0.0;
+            if balance <= scheduled_principal_due {
+                let principal_due = balance;
 
                 self.schedule.insert(
                     month,
@@ -116,9 +115,11 @@ impl Mortgage {
                         balance: 0.0,
                     },
                 );
+                break;
             }
 
             let extra_input: f64 = self.extra_payments.get(&month).copied().unwrap_or(0.0);
+            let principal_due = scheduled_principal_due;
             let max_extra: f64 = balance - principal_due;
             let extra: f64 = extra_input.clamp(0.0, max_extra);
             let total_principal: f64 = principal_due + extra;
@@ -167,7 +168,7 @@ impl Mortgage {
             }
         };
 
-        let max_extra = current.balance;
+        let max_extra = current.balance + current.extra;
 
         if max_extra <= 0.0 {
             println!(
@@ -191,5 +192,20 @@ impl Mortgage {
         self.extra_payments.insert(month, actual_extra);
         self.recalculate();
         Ok(actual_extra)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_accelerated_payoff_no_panic() {
+        let mut mortgage = Mortgage::new(1_500_000.0, 300_000.0, 5.9, 15).unwrap();
+        assert!(mortgage.add_extra_payment(1, 50_000.0).is_ok());
+        assert!(mortgage.add_extra_payment(12, 100_000.0).is_ok());
+        assert!(mortgage.add_extra_payment(24, 200_000.0).is_ok());
+
+        assert!(mortgage.schedule.len() < 180);
     }
 }

@@ -4,22 +4,29 @@ use crate::mortgage::Mortgage;
 
 /// Prints a high-level summary and formatted amortization schedule to the terminal.
 pub fn print_mortgage_summary(mortgage: &Mortgage) {
-    let total_months = mortgage.schedule.len() as u32;
-    let total_years = total_months as f64 / 12.0;
+    // 1. Sort schedule keys to iterate months sequentially (1..=N)
+    let mut months: Vec<u32> = mortgage.schedule.keys().copied().collect();
+    months.sort_unstable();
 
-    // Sum total interest and principal from computed schedule
+    // Actual active months dynamically derived from the schedule length
+    let actual_months = months.len() as u32;
+    let actual_years = actual_months as f64 / 12.0;
+
+    // 2. Aggregate financial metrics directly from active schedule entries
     let mut total_interest_paid = 0.0;
-    let mut total_principal_paid = 0.0;
-    let mut total_extra_paid = 0.0;
+    let mut total_scheduled_principal = 0.0;
+    let mut total_extra_principal = 0.0;
 
     for payment in mortgage.schedule.values() {
         total_interest_paid += payment.interest;
-        total_principal_paid += payment.principal;
-        total_extra_paid += payment.extra;
+        total_scheduled_principal += payment.principal;
+        total_extra_principal += payment.extra;
     }
 
-    let total_paid = total_interest_paid + total_principal_paid + total_extra_paid;
+    let total_principal_paid = total_scheduled_principal + total_extra_principal;
+    let total_cost = total_interest_paid + total_principal_paid;
 
+    // 3. Render Top-Level Summary Box
     println!(
         "\n========================================================================================="
     );
@@ -46,17 +53,17 @@ pub fn print_mortgage_summary(mortgage: &Mortgage) {
     );
     println!(
         " Actual Payoff:    {} months ({:.1} yrs) | Total Interest:   ${:.2}",
-        total_months, total_years, total_interest_paid
+        actual_months, actual_years, total_interest_paid
     );
     println!(
-        " Extra Principal:  ${:<12.2} | Total Cost:       ${:.2}",
-        total_extra_paid, total_paid
+        " Extra Principal:  ${:<12.2} | Total Loan Cost:  ${:.2}",
+        total_extra_principal, total_cost
     );
     println!(
         "========================================================================================="
     );
 
-    // Print Schedule Header
+    // 4. Render Table Header
     println!(
         "{:<6} | {:<12} | {:<12} | {:<12} | {:<12} | {:<14}",
         "Month", "Payment", "Principal", "Interest", "Extra Paid", "Rem. Balance"
@@ -65,15 +72,12 @@ pub fn print_mortgage_summary(mortgage: &Mortgage) {
         "-----------------------------------------------------------------------------------------"
     );
 
-    // Sort schedule keys to print months sequentially (1..=N)
-    let mut months: Vec<u32> = mortgage.schedule.keys().copied().collect();
-    months.sort_unstable();
-
+    // 5. Render Filtered Table Entries
     for &month in &months {
         if let Some(entry) = mortgage.schedule.get(&month) {
-            // Display rule: Print first 6 months, last 3 months, or any month with an extra payment
+            // Display filter: Show first 6 months, last 3 active months, or any month with extra payment
             let is_early_month = month <= 6;
-            let is_late_month = month > total_months.saturating_sub(3);
+            let is_late_month = month > actual_months.saturating_sub(3);
             let has_extra = entry.extra > 0.0;
 
             if is_early_month || is_late_month || has_extra {
