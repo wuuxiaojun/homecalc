@@ -77,7 +77,7 @@ impl Mortgage {
             loan: price - down,
             rate,
             term,
-            base_payment: monthly_payment(loan, rate, term),
+            base_payment: monthly_payment(price - down, rate, term),
             extra_payments: HashMap::new(),
             schedule: HashMap::new(),
         };
@@ -111,16 +111,16 @@ impl Mortgage {
                         month,
                         total: principal_due + interest_due,
                         principal: principal_due,
-                        extra_principal: 0.0,
+                        extra: 0.0,
                         interest: interest_due,
                         balance: 0.0,
                     },
-                )
+                );
             }
 
             let extra_input: f64 = self.extra_payments.get(&month).copied().unwrap_or(0.0);
             let max_extra: f64 = balance - principal_due;
-            let extra: f64 = extra_input.clamp(0, 0, max_extra);
+            let extra: f64 = extra_input.clamp(0.0, max_extra);
             let total_principal: f64 = principal_due + extra;
             balance -= total_principal;
 
@@ -134,11 +134,11 @@ impl Mortgage {
                     month,
                     total: total_principal + interest_due,
                     principal: principal_due,
-                    extra_principal: extra,
+                    extra,
                     interest: interest_due,
                     balance,
                 },
-            )
+            );
         }
     }
 

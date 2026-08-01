@@ -1,30 +1,54 @@
-fn calculate_monthly_payment(principal: f64, interest: f64, years: u32) -> f64 {
-    if interest <= 0.0 {
-        return principal / (years * 12) as f64;
-    }
+// src/main.rs
 
-    let r = interest / 100.0 / 12.0;
-    let n = (years * 12) as f64;
-    let factor = (1.0 + r).powf(n);
+mod display;
+mod formula;
+mod mortgage;
 
-    principal * (r * factor) / (factor - 1.0)
-}
+use display::print_mortgage_summary;
+use mortgage::Mortgage;
 
 fn main() {
-    let principal: f64 = 1_500_000.0;
-    let interest: f64 = 5.9;
-    let years: u32 = 15;
+    println!("🚀 Running Mortgage Engine Verification Tests...\n");
 
-    let monthly_payment = calculate_monthly_payment(principal, interest, years);
-    let total_cost = monthly_payment * (years * 12) as f64;
-    let total_interest = total_cost - principal;
+    // Scenario 1: Standard 15-Year Fixed Mortgage ($1.5M Home, $300k Down Payment)
+    println!("--- Test 1: Standard Mortgage (No Extra Payments) ---");
+    match Mortgage::new(1_500_000.0, 300_000.0, 5.9, 15) {
+        Ok(standard_loan) => {
+            print_mortgage_summary(&standard_loan);
+        }
+        Err(e) => eprintln!("Error creating mortgage: {:?}", e),
+    }
 
-    println!("--- Phase 1: Mortgage Math Proof of Concept ---");
-    println!("Loan Principal:     ${:.2}", principal);
-    println!("Annual Interest:    {:.2}%", interest);
-    println!("Term Length:        {} years", years);
-    println!("-----------------------------------------------");
-    println!("Monthly Payment:    ${:.2}", monthly_payment);
-    println!("Total Cost:         ${:.2}", total_cost);
-    println!("Total Interest:     ${:.2}", total_interest);
+    // Scenario 2: Dynamic Extra Principal Lump Sums
+    println!("--- Test 2: Accelerated Payoff with Extra Principal ---");
+    match Mortgage::new(1_500_000.0, 300_000.0, 5.9, 15) {
+        Ok(mut custom_loan) => {
+            println!("Adding $50,000 extra principal at Month 1...");
+            let _ = custom_loan.add_extra_payment(1, 50_000.0);
+
+            println!("Adding $100,000 extra principal at Month 12...");
+            let _ = custom_loan.add_extra_payment(12, 100_000.0);
+
+            println!("Adding $200,000 extra principal at Month 24...");
+            let _ = custom_loan.add_extra_payment(24, 200_000.0);
+
+            print_mortgage_summary(&custom_loan);
+        }
+        Err(e) => eprintln!("Error creating mortgage: {:?}", e),
+    }
+
+    // Scenario 3: Testing Safeguards & Boundaries
+    println!("--- Test 3: Safeguard & Boundary Verification ---");
+    match Mortgage::new(1_500_000.0, 300_000.0, 5.9, 15) {
+        Ok(mut loan) => {
+            println!("\n1. Testing Overpayment Capping:");
+            // Attempting to pay $2,000,000 extra on a $1.2M loan
+            let _ = loan.add_extra_payment(1, 2_000_000.0);
+
+            println!("\n2. Testing Payment Past Payoff Month:");
+            // Attempting to pay extra at Month 100 (loan was paid off in Month 1!)
+            let _ = loan.add_extra_payment(100, 10_000.0);
+        }
+        Err(e) => eprintln!("Error: {:?}", e),
+    }
 }

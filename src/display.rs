@@ -15,7 +15,7 @@ pub fn print_mortgage_summary(mortgage: &Mortgage) {
     for payment in mortgage.schedule.values() {
         total_interest_paid += payment.interest;
         total_principal_paid += payment.principal;
-        total_extra_paid += payment.extra_principal;
+        total_extra_paid += payment.extra;
     }
 
     let total_paid = total_interest_paid + total_principal_paid + total_extra_paid;
