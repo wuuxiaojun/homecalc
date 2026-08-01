@@ -4,33 +4,34 @@ use crate::mortgage::Mortgage;
 
 /// Prints a high-level summary and formatted amortization schedule to the terminal.
 pub fn print_mortgage_summary(mortgage: &Mortgage) {
-    // 1. Sort schedule keys to iterate months sequentially (1..=N)
     let mut months: Vec<u32> = mortgage.schedule.keys().copied().collect();
     months.sort_unstable();
 
-    // Actual active months dynamically derived from the schedule length
     let actual_months = months.len() as u32;
     let actual_years = actual_months as f64 / 12.0;
 
-    // 2. Aggregate financial metrics directly from active schedule entries
     let mut total_interest_paid = 0.0;
     let mut total_scheduled_principal = 0.0;
     let mut total_extra_principal = 0.0;
+    let mut total_escrow_paid = 0.0;
 
     for payment in mortgage.schedule.values() {
         total_interest_paid += payment.interest;
         total_scheduled_principal += payment.principal;
         total_extra_principal += payment.extra;
+        total_escrow_paid += payment.escrow;
     }
 
     let total_principal_paid = total_scheduled_principal + total_extra_principal;
-    let total_cost = total_interest_paid + total_principal_paid;
+    let total_loan_cost = total_interest_paid + total_principal_paid;
+    let total_housing_outflow = total_loan_cost + total_escrow_paid;
 
-    // 3. Render Top-Level Summary Box
+    let (upfront_ins, escrow_buffer, total_prepaids) = mortgage.closing_prepaids();
+
     println!(
         "\n========================================================================================="
     );
-    println!(" 🏠 MORTGAGE SUMMARY & AMORTIZATION SCHEDULE");
+    println!(" 🏠 FULL HOUSING COST ENGINE (PITI + ESCROW SUMMARY)");
     println!(
         "========================================================================================="
     );
@@ -45,54 +46,72 @@ pub fn print_mortgage_summary(mortgage: &Mortgage) {
         mortgage.loan, mortgage.rate
     );
     println!(
-        " Original Term:    {:<12} yrs | Base Monthly P&I: ${:.2}",
-        mortgage.term, mortgage.base_payment
+        " Original Term:    {:<12} yrs | Property Tax Rate:{:.2}%/yr (${:.2}/mo)",
+        mortgage.term,
+        mortgage.tax_rate,
+        mortgage.monthly_tax()
+    );
+    println!(
+        " Home Insurance:   ${:<12.2}/yr| Monthly Escrow:   ${:.2}/mo",
+        mortgage.annual_insurance,
+        mortgage.monthly_escrow()
     );
     println!(
         "-----------------------------------------------------------------------------------------"
+    );
+    println!(
+        " Monthly P&I:      ${:<12.2} | Total Monthly PITI:${:.2}/mo",
+        mortgage.base_payment,
+        mortgage.base_payment + mortgage.monthly_escrow()
     );
     println!(
         " Actual Payoff:    {} months ({:.1} yrs) | Total Interest:   ${:.2}",
         actual_months, actual_years, total_interest_paid
     );
     println!(
-        " Extra Principal:  ${:<12.2} | Total Loan Cost:  ${:.2}",
-        total_extra_principal, total_cost
+        " Total Escrow Paid:${:<12.2} | Total Housing Cost:${:.2}",
+        total_escrow_paid, total_housing_outflow
+    );
+    println!(
+        "-----------------------------------------------------------------------------------------"
+    );
+    println!(
+        " CLOSING DAY PREPAIDS: Upfront Ins: ${:.2} | Escrow Buffer: ${:.2} | Total Prepaids: ${:.2}",
+        upfront_ins, escrow_buffer, total_prepaids
     );
     println!(
         "========================================================================================="
     );
 
-    // 4. Render Table Header
+    // Render Table Header
     println!(
-        "{:<6} | {:<12} | {:<12} | {:<12} | {:<12} | {:<14}",
-        "Month", "Payment", "Principal", "Interest", "Extra Paid", "Rem. Balance"
+        "{:<6} | {:<12} | {:<12} | {:<12} | {:<10} | {:<12} | {:<12}",
+        "Month", "P&I Total", "Principal", "Interest", "Extra", "Escrow", "Total Outflow"
     );
     println!(
         "-----------------------------------------------------------------------------------------"
     );
 
-    // 5. Render Filtered Table Entries
     for &month in &months {
         if let Some(entry) = mortgage.schedule.get(&month) {
-            // Display filter: Show first 6 months, last 3 active months, or any month with extra payment
             let is_early_month = month <= 6;
             let is_late_month = month > actual_months.saturating_sub(3);
             let has_extra = entry.extra > 0.0;
 
             if is_early_month || is_late_month || has_extra {
                 println!(
-                    "{:<6} | ${:<11.2} | ${:<11.2} | ${:<11.2} | ${:<11.2} | ${:<13.2}",
+                    "{:<6} | ${:<11.2} | ${:<11.2} | ${:<11.2} | ${:<9.2} | ${:<11.2} | ${:<11.2}",
                     entry.month,
-                    entry.total,
+                    entry.total_p_i,
                     entry.principal,
                     entry.interest,
                     entry.extra,
-                    entry.balance
+                    entry.escrow,
+                    entry.total_outflow
                 );
             } else if month == 7 {
                 println!(
-                    "  ...  |      ...     |      ...     |      ...     |      ...     |       ...      "
+                    "  ...  |      ...     |      ...     |      ...     |    ...    |      ...     |      ...     "
                 );
             }
         }
