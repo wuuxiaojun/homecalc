@@ -99,10 +99,10 @@ impl Mortgage {
             }
 
             let interest_due: f64 = balance * monthly_rate;
-            let scheduled_principal_due: f64 = self.base_payment - interest_due;
+            let mut principal_due: f64 = self.base_payment - interest_due;
 
-            if balance <= scheduled_principal_due {
-                let principal_due = balance;
+            if balance <= principal_due {
+                principal_due = balance;
 
                 self.schedule.insert(
                     month,
@@ -119,7 +119,6 @@ impl Mortgage {
             }
 
             let extra_input: f64 = self.extra_payments.get(&month).copied().unwrap_or(0.0);
-            let principal_due = scheduled_principal_due;
             let max_extra: f64 = balance - principal_due;
             let extra: f64 = extra_input.clamp(0.0, max_extra);
             let total_principal: f64 = principal_due + extra;
