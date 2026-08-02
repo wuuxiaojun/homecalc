@@ -39,6 +39,8 @@ pub struct AnnualSummary {
     pub interest_paid: f64,
     pub escrow_paid: f64,
     pub total_outflow: f64,
+    pub tax_savings: f64,
+    pub net_effective_outlay: f64,
     pub year_end_balance: f64,
 }
 
@@ -277,6 +279,9 @@ impl Mortgage {
 
             if current_year != year {
                 if current_year != 0 {
+                    let (tax_savings, _) = crate::formula::calculate_annual_tax_savings(self.loan, interest_paid);
+                    let net_effective_outlay = total_outflow - tax_savings;
+
                     summaries.push(AnnualSummary {
                         year: current_year,
                         principal_paid,
@@ -284,6 +289,8 @@ impl Mortgage {
                         interest_paid,
                         escrow_paid,
                         total_outflow,
+                        tax_savings,
+                        net_effective_outlay,
                         year_end_balance,
                     });
                 }
@@ -303,6 +310,9 @@ impl Mortgage {
             year_end_balance = payment.balance;
 
             if idx == total_entries - 1 {
+                let (tax_savings, _) = crate::formula::calculate_annual_tax_savings(self.loan, interest_paid);
+                let net_effective_outlay = total_outflow - tax_savings;
+
                 summaries.push(AnnualSummary {
                     year: current_year,
                     principal_paid,
@@ -310,6 +320,8 @@ impl Mortgage {
                     interest_paid,
                     escrow_paid,
                     total_outflow,
+                    tax_savings,
+                    net_effective_outlay,
                     year_end_balance,
                 });
             }

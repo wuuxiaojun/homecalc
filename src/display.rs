@@ -175,9 +175,18 @@ pub fn print_mortgage_summary(mortgage: &Mortgage) {
     println!("{}{}{}", DIM, box_divider, RESET);
     println!(" {} | {}", l8, r8);
     println!("{}{}{}", DIM, box_divider, RESET);
+    let year1_interest = mortgage.annual_summaries().first().map(|s| s.interest_paid).unwrap_or(0.0);
+    let (year1_annual_savings, year1_monthly_savings) = crate::formula::calculate_annual_tax_savings(mortgage.loan, year1_interest);
+
+    println!("{}{}{}", DIM, box_divider, RESET);
     println!(
         " CLOSING DAY PREPAIDS: Upfront Ins: ${:.2} | Escrow Buffer: ${:.2} | Total Prepaids: {}${:.2}{}",
         upfront_ins, escrow_buffer, BOLD, total_prepaids, RESET
+    );
+    println!("{}{}{}", DIM, box_divider, RESET);
+    println!(
+        " TAX DEDUCTION ESTIMATE: Year 1 Est. Tax Savings: {}${:.2}/yr (${:.2}/mo){} [Assumes CA MFJ 24% Fed / 9.3% CA]",
+        BOLD, year1_annual_savings, year1_monthly_savings, RESET
     );
     println!("{}{}{}\n", CYAN, box_border, RESET);
 
@@ -238,7 +247,7 @@ pub fn print_annual_summary_table(mortgage: &Mortgage) {
 
     print_banner("📅", "ANNUAL AGGREGATION SUMMARY (YEAR-BY-YEAR ROLLUP)");
     println!(
-        "{}{:<6} | {:<12} | {:<12} | {:<12} | {:<12} | {:<14} | {:<13}{}",
+        "{}{:<6} | {:<11} | {:<11} | {:<11} | {:<11} | {:<13} | {:<16} | {:<13} | {:<12}{}",
         BOLD,
         "Year",
         "Principal",
@@ -246,6 +255,8 @@ pub fn print_annual_summary_table(mortgage: &Mortgage) {
         "Interest",
         "Escrow",
         "Total Outflow",
+        "Est. Tax Savings",
+        "Net Outlay",
         "End Balance",
         RESET
     );
@@ -254,21 +265,26 @@ pub fn print_annual_summary_table(mortgage: &Mortgage) {
     for s in &summaries {
         let extra_str = if s.extra_principal_paid > 0.0 {
             format!(
-                "{}{}${:<11.2}{}",
+                "{}{}${:<10.2}{}",
                 BOLD, GREEN, s.extra_principal_paid, RESET
             )
         } else {
-            format!("${:<11.2}", s.extra_principal_paid)
+            format!("${:<10.2}", s.extra_principal_paid)
         };
 
+        let tax_str = format!("{}{}${:<15.2}{}", BOLD, GREEN, s.tax_savings, RESET);
+        let net_str = format!("${:<12.2}", s.net_effective_outlay);
+
         println!(
-            "{:<6} | ${:<11.2} | {} | ${:<11.2} | ${:<11.2} | ${:<13.2} | ${:<12.2}",
+            "{:<6} | ${:<10.2} | {} | ${:<10.2} | ${:<10.2} | ${:<12.2} | {} | {} | ${:<11.2}",
             format!("Yr {}", s.year),
             s.principal_paid,
             extra_str,
             s.interest_paid,
             s.escrow_paid,
             s.total_outflow,
+            tax_str,
+            net_str,
             s.year_end_balance
         );
     }
