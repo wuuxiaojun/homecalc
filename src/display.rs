@@ -1,5 +1,6 @@
 // src/display.rs
 
+use crate::analysis::ComparisonReport;
 use crate::mortgage::Mortgage;
 
 /// Prints a high-level summary and formatted amortization schedule to the terminal.
@@ -116,5 +117,86 @@ pub fn print_mortgage_summary(mortgage: &Mortgage) {
             }
         }
     }
+    println!("{}\n", box_border);
+}
+
+/// Prints a year-by-year annual rollup summary table to the terminal.
+pub fn print_annual_summary_table(mortgage: &Mortgage) {
+    let summaries = mortgage.annual_summaries();
+    let box_border = "===============================================================================================================";
+    let box_divider = "---------------------------------------------------------------------------------------------------------------";
+
+    println!("{}", box_border);
+    println!(" 📅 ANNUAL AGGREGATION SUMMARY (YEAR-BY-YEAR ROLLUP)");
+    println!("{}", box_border);
+    println!(
+        "{:<6} | {:<12} | {:<12} | {:<12} | {:<12} | {:<14} | {:<13}",
+        "Year", "Principal", "Extra Paid", "Interest", "Escrow", "Total Outflow", "End Balance"
+    );
+    println!("{}", box_divider);
+
+    for s in &summaries {
+        println!(
+            "{:<6} | ${:<11.2} | ${:<11.2} | ${:<11.2} | ${:<11.2} | ${:<13.2} | ${:<12.2}",
+            format!("Yr {}", s.year),
+            s.principal_paid,
+            s.extra_principal_paid,
+            s.interest_paid,
+            s.escrow_paid,
+            s.total_outflow,
+            s.year_end_balance
+        );
+    }
+    println!("{}\n", box_border);
+}
+
+/// Prints a side-by-side comparison report between two mortgage scenarios to the terminal.
+pub fn print_comparison_report(
+    report: &ComparisonReport,
+    baseline_title: &str,
+    accel_title: &str,
+) {
+    let box_border = "===============================================================================================================";
+    let box_divider = "---------------------------------------------------------------------------------------------------------------";
+
+    let b_months_str = format!("{} months ({:.1} yrs)", report.baseline_months, report.baseline_months as f64 / 12.0);
+    let a_months_str = format!("{} months ({:.1} yrs)", report.accelerated_months, report.accelerated_months as f64 / 12.0);
+    let saved_months_str = format!("{} months ({:.1} yrs) saved", report.months_saved, report.years_saved);
+
+    let b_interest_str = format!("${:.2}", report.baseline_interest);
+    let a_interest_str = format!("${:.2}", report.accelerated_interest);
+    let saved_interest_str = format!("${:.2} saved", report.interest_saved);
+
+    let b_outflow_str = format!("${:.2}", report.baseline_outflow);
+    let a_outflow_str = format!("${:.2}", report.accelerated_outflow);
+    let saved_outflow_str = format!("${:.2} saved", report.total_outflow_saved);
+
+    println!("{}", box_border);
+    println!(" ⚖️ MORTGAGE SCENARIO COMPARISON REPORT");
+    println!("    Baseline:    {}", baseline_title);
+    println!("    Accelerated: {}", accel_title);
+    println!("{}", box_border);
+    println!(
+        "{:<30} | {:<25} | {:<25} | {:<22}",
+        "Metric", "Baseline", "Accelerated", "Difference / Savings"
+    );
+    println!("{}", box_divider);
+    println!(
+        "{:<30} | {:<25} | {:<25} | {:<22}",
+        "Payoff Duration", b_months_str, a_months_str, saved_months_str
+    );
+    println!(
+        "{:<30} | {:<25} | {:<25} | {:<22}",
+        "Total Interest Paid", b_interest_str, a_interest_str, saved_interest_str
+    );
+    println!(
+        "{:<30} | {:<25} | {:<25} | {:<22}",
+        "Total Housing Outflow", b_outflow_str, a_outflow_str, saved_outflow_str
+    );
+    println!("{}", box_divider);
+    println!(
+        " 🎉 SUMMARY SAVINGS: Paid off {:.1} years early | Saved ${:.2} in Interest | Saved ${:.2} Total Cash",
+        report.years_saved, report.interest_saved, report.total_outflow_saved
+    );
     println!("{}\n", box_border);
 }

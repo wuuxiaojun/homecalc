@@ -27,6 +27,18 @@ pub struct Payment {
     pub balance: f64,       // Remaining loan balance
 }
 
+// AnnualSummary struct representing a year-by-year rollup
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnnualSummary {
+    pub year: u32,
+    pub principal_paid: f64,
+    pub extra_principal_paid: f64,
+    pub interest_paid: f64,
+    pub escrow_paid: f64,
+    pub total_outflow: f64,
+    pub year_end_balance: f64,
+}
+
 // Mortgage struct
 pub struct Mortgage {
     pub price: f64,
@@ -249,6 +261,71 @@ impl Mortgage {
         self.recalculate();
         Ok(actual_extra)
     }
+
+    /// Calculate annual aggregation summaries by grouping monthly schedule entries into yearly buckets
+    pub fn annual_summaries(&self) -> Vec<AnnualSummary> {
+        let mut months: Vec<u32> = self.schedule.keys().copied().collect();
+        months.sort_unstable();
+
+        let mut summaries = Vec::new();
+        if months.is_empty() {
+            return summaries;
+        }
+
+        let mut current_year = 0;
+        let mut principal_paid = 0.0;
+        let mut extra_principal_paid = 0.0;
+        let mut interest_paid = 0.0;
+        let mut escrow_paid = 0.0;
+        let mut total_outflow = 0.0;
+        let mut year_end_balance = 0.0;
+
+        for (idx, &m) in months.iter().enumerate() {
+            let payment = &self.schedule[&m];
+            let year = ((m - 1) / 12) + 1;
+
+            if current_year != year {
+                if current_year != 0 {
+                    summaries.push(AnnualSummary {
+                        year: current_year,
+                        principal_paid,
+                        extra_principal_paid,
+                        interest_paid,
+                        escrow_paid,
+                        total_outflow,
+                        year_end_balance,
+                    });
+                }
+                current_year = year;
+                principal_paid = 0.0;
+                extra_principal_paid = 0.0;
+                interest_paid = 0.0;
+                escrow_paid = 0.0;
+                total_outflow = 0.0;
+            }
+
+            principal_paid += payment.principal;
+            extra_principal_paid += payment.extra;
+            interest_paid += payment.interest;
+            escrow_paid += payment.escrow;
+            total_outflow += payment.total_outflow;
+            year_end_balance = payment.balance;
+
+            if idx == months.len() - 1 {
+                summaries.push(AnnualSummary {
+                    year: current_year,
+                    principal_paid,
+                    extra_principal_paid,
+                    interest_paid,
+                    escrow_paid,
+                    total_outflow,
+                    year_end_balance,
+                });
+            }
+        }
+
+        summaries
+    }
 }
 
 #[cfg(test)]
@@ -265,5 +342,41 @@ mod tests {
         assert_eq!(mortgage.monthly_insurance(), 300.0);
         // Escrow = $1,800/mo
         assert_eq!(mortgage.monthly_escrow(), 1_800.0);
+    }
+
+    #[test]
+    fn test_annual_summaries_standard_loan() {
+        let mortgage = Mortgage::new(1_500_000.0, 300_000.0, 5.9, 15, 1.2, 3_600.0).unwrap();
+        let summaries = mortgage.annual_summaries();
+
+        // 1. Verify 15-year loan generates 15 annual summaries
+        assert_eq!(summaries.len(), 15);
+        assert_eq!(summaries[0].year, 1);
+        assert_eq!(summaries[14].year, 15);
+        assert_eq!(summaries[14].year_end_balance, 0.0);
+
+        // 2. Verify summing interest across all AnnualSummary structs matches total interest in schedule
+        let annual_interest_sum: f64 = summaries.iter().map(|s| s.interest_paid).sum();
+        let schedule_interest_sum: f64 = mortgage.schedule.values().map(|p| p.interest).sum();
+        assert!((annual_interest_sum - schedule_interest_sum).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_annual_summaries_early_payoff() {
+        let mut mortgage = Mortgage::new(1_500_000.0, 300_000.0, 5.9, 15, 1.2, 3_600.0).unwrap();
+        let _ = mortgage.add_extra_payment(1, 50_000.0);
+        let _ = mortgage.add_extra_payment(12, 100_000.0);
+        let _ = mortgage.add_extra_payment(24, 200_000.0);
+
+        let summaries = mortgage.annual_summaries();
+
+        // Paid off at month 115 -> 10 annual summaries (Years 1..=10)
+        assert_eq!(summaries.len(), 10);
+        assert_eq!(summaries.last().unwrap().year_end_balance, 0.0);
+
+        // Interest sum match verification
+        let annual_interest_sum: f64 = summaries.iter().map(|s| s.interest_paid).sum();
+        let schedule_interest_sum: f64 = mortgage.schedule.values().map(|p| p.interest).sum();
+        assert!((annual_interest_sum - schedule_interest_sum).abs() < 1e-6);
     }
 }
