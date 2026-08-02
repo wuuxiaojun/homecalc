@@ -2,6 +2,13 @@
 
 use crate::analysis::ComparisonReport;
 use crate::mortgage::Mortgage;
+use std::io::{self, Write};
+
+/// Clears the terminal screen buffer cleanly
+pub fn clear_screen() {
+    print!("\x1B[2J\x1B[1;1H");
+    let _ = io::stdout().flush();
+}
 
 /// Prints a high-level summary and formatted amortization schedule to the terminal.
 pub fn print_mortgage_summary(mortgage: &Mortgage) {
@@ -80,7 +87,8 @@ pub fn print_mortgage_summary(mortgage: &Mortgage) {
     let box_divider = "---------------------------------------------------------------------------------------------------------------";
 
     println!("\n{}", box_border);
-    println!(" 🏠 FULL HOUSING COST ENGINE (PITI + ESCROW SUMMARY)");
+    println!(" 🏠 SCENARIO: {}", mortgage.name.to_uppercase());
+    println!("    FULL HOUSING COST ENGINE (PITI + ESCROW SUMMARY)");
     println!("{}", box_border);
     println!(" {:<44} | {}", l1, r1);
     println!(" {:<44} | {}", l2, r2);

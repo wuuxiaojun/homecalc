@@ -110,10 +110,10 @@ mod tests {
     #[test]
     fn test_compare_different_mortgage_products() {
         // Option A: 15-Year Fixed @ 5.5% with $300k down on $1.5M home
-        let option_a = Mortgage::new(1_500_000.0, 300_000.0, 5.5, 15, 1.2, 3_600.0).unwrap();
+        let option_a = Mortgage::new("Option A".to_string(), 1_500_000.0, 300_000.0, 5.5, 15, 1.2, 3_600.0).unwrap();
 
         // Option B: 30-Year Fixed @ 6.25% with $150k down on $1.5M home
-        let option_b = Mortgage::new(1_500_000.0, 150_000.0, 6.25, 30, 1.2, 3_600.0).unwrap();
+        let option_b = Mortgage::new("Option B".to_string(), 1_500_000.0, 150_000.0, 6.25, 30, 1.2, 3_600.0).unwrap();
 
         let report = compare_mortgages(&option_a, &option_b);
 

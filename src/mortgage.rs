@@ -1,7 +1,11 @@
 // src/mortgage.rs
 
 use crate::formula::monthly_payment;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fs::{self, File};
+use std::io::BufReader;
+use std::path::Path;
 
 // Enum to check parameter input error
 #[derive(Debug, Clone, PartialEq)]
@@ -15,7 +19,7 @@ pub enum InputError {
 }
 
 // Payment struct representing a single month's breakdown
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Payment {
     pub month: u32,
     pub total_p_i: f64,     // Principal + Interest payment
@@ -28,7 +32,7 @@ pub struct Payment {
 }
 
 // AnnualSummary struct representing a year-by-year rollup
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AnnualSummary {
     pub year: u32,
     pub principal_paid: f64,
@@ -40,7 +44,9 @@ pub struct AnnualSummary {
 }
 
 // Mortgage struct
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Mortgage {
+    pub name: String,
     pub price: f64,
     pub down: f64,
     pub loan: f64,                         // Total loan amount
@@ -56,6 +62,7 @@ pub struct Mortgage {
 impl Mortgage {
     /// Construct new mortgage with Tax, Insurance, and Safeguard Validation
     pub fn new(
+        name: String,
         price: f64,
         down: f64,
         rate: f64,
@@ -107,6 +114,7 @@ impl Mortgage {
         }
 
         let mut mortgage = Mortgage {
+            name,
             price,
             down,
             loan: price - down,
@@ -358,6 +366,82 @@ impl Mortgage {
         }
         None
     }
+
+    /// Serializes Mortgage struct to a JSON file inside dir_path directory
+    pub fn save_to_json(&self, dir_path: &str, filename: &str) -> Result<String, Box<dyn std::error::Error>> {
+        fs::create_dir_all(dir_path)?;
+
+        let filename_clean = if filename.ends_with(".json") {
+            filename.to_string()
+        } else {
+            format!("{}.json", filename)
+        };
+
+        let filepath = format!("{}/{}", dir_path, filename_clean);
+        let json_str = serde_json::to_string_pretty(self)?;
+        fs::write(&filepath, json_str)?;
+
+        Ok(filepath)
+    }
+
+    /// Deserializes a JSON file into a Mortgage struct and recalculates its schedule
+    pub fn load_from_json(filepath: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        let file = File::open(filepath)?;
+        let reader = BufReader::new(file);
+        let mut mortgage: Mortgage = serde_json::from_reader(reader)?;
+        mortgage.recalculate();
+        Ok(mortgage)
+    }
+
+    /// Exports monthly amortization schedule payments to a CSV file
+    #[allow(dead_code)]
+    pub fn export_to_csv(&self, filepath_input: &str) -> Result<String, Box<dyn std::error::Error>> {
+        let filepath_clean = if filepath_input.ends_with(".csv") {
+            filepath_input.to_string()
+        } else {
+            format!("{}.csv", filepath_input)
+        };
+
+        if let Some(parent) = Path::new(&filepath_clean).parent() {
+            if !parent.as_os_str().is_empty() {
+                fs::create_dir_all(parent)?;
+            }
+        }
+
+        let mut writer = csv::Writer::from_path(&filepath_clean)?;
+
+        writer.write_record(&[
+            "Month",
+            "P&I Total",
+            "Principal",
+            "Interest",
+            "Extra",
+            "Escrow",
+            "Total Outflow",
+            "Balance",
+        ])?;
+
+        let mut months: Vec<u32> = self.schedule.keys().copied().collect();
+        months.sort_unstable();
+
+        for m in months {
+            if let Some(payment) = self.schedule.get(&m) {
+                writer.write_record(&[
+                    payment.month.to_string(),
+                    format!("{:.2}", payment.total_p_i),
+                    format!("{:.2}", payment.principal),
+                    format!("{:.2}", payment.interest),
+                    format!("{:.2}", payment.extra),
+                    format!("{:.2}", payment.escrow),
+                    format!("{:.2}", payment.total_outflow),
+                    format!("{:.2}", payment.balance),
+                ])?;
+            }
+        }
+
+        writer.flush()?;
+        Ok(filepath_clean)
+    }
 }
 
 #[cfg(test)]
@@ -366,7 +450,7 @@ mod tests {
 
     #[test]
     fn test_phase3_escrow_calculations() {
-        let mortgage = Mortgage::new(1_500_000.0, 300_000.0, 5.9, 15, 1.2, 3_600.0).unwrap();
+        let mortgage = Mortgage::new("Test Loan".to_string(), 1_500_000.0, 300_000.0, 5.9, 15, 1.2, 3_600.0).unwrap();
 
         // $1.5M * 1.2% / 12 = $1,500/mo tax
         assert_eq!(mortgage.monthly_tax(), 1_500.0);
@@ -378,7 +462,7 @@ mod tests {
 
     #[test]
     fn test_annual_summaries_standard_loan() {
-        let mortgage = Mortgage::new(1_500_000.0, 300_000.0, 5.9, 15, 1.2, 3_600.0).unwrap();
+        let mortgage = Mortgage::new("Standard Loan".to_string(), 1_500_000.0, 300_000.0, 5.9, 15, 1.2, 3_600.0).unwrap();
         let summaries = mortgage.annual_summaries();
 
         // 1. Verify 15-year loan generates 15 annual summaries
@@ -395,7 +479,7 @@ mod tests {
 
     #[test]
     fn test_annual_summaries_early_payoff() {
-        let mut mortgage = Mortgage::new(1_500_000.0, 300_000.0, 5.9, 15, 1.2, 3_600.0).unwrap();
+        let mut mortgage = Mortgage::new("Accelerated Loan".to_string(), 1_500_000.0, 300_000.0, 5.9, 15, 1.2, 3_600.0).unwrap();
         let _ = mortgage.add_extra_payment(1, 50_000.0);
         let _ = mortgage.add_extra_payment(12, 100_000.0);
         let _ = mortgage.add_extra_payment(24, 200_000.0);
@@ -414,14 +498,14 @@ mod tests {
 
     #[test]
     fn test_milestones_standard_and_accelerated() {
-        let standard = Mortgage::new(1_500_000.0, 300_000.0, 5.9, 15, 1.2, 3_600.0).unwrap();
+        let standard = Mortgage::new("Standard".to_string(), 1_500_000.0, 300_000.0, 5.9, 15, 1.2, 3_600.0).unwrap();
         let crossover_std = standard.crossover_month();
         let half_eq_std = standard.half_equity_month();
 
         assert!(crossover_std.is_some());
         assert!(half_eq_std.is_some());
 
-        let mut accelerated = Mortgage::new(1_500_000.0, 300_000.0, 5.9, 15, 1.2, 3_600.0).unwrap();
+        let mut accelerated = Mortgage::new("Accelerated".to_string(), 1_500_000.0, 300_000.0, 5.9, 15, 1.2, 3_600.0).unwrap();
         let _ = accelerated.add_extra_payment(1, 50_000.0);
         let _ = accelerated.add_extra_payment(12, 100_000.0);
         let _ = accelerated.add_extra_payment(24, 200_000.0);
@@ -435,5 +519,32 @@ mod tests {
         // Extra principal payments move both milestones earlier
         assert!(crossover_acc.unwrap() <= crossover_std.unwrap());
         assert!(half_eq_acc.unwrap() < half_eq_std.unwrap());
+    }
+
+    #[test]
+    fn test_json_and_csv_persistence() {
+        let temp_dir = std::env::temp_dir().join("mortgage_tests");
+        let dir_str = temp_dir.to_str().unwrap();
+
+        let mut original = Mortgage::new("Persist Test".to_string(), 500_000.0, 100_000.0, 6.0, 30, 1.0, 1_200.0).unwrap();
+        let _ = original.add_extra_payment(6, 10_000.0);
+
+        // Test JSON save & load
+        let json_path = original.save_to_json(dir_str, "test_scenario").unwrap();
+        assert!(Path::new(&json_path).exists());
+
+        let loaded = Mortgage::load_from_json(&json_path).unwrap();
+        assert_eq!(loaded.name, "Persist Test");
+        assert_eq!(loaded.price, 500_000.0);
+        assert_eq!(loaded.extra_payments.get(&6).copied(), Some(10_000.0));
+        assert_eq!(loaded.schedule.len(), original.schedule.len());
+
+        // Test CSV export
+        let csv_path = format!("{}/test_schedule.csv", dir_str);
+        let exported_csv = original.export_to_csv(&csv_path).unwrap();
+        assert!(Path::new(&exported_csv).exists());
+
+        // Cleanup
+        let _ = fs::remove_dir_all(temp_dir);
     }
 }
