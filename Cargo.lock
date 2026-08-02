@@ -172,6 +172,7 @@ dependencies = [
 name = "mortgage"
 version = "0.1.0"
 dependencies = [
+ "crossterm",
  "csv",
  "inquire",
  "serde",

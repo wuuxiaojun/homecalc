@@ -10,6 +10,14 @@ pub fn clear_screen() {
     let _ = io::stdout().flush();
 }
 
+/// Helper function to print standardized double-line header banners
+pub fn print_banner(emoji: &str, title: &str) {
+    let box_border = "===============================================================================================================";
+    println!("{}", box_border);
+    println!(" {} {}", emoji, title.to_uppercase());
+    println!("{}", box_border);
+}
+
 /// Prints a high-level summary and formatted amortization schedule to the terminal.
 pub fn print_mortgage_summary(mortgage: &Mortgage) {
     let mut months: Vec<u32> = mortgage.schedule.keys().copied().collect();
@@ -148,9 +156,7 @@ pub fn print_annual_summary_table(mortgage: &Mortgage) {
     let box_border = "===============================================================================================================";
     let box_divider = "---------------------------------------------------------------------------------------------------------------";
 
-    println!("{}", box_border);
-    println!(" 📅 ANNUAL AGGREGATION SUMMARY (YEAR-BY-YEAR ROLLUP)");
-    println!("{}", box_border);
+    print_banner("📅", "ANNUAL AGGREGATION SUMMARY (YEAR-BY-YEAR ROLLUP)");
     println!(
         "{:<6} | {:<12} | {:<12} | {:<12} | {:<12} | {:<14} | {:<13}",
         "Year", "Principal", "Extra Paid", "Interest", "Escrow", "Total Outflow", "End Balance"
@@ -184,9 +190,7 @@ pub fn print_comparison_report(
     let col_a_title = format!("A: {}", title_a);
     let col_b_title = format!("B: {}", title_b);
 
-    println!("{}", box_border);
-    println!(" ⚖️ MORTGAGE SCENARIO COMPARISON REPORT (OPTION A vs. OPTION B)");
-    println!("{}", box_border);
+    print_banner("⚖️", "MORTGAGE SCENARIO COMPARISON REPORT (OPTION A vs. OPTION B)");
     println!(
         "{:<30} | {:<24} | {:<24} | {:<24}",
         "Financial Metric", col_a_title, col_b_title, "Delta (Option B - A)"

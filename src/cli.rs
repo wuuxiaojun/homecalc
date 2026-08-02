@@ -1,46 +1,122 @@
 // src/cli.rs
 
 use crate::analysis::compare_mortgages;
-use crate::display::{clear_screen, print_annual_summary_table, print_comparison_report, print_mortgage_summary};
+use crate::display::{clear_screen, print_annual_summary_table, print_banner, print_comparison_report, print_mortgage_summary};
 use crate::mortgage::Mortgage;
-use inquire::{Confirm, CustomType, Select, Text};
+use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+use inquire::{Confirm, CustomType, Text};
 use std::fs;
+use std::io::{self, Write};
+
+/// Custom menu selector supporting Up/Down arrows + Enter AND instant numeric key (1-9) selection.
+/// Accepts a rendering closure for the header so full screens are preserved on redraw.
+pub fn select_menu<F>(render_header: F, options: &[&str]) -> Result<usize, io::Error>
+where
+    F: Fn(),
+{
+    let mut selected_idx: usize = 0;
+    let total = options.len();
+
+    if total == 0 {
+        return Ok(0);
+    }
+
+    loop {
+        clear_screen();
+        render_header();
+
+        println!("===============================================================================================================");
+        for (idx, opt) in options.iter().enumerate() {
+            let num = idx + 1;
+            if idx == selected_idx {
+                println!("  > [{}] {}", num, opt);
+            } else {
+                println!("    [{}] {}", num, opt);
+            }
+        }
+        println!("===============================================================================================================");
+        let _ = io::stdout().flush();
+
+        enable_raw_mode()?;
+        let event_res = event::read();
+        let _ = disable_raw_mode();
+
+        match event_res {
+            Ok(Event::Key(KeyEvent { code, modifiers, .. })) => {
+                if modifiers.contains(KeyModifiers::CONTROL) && code == KeyCode::Char('c') {
+                    return Ok(total.saturating_sub(1));
+                }
+
+                match code {
+                    KeyCode::Up => {
+                        selected_idx = (selected_idx + total - 1) % total;
+                    }
+                    KeyCode::Down => {
+                        selected_idx = (selected_idx + 1) % total;
+                    }
+                    KeyCode::Enter => {
+                        return Ok(selected_idx);
+                    }
+                    KeyCode::Char(ch) => {
+                        if let Some(digit) = ch.to_digit(10) {
+                            let d = digit as usize;
+                            if d >= 1 && d <= total {
+                                return Ok(d - 1);
+                            }
+                        }
+                        if ch == 'q' || ch == 'Q' {
+                            return Ok(total.saturating_sub(1));
+                        }
+                    }
+                    KeyCode::Esc => {
+                        return Ok(total.saturating_sub(1));
+                    }
+                    _ => {}
+                }
+            }
+            Err(e) => {
+                return Err(e);
+            }
+            _ => {}
+        }
+    }
+}
 
 pub fn run_cli() {
     let mut main_status: Option<String> = None;
 
     loop {
-        clear_screen();
-        println!("===============================================================================================================");
-        println!(" 🏠 MORTGAGE ENGINE & HOUSING FINANCIAL CALCULATOR (CLI)");
-        println!("===============================================================================================================");
-        println!(" [1] Start New Mortgage Scenario");
-        println!(" [2] Load Saved Mortgage Scenario");
-        println!(" [3] Compare 2 Mortgage Scenarios");
-        println!(" [4] Quit");
-        println!("===============================================================================================================");
+        let options = vec![
+            "Start New Mortgage Scenario",
+            "Load Saved Mortgage Scenario",
+            "Compare 2 Mortgage Scenarios",
+            "Quit",
+        ];
 
-        if let Some(msg) = &main_status {
-            println!(" {}\n", msg);
-        }
-
-        let input = match Text::new("Select option [1-4]:").with_default("1").prompt() {
-            Ok(val) => val.trim().to_string(),
+        let selection = match select_menu(
+            || {
+                print_banner("🏠", "MORTGAGE ENGINE & HOUSING FINANCIAL CALCULATOR (CLI)");
+                if let Some(msg) = &main_status {
+                    println!("\n {}", msg);
+                }
+            },
+            &options,
+        ) {
+            Ok(idx) => idx,
             Err(_) => break,
         };
 
         main_status = None;
 
-        match input.as_str() {
-            "1" => handle_new_mortgage(&mut main_status),
-            "2" => handle_load_mortgage(&mut main_status),
-            "3" => handle_compare_mortgages(&mut main_status),
-            "4" => {
+        match selection {
+            0 => handle_new_mortgage(&mut main_status),
+            1 => handle_load_mortgage(&mut main_status),
+            2 => handle_compare_mortgages(&mut main_status),
+            3 | _ => {
+                clear_screen();
                 println!("\nThank you for using Mortgage Engine. Goodbye!");
                 break;
-            }
-            _ => {
-                main_status = Some("❌ Invalid option. Please enter 1, 2, 3, or 4.".to_string());
             }
         }
     }
@@ -48,46 +124,45 @@ pub fn run_cli() {
 
 fn handle_new_mortgage(main_status: &mut Option<String>) {
     clear_screen();
-    println!("--- Create New Mortgage Scenario ---");
+    print_banner("🏠", "CREATE NEW MORTGAGE SCENARIO");
+    println!();
 
-    let name = match Text::new("Mortgage Scenario Name:").with_default("Primary Home").prompt() {
+    let name = match Text::new("Mortgage Scenario Name:").prompt() {
         Ok(val) => val,
         Err(_) => return,
     };
 
-    let price = match CustomType::<f64>::new("Home Price ($):").with_default(1_500_000.0).prompt() {
+    let price = match CustomType::<f64>::new("Home Price ($):").prompt() {
         Ok(val) => val,
         Err(_) => return,
     };
 
-    let down = match CustomType::<f64>::new("Down Payment ($):").with_default(300_000.0).prompt() {
+    let down = match CustomType::<f64>::new("Down Payment ($):").prompt() {
         Ok(val) => val,
         Err(_) => return,
     };
 
-    let rate = match CustomType::<f64>::new("Interest Rate (%):").with_default(5.9).prompt() {
+    let rate = match CustomType::<f64>::new("Interest Rate (%):").prompt() {
         Ok(val) => val,
         Err(_) => return,
     };
 
-    let term = match CustomType::<u32>::new("Loan Term (Years):").with_default(15).prompt() {
+    let term = match CustomType::<u32>::new("Loan Term (Years):").prompt() {
         Ok(val) => val,
         Err(_) => return,
     };
 
-    let tax_rate = match CustomType::<f64>::new("Annual Property Tax Rate (%):").with_default(1.2).prompt() {
+    let tax_rate = match CustomType::<f64>::new("Annual Property Tax Rate (%):").prompt() {
         Ok(val) => val,
         Err(_) => return,
     };
 
-    let annual_insurance = match CustomType::<f64>::new("Annual Home Insurance ($):").with_default(3_600.0).prompt() {
+    let annual_insurance = match CustomType::<f64>::new("Annual Home Insurance ($):").prompt() {
         Ok(val) => val,
         Err(_) => return,
     };
 
-    let confirm = Confirm::new("Create mortgage scenario with these parameters?")
-        .with_default(true)
-        .prompt();
+    let confirm = Confirm::new("Create mortgage scenario with these parameters?").prompt();
 
     if let Ok(true) = confirm {
         match Mortgage::new(name, price, down, rate, term, tax_rate, annual_insurance) {
@@ -103,8 +178,6 @@ fn handle_new_mortgage(main_status: &mut Option<String>) {
 
 fn handle_load_mortgage(main_status: &mut Option<String>) {
     clear_screen();
-    println!("--- Load Saved Mortgage Scenario ---");
-
     let filepath = match select_json_file("Select a saved mortgage scenario file:") {
         Some(path) => path,
         None => return,
@@ -122,16 +195,12 @@ fn handle_load_mortgage(main_status: &mut Option<String>) {
 
 fn handle_compare_mortgages(main_status: &mut Option<String>) {
     clear_screen();
-    println!("--- Compare 2 Mortgage Scenarios Side-by-Side ---");
-
-    println!("\nSelecting Option A (First Scenario):");
-    let path1 = match select_json_file("Select file for Option A:") {
+    let path1 = match select_json_file("Select Option A (First Scenario):") {
         Some(path) => path,
         None => return,
     };
 
-    println!("\nSelecting Option B (Second Scenario):");
-    let path2 = match select_json_file("Select file for Option B:") {
+    let path2 = match select_json_file("Select Option B (Second Scenario):") {
         Some(path) => path,
         None => return,
     };
@@ -156,38 +225,39 @@ fn handle_compare_mortgages(main_status: &mut Option<String>) {
 
     clear_screen();
     print_comparison_report(&report, &option_a.name, &option_b.name);
-    let _ = Text::new("Press Enter to return to Main Menu:").with_default("").prompt();
+    let _ = Text::new("Press Enter to return to Main Menu:").prompt();
 }
 
 fn active_mortgage_menu(mut mortgage: Mortgage) {
     let mut status_message: Option<String> = None;
 
     loop {
-        clear_screen();
-        print_mortgage_summary(&mortgage);
-        print_annual_summary_table(&mortgage);
+        let options = vec![
+            "Add / Update Extra Principal Payment",
+            "Save Mortgage Scenario to JSON",
+            "Back to Main Menu",
+        ];
 
-        if let Some(msg) = &status_message {
-            println!(" {}\n", msg);
-        }
-
-        println!("===============================================================================================================");
-        println!(" ACTIVE SCENARIO ACTIONS:");
-        println!(" [1] Add / Update Extra Principal Payment");
-        println!(" [2] Save Mortgage Scenario to JSON");
-        println!(" [3] Back to Main Menu");
-        println!("===============================================================================================================");
-
-        let input = match Text::new("Select action [1-3]:").with_default("1").prompt() {
-            Ok(val) => val.trim().to_string(),
+        let selection = match select_menu(
+            || {
+                print_mortgage_summary(&mortgage);
+                print_annual_summary_table(&mortgage);
+                if let Some(msg) = &status_message {
+                    println!(" {}\n", msg);
+                }
+                print_banner("⚙️", "ACTIVE SCENARIO ACTIONS");
+            },
+            &options,
+        ) {
+            Ok(idx) => idx,
             Err(_) => break,
         };
 
         status_message = None;
 
-        match input.as_str() {
-            "1" => {
-                let month = match CustomType::<u32>::new("Target Month for Extra Payment (1 to N):").prompt() {
+        match selection {
+            0 => {
+                let month = match CustomType::<u32>::new("Target Month for Extra Payment:").prompt() {
                     Ok(m) => m,
                     Err(_) => continue,
                 };
@@ -204,9 +274,8 @@ fn active_mortgage_menu(mut mortgage: Mortgage) {
                     }
                 }
             }
-            "2" => {
-                let default_filename = mortgage.name.to_lowercase().replace(' ', "_");
-                let filename = match Text::new("Filename to save (under ./products):").with_default(&default_filename).prompt() {
+            1 => {
+                let filename = match Text::new("Filename to save:").prompt() {
                     Ok(f) => f,
                     Err(_) => continue,
                 };
@@ -219,15 +288,12 @@ fn active_mortgage_menu(mut mortgage: Mortgage) {
                     }
                 }
             }
-            "3" => break,
-            _ => {
-                status_message = Some("❌ Invalid action. Please enter 1, 2, or 3.".to_string());
-            }
+            2 | _ => break,
         }
     }
 }
 
-fn select_json_file(prompt: &str) -> Option<String> {
+fn select_json_file(title: &str) -> Option<String> {
     let mut files = Vec::new();
     let dir_path = "./products";
 
@@ -244,33 +310,32 @@ fn select_json_file(prompt: &str) -> Option<String> {
     files.sort();
 
     if files.is_empty() {
-        let custom = Text::new("No files found in ./products. Enter custom file path (or blank to cancel):").prompt();
+        let custom = Text::new("No files found in ./products. Enter custom file path:").prompt();
         match custom {
             Ok(path) if !path.trim().is_empty() => Some(path.trim().to_string()),
             _ => None,
         }
     } else {
-        let custom_option = "Custom File Path...";
-        let cancel_option = "Cancel";
+        let mut options: Vec<String> = files.iter().map(|f| format!("Product: {}", f)).collect();
+        options.push("Custom File Path...".to_string());
+        options.push("Cancel".to_string());
 
-        let mut choices = files.clone();
-        choices.push(custom_option.to_string());
-        choices.push(cancel_option.to_string());
+        let str_options: Vec<&str> = options.iter().map(|s| s.as_str()).collect();
 
-        match Select::new(prompt, choices).prompt() {
-            Ok(selected) => {
-                if selected == custom_option {
-                    match Text::new("Enter custom JSON file path:").prompt() {
-                        Ok(p) if !p.trim().is_empty() => Some(p.trim().to_string()),
-                        _ => None,
-                    }
-                } else if selected == cancel_option {
-                    None
-                } else {
-                    Some(format!("{}/{}", dir_path, selected))
+        match select_menu(
+            || {
+                print_banner("📂", title);
+            },
+            &str_options,
+        ) {
+            Ok(idx) if idx < files.len() => Some(format!("{}/{}", dir_path, files[idx])),
+            Ok(idx) if idx == files.len() => {
+                match Text::new("Enter custom JSON file path:").prompt() {
+                    Ok(p) if !p.trim().is_empty() => Some(p.trim().to_string()),
+                    _ => None,
                 }
             }
-            Err(_) => None,
+            _ => None,
         }
     }
 }
