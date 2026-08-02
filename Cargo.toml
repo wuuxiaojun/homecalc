@@ -1,6 +1,6 @@
 [package]
 name = "mortgage"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
 
 [dependencies]
@@ -11,4 +11,3 @@ crossterm = "0.25"
 
 [dev-dependencies]
 tempfile = "3.8"
-
