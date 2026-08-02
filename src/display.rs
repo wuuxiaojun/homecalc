@@ -52,43 +52,6 @@ pub fn print_mortgage_summary(mortgage: &Mortgage) {
 
     let (upfront_ins, escrow_buffer, total_prepaids) = mortgage.closing_prepaids();
 
-    let l1 = format!("Home Price:       {}{}${:.2}{}", BOLD, GREEN, mortgage.price, RESET);
-    let r1 = format!(
-        "Down Payment:     {}{}${:.2}{} ({:.1}%)",
-        BOLD, GREEN, mortgage.down, RESET,
-        (mortgage.down / mortgage.price) * 100.0
-    );
-
-    let l2 = format!("Loan Principal:   {}{}${:.2}{}", BOLD, GREEN, mortgage.loan, RESET);
-    let r2 = format!("Interest Rate:    {}{}{:.2}%{}", BOLD, CYAN, mortgage.rate, RESET);
-
-    let l3 = format!("Original Term:    {}{}{} yrs{}", BOLD, CYAN, mortgage.term, RESET);
-    let r3 = format!(
-        "Property Tax Rate: {:.2}%/yr (${:.2}/mo)",
-        mortgage.tax_rate,
-        mortgage.monthly_tax()
-    );
-
-    let l4 = format!("Home Insurance:   ${:.2}/yr", mortgage.annual_insurance);
-    let r4 = format!("Monthly Escrow:   ${:.2}/mo", mortgage.monthly_escrow());
-
-    let l5 = format!("Monthly P&I:      {}{}${:.2}{}", BOLD, CYAN, mortgage.base_payment, RESET);
-    let r5 = format!(
-        "Total Monthly PITI: {}{}${:.2}/mo{}",
-        BOLD, GREEN,
-        mortgage.base_payment + mortgage.monthly_escrow(),
-        RESET
-    );
-
-    let l6 = format!(
-        "Actual Payoff:    {}{}{} mos ({:.1} yrs){}",
-        BOLD, YELLOW, actual_months, actual_years, RESET
-    );
-    let r6 = format!("Total Interest:   {}{}${:.2}{}", BOLD, RED, total_interest_paid, RESET);
-
-    let l7 = format!("Total Escrow Paid:${:.2}", total_escrow_paid);
-    let r7 = format!("Total Housing Cost: {}{}${:.2}{}", BOLD, WHITE, total_housing_outflow, RESET);
-
     let crossover_str = match mortgage.crossover_month() {
         Some(m) => format!("Month {} (Yr {:.1})", m, m as f64 / 12.0),
         None => "N/A".to_string(),
@@ -98,8 +61,45 @@ pub fn print_mortgage_summary(mortgage: &Mortgage) {
         None => "N/A".to_string(),
     };
 
-    let l8 = format!("Crossover Month:  {}{}{}", BOLD, MAGENTA, crossover_str);
-    let r8 = format!("50% Equity Month:  {}{}{}", BOLD, MAGENTA, half_equity_str);
+    // Plain text values for left column
+    let l1_val = format!("${:.2}", mortgage.price);
+    let l2_val = format!("${:.2}", mortgage.loan);
+    let l3_val = format!("{} yrs", mortgage.term);
+    let l4_val = format!("${:.2}/yr", mortgage.annual_insurance);
+    let l5_val = format!("${:.2}", mortgage.base_payment);
+    let l6_val = format!("{} mos ({:.1} yrs)", actual_months, actual_years);
+    let l7_val = format!("${:.2}", total_escrow_paid);
+    let l8_val = crossover_str;
+
+    // Plain text values for right column
+    let r1_val = format!("${:.2} ({:.1}%)", mortgage.down, (mortgage.down / mortgage.price) * 100.0);
+    let r2_val = format!("{:.2}%", mortgage.rate);
+    let r3_val = format!("{:.2}%/yr (${:.2}/mo)", mortgage.tax_rate, mortgage.monthly_tax());
+    let r4_val = format!("${:.2}/mo", mortgage.monthly_escrow());
+    let r5_val = format!("${:.2}/mo", mortgage.base_payment + mortgage.monthly_escrow());
+    let r6_val = format!("${:.2}", total_interest_paid);
+    let r7_val = format!("${:.2}", total_housing_outflow);
+    let r8_val = half_equity_str;
+
+    // Formatted Left Columns (Exact 19-char label + 24-char value = 43 visual chars)
+    let l1 = format!("{:<19} {}{}{:<24}{}", "Home Price:", BOLD, GREEN, l1_val, RESET);
+    let l2 = format!("{:<19} {}{}{:<24}{}", "Loan Principal:", BOLD, GREEN, l2_val, RESET);
+    let l3 = format!("{:<19} {}{}{:<24}{}", "Original Term:", BOLD, CYAN, l3_val, RESET);
+    let l4 = format!("{:<19} {:<24}", "Home Insurance:", l4_val);
+    let l5 = format!("{:<19} {}{}{:<24}{}", "Monthly P&I:", BOLD, CYAN, l5_val, RESET);
+    let l6 = format!("{:<19} {}{}{:<24}{}", "Actual Payoff:", BOLD, YELLOW, l6_val, RESET);
+    let l7 = format!("{:<19} {:<24}", "Total Escrow Paid:", l7_val);
+    let l8 = format!("{:<19} {}{}{:<24}{}", "Crossover Month:", BOLD, MAGENTA, l8_val, RESET);
+
+    // Formatted Right Columns (Exact 20-char label + value)
+    let r1 = format!("{:<20} {}{}{}{}", "Down Payment:", BOLD, GREEN, r1_val, RESET);
+    let r2 = format!("{:<20} {}{}{}{}", "Interest Rate:", BOLD, CYAN, r2_val, RESET);
+    let r3 = format!("{:<20} {}", "Property Tax Rate:", r3_val);
+    let r4 = format!("{:<20} {}", "Monthly Escrow:", r4_val);
+    let r5 = format!("{:<20} {}{}{}{}", "Total Monthly PITI:", BOLD, GREEN, r5_val, RESET);
+    let r6 = format!("{:<20} {}{}{}{}", "Total Interest:", BOLD, RED, r6_val, RESET);
+    let r7 = format!("{:<20} {}{}{}{}", "Total Housing Cost:", BOLD, WHITE, r7_val, RESET);
+    let r8 = format!("{:<20} {}{}{}{}", "50% Equity Month:", BOLD, MAGENTA, r8_val, RESET);
 
     let box_border = "===============================================================================================================";
     let box_divider = "---------------------------------------------------------------------------------------------------------------";
@@ -108,16 +108,16 @@ pub fn print_mortgage_summary(mortgage: &Mortgage) {
     println!(" 🏠 {}{}SCENARIO: {}{}", BOLD, WHITE, mortgage.name.to_uppercase(), RESET);
     println!("    {}FULL HOUSING COST ENGINE (PITI + ESCROW SUMMARY){}", DIM, RESET);
     println!("{}{}{}", CYAN, box_border, RESET);
-    println!(" {:<53} | {}", l1, r1);
-    println!(" {:<53} | {}", l2, r2);
-    println!(" {:<53} | {}", l3, r3);
-    println!(" {:<44} | {}", l4, r4);
+    println!(" {} | {}", l1, r1);
+    println!(" {} | {}", l2, r2);
+    println!(" {} | {}", l3, r3);
+    println!(" {} | {}", l4, r4);
     println!("{}{}{}", DIM, box_divider, RESET);
-    println!(" {:<53} | {}", l5, r5);
-    println!(" {:<53} | {}", l6, r6);
-    println!(" {:<44} | {}", l7, r7);
+    println!(" {} | {}", l5, r5);
+    println!(" {} | {}", l6, r6);
+    println!(" {} | {}", l7, r7);
     println!("{}{}{}", DIM, box_divider, RESET);
-    println!(" {:<53} | {}", l8, r8);
+    println!(" {} | {}", l8, r8);
     println!("{}{}{}", DIM, box_divider, RESET);
     println!(
         " CLOSING DAY PREPAIDS: Upfront Ins: ${:.2} | Escrow Buffer: ${:.2} | Total Prepaids: {}${:.2}{}",
