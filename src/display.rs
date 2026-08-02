@@ -4,16 +4,16 @@ use crate::analysis::ComparisonReport;
 use crate::mortgage::Mortgage;
 use std::io::{self, Write};
 
-// ANSI Color & Formatting Constants
-pub const RESET: &str = "\x1B[0m";
-pub const BOLD: &str = "\x1B[1m";
-pub const DIM: &str = "\x1B[2m";
-pub const RED: &str = "\x1B[1;31m";
-pub const GREEN: &str = "\x1B[1;32m";
-pub const YELLOW: &str = "\x1B[1;33m";
-pub const MAGENTA: &str = "\x1B[1;35m";
-pub const CYAN: &str = "\x1B[1;36m";
-pub const WHITE: &str = "\x1B[1;37m";
+// ANSI Color & Formatting Constants (Disabled for clean unstyled text)
+pub const RESET: &str = "";
+pub const BOLD: &str = "";
+pub const DIM: &str = "";
+pub const RED: &str = "";
+pub const GREEN: &str = "";
+pub const YELLOW: &str = "";
+pub const MAGENTA: &str = "";
+pub const CYAN: &str = "";
+pub const WHITE: &str = "";
 
 /// Clears the terminal screen buffer cleanly
 pub fn clear_screen() {
@@ -185,10 +185,10 @@ pub fn print_mortgage_summary(mortgage: &Mortgage) {
     );
     println!("{}{}{}", DIM, box_divider, RESET);
     println!(
-        " TAX DEDUCTION ESTIMATE: Year 1 Est. Tax Savings: {}${:.2}/yr (${:.2}/mo){} [Assumes CA MFJ 24% Fed / 9.3% CA]",
+        " TAX DEDUCTION ESTIMATE: Year 1 Tax Savings: {}${:.2}/yr (${:.2}/mo){} [Assumes CA MFJ 24% Fed / 9.3% CA]",
         BOLD, year1_annual_savings, year1_monthly_savings, RESET
     );
-    println!("{}{}{}\n", CYAN, box_border, RESET);
+    println!("{}{}{}\n\n", CYAN, box_border, RESET);
 
     // Render Table Header
     println!(
@@ -236,7 +236,7 @@ pub fn print_mortgage_summary(mortgage: &Mortgage) {
             );
         }
     }
-    println!("{}{}{}\n", CYAN, box_border, RESET);
+    println!("{}{}{}\n\n", CYAN, box_border, RESET);
 }
 
 /// Prints a year-by-year annual rollup summary table to the terminal.
@@ -247,7 +247,7 @@ pub fn print_annual_summary_table(mortgage: &Mortgage) {
 
     print_banner("📅", "ANNUAL AGGREGATION SUMMARY (YEAR-BY-YEAR ROLLUP)");
     println!(
-        "{}{:<6} | {:<11} | {:<11} | {:<11} | {:<11} | {:<13} | {:<16} | {:<13} | {:<12}{}",
+        "{}{:<6} | {:<11} | {:<11} | {:<11} | {:<11} | {:<13} | {:<16} | {:<13}{}",
         BOLD,
         "Year",
         "Principal",
@@ -255,9 +255,8 @@ pub fn print_annual_summary_table(mortgage: &Mortgage) {
         "Interest",
         "Escrow",
         "Total Outflow",
-        "Est. Tax Savings",
+        "Tax Savings",
         "Net Outlay",
-        "End Balance",
         RESET
     );
     println!("{}{}{}", DIM, box_divider, RESET);
@@ -276,7 +275,7 @@ pub fn print_annual_summary_table(mortgage: &Mortgage) {
         let net_str = format!("${:<12.2}", s.net_effective_outlay);
 
         println!(
-            "{:<6} | ${:<10.2} | {} | ${:<10.2} | ${:<10.2} | ${:<12.2} | {} | {} | ${:<11.2}",
+            "{:<6} | ${:<10.2} | {} | ${:<10.2} | ${:<10.2} | ${:<12.2} | {} | {}",
             format!("Yr {}", s.year),
             s.principal_paid,
             extra_str,
@@ -284,8 +283,7 @@ pub fn print_annual_summary_table(mortgage: &Mortgage) {
             s.escrow_paid,
             s.total_outflow,
             tax_str,
-            net_str,
-            s.year_end_balance
+            net_str
         );
     }
     println!("{}{}{}\n", CYAN, box_border, RESET);
