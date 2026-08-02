@@ -27,7 +27,7 @@ where
         clear_screen();
         render_header();
 
-        println!("===============================================================================================================");
+        println!();
         for (idx, opt) in options.iter().enumerate() {
             let num = idx + 1;
             if idx == selected_idx {
@@ -36,7 +36,7 @@ where
                 println!("    \x1B[2m[{}] {}\x1B[0m", num, opt);
             }
         }
-        println!("===============================================================================================================");
+        println!();
         let _ = io::stdout().flush();
 
         enable_raw_mode()?;
