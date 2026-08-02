@@ -164,53 +164,148 @@ pub fn print_annual_summary_table(mortgage: &Mortgage) {
     println!("{}\n", box_border);
 }
 
-/// Prints a side-by-side comparison report between two mortgage scenarios to the terminal.
+/// Prints a 4-column side-by-side comparison report between Option A and Option B
 pub fn print_comparison_report(
     report: &ComparisonReport,
-    baseline_title: &str,
-    accel_title: &str,
+    title_a: &str,
+    title_b: &str,
 ) {
     let box_border = "===============================================================================================================";
     let box_divider = "---------------------------------------------------------------------------------------------------------------";
 
-    let b_months_str = format!("{} months ({:.1} yrs)", report.baseline_months, report.baseline_months as f64 / 12.0);
-    let a_months_str = format!("{} months ({:.1} yrs)", report.accelerated_months, report.accelerated_months as f64 / 12.0);
-    let saved_months_str = format!("{} months ({:.1} yrs) saved", report.months_saved, report.years_saved);
-
-    let b_interest_str = format!("${:.2}", report.baseline_interest);
-    let a_interest_str = format!("${:.2}", report.accelerated_interest);
-    let saved_interest_str = format!("${:.2} saved", report.interest_saved);
-
-    let b_outflow_str = format!("${:.2}", report.baseline_outflow);
-    let a_outflow_str = format!("${:.2}", report.accelerated_outflow);
-    let saved_outflow_str = format!("${:.2} saved", report.total_outflow_saved);
+    let col_a_title = format!("A: {}", title_a);
+    let col_b_title = format!("B: {}", title_b);
 
     println!("{}", box_border);
-    println!(" ⚖️ MORTGAGE SCENARIO COMPARISON REPORT");
-    println!("    Baseline:    {}", baseline_title);
-    println!("    Accelerated: {}", accel_title);
+    println!(" ⚖️ MORTGAGE SCENARIO COMPARISON REPORT (OPTION A vs. OPTION B)");
     println!("{}", box_border);
     println!(
-        "{:<30} | {:<25} | {:<25} | {:<22}",
-        "Metric", "Baseline", "Accelerated", "Difference / Savings"
+        "{:<30} | {:<24} | {:<24} | {:<24}",
+        "Financial Metric", col_a_title, col_b_title, "Delta (Option B - A)"
     );
     println!("{}", box_divider);
+
+    // Section 1: Upfront Cash Needed
+    println!(" --- 1. UPFRONT CASH NEEDED ---");
     println!(
-        "{:<30} | {:<25} | {:<25} | {:<22}",
-        "Payoff Duration", b_months_str, a_months_str, saved_months_str
+        "{:<30} | ${:<23.2} | ${:<23.2} | ${:<23.2}",
+        "Down Payment",
+        report.option_a.down_payment,
+        report.option_b.down_payment,
+        report.option_b.down_payment - report.option_a.down_payment
     );
     println!(
-        "{:<30} | {:<25} | {:<25} | {:<22}",
-        "Total Interest Paid", b_interest_str, a_interest_str, saved_interest_str
+        "{:<30} | ${:<23.2} | ${:<23.2} | ${:<23.2}",
+        "Closing Prepaids & Reserves",
+        report.option_a.upfront_prepaids,
+        report.option_b.upfront_prepaids,
+        report.option_b.upfront_prepaids - report.option_a.upfront_prepaids
     );
+    let delta_cash_fmt = format_delta_currency(report.delta_cash_to_close);
     println!(
-        "{:<30} | {:<25} | {:<25} | {:<22}",
-        "Total Housing Outflow", b_outflow_str, a_outflow_str, saved_outflow_str
+        "{:<30} | ${:<23.2} | ${:<23.2} | {:<24}",
+        "Total Cash to Close",
+        report.option_a.total_cash_to_close,
+        report.option_b.total_cash_to_close,
+        delta_cash_fmt
     );
     println!("{}", box_divider);
+
+    // Section 2: Monthly Cash Outflow
+    println!(" --- 2. MONTHLY CASH OUTFLOW ---");
     println!(
-        " 🎉 SUMMARY SAVINGS: Paid off {:.1} years early | Saved ${:.2} in Interest | Saved ${:.2} Total Cash",
-        report.years_saved, report.interest_saved, report.total_outflow_saved
+        "{:<30} | ${:<23.2} | ${:<23.2} | ${:<23.2}",
+        "Monthly Principal & Interest",
+        report.option_a.monthly_p_i,
+        report.option_b.monthly_p_i,
+        report.option_b.monthly_p_i - report.option_a.monthly_p_i
+    );
+    println!(
+        "{:<30} | ${:<23.2} | ${:<23.2} | ${:<23.2}",
+        "Monthly Escrow (Tax + Ins)",
+        report.option_a.monthly_escrow,
+        report.option_b.monthly_escrow,
+        report.option_b.monthly_escrow - report.option_a.monthly_escrow
+    );
+    let delta_piti_fmt = format_delta_currency(report.delta_monthly_piti);
+    println!(
+        "{:<30} | ${:<23.2} | ${:<23.2} | {:<24}",
+        "Total Monthly PITI Outflow",
+        report.option_a.monthly_piti,
+        report.option_b.monthly_piti,
+        delta_piti_fmt
+    );
+    println!("{}", box_divider);
+
+    // Section 3: Loan Timeline & Equity
+    println!(" --- 3. LOAN TIMELINE & EQUITY ---");
+    let a_months_fmt = format!(
+        "{} mos ({:.1} yrs)",
+        report.option_a.actual_payoff_months,
+        report.option_a.actual_payoff_months as f64 / 12.0
+    );
+    let b_months_fmt = format!(
+        "{} mos ({:.1} yrs)",
+        report.option_b.actual_payoff_months,
+        report.option_b.actual_payoff_months as f64 / 12.0
+    );
+    let delta_months_fmt = if report.delta_payoff_months > 0 {
+        format!(
+            "+{} mos (+{:.1} yrs)",
+            report.delta_payoff_months,
+            report.delta_payoff_months as f64 / 12.0
+        )
+    } else if report.delta_payoff_months < 0 {
+        format!(
+            "{} mos ({:.1} yrs)",
+            report.delta_payoff_months,
+            report.delta_payoff_months as f64 / 12.0
+        )
+    } else {
+        "0 mos".to_string()
+    };
+    println!(
+        "{:<30} | {:<24} | {:<24} | {:<24}",
+        "Payoff Duration", a_months_fmt, b_months_fmt, delta_months_fmt
+    );
+
+    let delta_eq_fmt = format_delta_currency(report.delta_5yr_equity);
+    println!(
+        "{:<30} | ${:<23.2} | ${:<23.2} | {:<24}",
+        "5-Year Equity Built",
+        report.option_a.equity_at_5_years,
+        report.option_b.equity_at_5_years,
+        delta_eq_fmt
+    );
+    println!("{}", box_divider);
+
+    // Section 4: Lifetime Financial Cost
+    println!(" --- 4. LIFETIME FINANCIAL COST ---");
+    let delta_int_fmt = format_delta_currency(report.delta_total_interest);
+    println!(
+        "{:<30} | ${:<23.2} | ${:<23.2} | {:<24}",
+        "Total Interest Paid",
+        report.option_a.total_interest_paid,
+        report.option_b.total_interest_paid,
+        delta_int_fmt
+    );
+    let delta_outflow_fmt = format_delta_currency(report.delta_lifetime_outflow);
+    println!(
+        "{:<30} | ${:<23.2} | ${:<23.2} | {:<24}",
+        "Total Housing Outflow",
+        report.option_a.total_lifetime_outflow,
+        report.option_b.total_lifetime_outflow,
+        delta_outflow_fmt
     );
     println!("{}\n", box_border);
+}
+
+fn format_delta_currency(delta: f64) -> String {
+    if delta > 0.0 {
+        format!("+${:.2}", delta)
+    } else if delta < 0.0 {
+        format!("-${:.2}", delta.abs())
+    } else {
+        "$0.00".to_string()
+    }
 }
