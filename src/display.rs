@@ -20,10 +20,7 @@ pub fn print_banner(emoji: &str, title: &str) {
 
 /// Prints a high-level summary and formatted amortization schedule to the terminal.
 pub fn print_mortgage_summary(mortgage: &Mortgage) {
-    let mut months: Vec<u32> = mortgage.schedule.keys().copied().collect();
-    months.sort_unstable();
-
-    let actual_months = months.len() as u32;
+    let actual_months = mortgage.schedule.len() as u32;
     let actual_years = actual_months as f64 / 12.0;
 
     let mut total_interest_paid = 0.0;
@@ -122,29 +119,27 @@ pub fn print_mortgage_summary(mortgage: &Mortgage) {
     );
     println!("{}", box_divider);
 
-    for &month in &months {
-        if let Some(entry) = mortgage.schedule.get(&month) {
-            let is_early_month = month <= 6;
-            let is_late_month = month > actual_months.saturating_sub(3);
-            let has_extra = entry.extra > 0.0;
+    for (&month, entry) in &mortgage.schedule {
+        let is_early_month = month <= 6;
+        let is_late_month = month > actual_months.saturating_sub(3);
+        let has_extra = entry.extra > 0.0;
 
-            if is_early_month || is_late_month || has_extra {
-                println!(
-                    "{:<6} | ${:<11.2} | ${:<11.2} | ${:<11.2} | ${:<9.2} | ${:<11.2} | ${:<12.2} | ${:<12.2}",
-                    entry.month,
-                    entry.total_p_i,
-                    entry.principal,
-                    entry.interest,
-                    entry.extra,
-                    entry.escrow,
-                    entry.total_outflow,
-                    entry.balance
-                );
-            } else if month == 7 {
-                println!(
-                    "  ...  |      ...     |      ...     |      ...     |    ...    |      ...     |      ...      |      ...     "
-                );
-            }
+        if is_early_month || is_late_month || has_extra {
+            println!(
+                "{:<6} | ${:<11.2} | ${:<11.2} | ${:<11.2} | ${:<9.2} | ${:<11.2} | ${:<12.2} | ${:<12.2}",
+                entry.month,
+                entry.total_p_i,
+                entry.principal,
+                entry.interest,
+                entry.extra,
+                entry.escrow,
+                entry.total_outflow,
+                entry.balance
+            );
+        } else if month == 7 {
+            println!(
+                "  ...  |      ...     |      ...     |      ...     |    ...    |      ...     |      ...      |      ...     "
+            );
         }
     }
     println!("{}\n", box_border);

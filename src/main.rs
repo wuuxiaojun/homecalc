@@ -1,11 +1,8 @@
 // src/main.rs
 
-mod analysis;
-mod cli;
-mod display;
-mod formula;
-mod mortgage;
+use mortgage::cli;
 
 fn main() {
     cli::run_cli();
 }
+

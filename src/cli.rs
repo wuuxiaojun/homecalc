@@ -113,7 +113,7 @@ pub fn run_cli() {
             0 => handle_new_mortgage(&mut main_status),
             1 => handle_load_mortgage(&mut main_status),
             2 => handle_compare_mortgages(&mut main_status),
-            3 | _ => {
+            _ => {
                 clear_screen();
                 println!("\nThank you for using Mortgage Engine. Goodbye!");
                 break;
@@ -122,49 +122,29 @@ pub fn run_cli() {
     }
 }
 
-fn handle_new_mortgage(main_status: &mut Option<String>) {
+fn prompt_mortgage_params() -> Option<(String, f64, f64, f64, u32, f64, f64)> {
     clear_screen();
     print_banner("🏠", "CREATE NEW MORTGAGE SCENARIO");
     println!();
 
-    let name = match Text::new("Mortgage Scenario Name:").prompt() {
-        Ok(val) => val,
-        Err(_) => return,
-    };
-
-    let price = match CustomType::<f64>::new("Home Price ($):").prompt() {
-        Ok(val) => val,
-        Err(_) => return,
-    };
-
-    let down = match CustomType::<f64>::new("Down Payment ($):").prompt() {
-        Ok(val) => val,
-        Err(_) => return,
-    };
-
-    let rate = match CustomType::<f64>::new("Interest Rate (%):").prompt() {
-        Ok(val) => val,
-        Err(_) => return,
-    };
-
-    let term = match CustomType::<u32>::new("Loan Term (Years):").prompt() {
-        Ok(val) => val,
-        Err(_) => return,
-    };
-
-    let tax_rate = match CustomType::<f64>::new("Annual Property Tax Rate (%):").prompt() {
-        Ok(val) => val,
-        Err(_) => return,
-    };
-
-    let annual_insurance = match CustomType::<f64>::new("Annual Home Insurance ($):").prompt() {
-        Ok(val) => val,
-        Err(_) => return,
-    };
+    let name = Text::new("Mortgage Scenario Name:").prompt().ok()?;
+    let price = CustomType::<f64>::new("Home Price ($):").prompt().ok()?;
+    let down = CustomType::<f64>::new("Down Payment ($):").prompt().ok()?;
+    let rate = CustomType::<f64>::new("Interest Rate (%):").prompt().ok()?;
+    let term = CustomType::<u32>::new("Loan Term (Years):").prompt().ok()?;
+    let tax_rate = CustomType::<f64>::new("Annual Property Tax Rate (%):").prompt().ok()?;
+    let annual_insurance = CustomType::<f64>::new("Annual Home Insurance ($):").prompt().ok()?;
 
     let confirm = Confirm::new("Create mortgage scenario with these parameters?").prompt();
-
     if let Ok(true) = confirm {
+        Some((name, price, down, rate, term, tax_rate, annual_insurance))
+    } else {
+        None
+    }
+}
+
+fn handle_new_mortgage(main_status: &mut Option<String>) {
+    if let Some((name, price, down, rate, term, tax_rate, annual_insurance)) = prompt_mortgage_params() {
         match Mortgage::new(name, price, down, rate, term, tax_rate, annual_insurance) {
             Ok(mortgage) => {
                 active_mortgage_menu(mortgage);
@@ -226,6 +206,16 @@ fn handle_compare_mortgages(main_status: &mut Option<String>) {
     let _ = Text::new("Press Enter to return to Main Menu:").prompt();
 }
 
+fn prompt_extra_payment_input() -> Option<(u32, f64)> {
+    let month = CustomType::<u32>::new("Target Month for Extra Payment:").prompt().ok()?;
+    let amount = CustomType::<f64>::new("Extra Principal Amount ($):").prompt().ok()?;
+    Some((month, amount))
+}
+
+fn prompt_save_filename_input() -> Option<String> {
+    Text::new("Filename to save:").prompt().ok()
+}
+
 fn active_mortgage_menu(mut mortgage: Mortgage) {
     let mut status_message: Option<String> = None;
 
@@ -255,57 +245,55 @@ fn active_mortgage_menu(mut mortgage: Mortgage) {
 
         match selection {
             0 => {
-                let month = match CustomType::<u32>::new("Target Month for Extra Payment:").prompt() {
-                    Ok(m) => m,
-                    Err(_) => continue,
-                };
-                let amount = match CustomType::<f64>::new("Extra Principal Amount ($):").prompt() {
-                    Ok(a) => a,
-                    Err(_) => continue,
-                };
-                match mortgage.add_extra_payment(month, amount) {
-                    Ok(added) => {
-                        status_message = Some(format!("✅ Applied ${:.2} extra payment at Month {}.", added, month));
-                    }
-                    Err(e) => {
-                        status_message = Some(format!("❌ Error adding extra payment: {}", e));
+                if let Some((month, amount)) = prompt_extra_payment_input() {
+                    match mortgage.add_extra_payment(month, amount) {
+                        Ok(added) => {
+                            status_message = Some(format!("✅ Applied ${:.2} extra payment at Month {}.", added, month));
+                        }
+                        Err(e) => {
+                            status_message = Some(format!("❌ Error adding extra payment: {}", e));
+                        }
                     }
                 }
             }
             1 => {
-                let filename = match Text::new("Filename to save:").prompt() {
-                    Ok(f) => f,
-                    Err(_) => continue,
-                };
-                match mortgage.save_to_json("./products", &filename) {
-                    Ok(path) => {
-                        status_message = Some(format!("✅ Successfully saved mortgage scenario to {}", path));
-                    }
-                    Err(e) => {
-                        status_message = Some(format!("❌ Failed to save scenario: {}", e));
+                if let Some(filename) = prompt_save_filename_input() {
+                    match mortgage.save_to_json("./products", &filename) {
+                        Ok(path) => {
+                            status_message = Some(format!("✅ Successfully saved mortgage scenario to {}", path));
+                        }
+                        Err(e) => {
+                            status_message = Some(format!("❌ Failed to save scenario: {}", e));
+                        }
                     }
                 }
             }
-            2 | _ => break,
+            _ => break,
         }
     }
 }
 
-fn select_json_file(emoji: &str, title: &str) -> Option<String> {
+fn get_json_files_in_dir(dir_path: &str) -> Vec<String> {
     let mut files = Vec::new();
-    let dir_path = "./products";
-
     if let Ok(entries) = fs::read_dir(dir_path) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("json") {
-                if let Some(filename) = path.file_name().and_then(|s| s.to_str()) {
-                    files.push(filename.to_string());
+            let is_json = path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("json");
+            if is_json {
+                let filename = path.file_name().and_then(|s| s.to_str());
+                if let Some(name) = filename {
+                    files.push(name.to_string());
                 }
             }
         }
     }
     files.sort();
+    files
+}
+
+fn select_json_file(emoji: &str, title: &str) -> Option<String> {
+    let dir_path = "./products";
+    let files = get_json_files_in_dir(dir_path);
 
     if files.is_empty() {
         clear_screen();

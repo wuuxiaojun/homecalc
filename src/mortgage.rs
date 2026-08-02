@@ -2,10 +2,9 @@
 
 use crate::formula::monthly_payment;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fs::{self, File};
 use std::io::BufReader;
-use std::path::Path;
 
 // Enum to check parameter input error
 #[derive(Debug, Clone, PartialEq)]
@@ -44,19 +43,19 @@ pub struct AnnualSummary {
 }
 
 // Mortgage struct
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Mortgage {
     pub name: String,
     pub price: f64,
     pub down: f64,
-    pub loan: f64,                         // Total loan amount
-    pub rate: f64,                         // Rate in percentage (e.g., 5.9)
-    pub term: u32,                         // Term in years
-    pub tax_rate: f64,                     // Annual property tax rate in % (e.g., 1.2)
-    pub annual_insurance: f64,             // Annual homeowners insurance ($)
-    pub base_payment: f64,                 // Base P&I payment each month
-    pub extra_payments: HashMap<u32, f64>, // Extra payment schedule
-    pub schedule: HashMap<u32, Payment>,   // Complete schedule
+    pub loan: f64,                          // Total loan amount
+    pub rate: f64,                          // Rate in percentage (e.g., 5.9)
+    pub term: u32,                          // Term in years
+    pub tax_rate: f64,                      // Annual property tax rate in % (e.g., 1.2)
+    pub annual_insurance: f64,              // Annual homeowners insurance ($)
+    pub base_payment: f64,                  // Base P&I payment each month
+    pub extra_payments: BTreeMap<u32, f64>, // Extra payment schedule
+    pub schedule: BTreeMap<u32, Payment>,    // Complete schedule
 }
 
 impl Mortgage {
@@ -71,13 +70,13 @@ impl Mortgage {
         annual_insurance: f64,
     ) -> Result<Self, InputError> {
         // Check Home Price
-        if price <= 0.0 || price.is_nan() {
+        if price <= 0.0 || price.is_nan() || price.is_infinite() {
             return Err(InputError::InvalidPrice(
                 "Price must be greater than 0.".to_string(),
             ));
         }
         // Check Down Payment
-        if down < 0.0 || down.is_nan() {
+        if down < 0.0 || down.is_nan() || down.is_infinite() {
             return Err(InputError::InvalidDown(
                 "Down payment cannot be negative.".to_string(),
             ));
@@ -89,25 +88,25 @@ impl Mortgage {
             )));
         }
         // Check Interest Rate
-        if rate < 0.0 || rate > 100.0 || rate.is_nan() {
+        if !(0.0..=100.0).contains(&rate) {
             return Err(InputError::InvalidRate(
                 "Interest rate must be between 0% and 100%.".to_string(),
             ));
         }
         // Check Loan Term
-        if term < 1 || term > 30 {
+        if !(1..=30).contains(&term) {
             return Err(InputError::InvalidTerm(
                 "Loan term must be between 1 and 30 years.".to_string(),
             ));
         }
         // Check Tax Rate
-        if tax_rate < 0.0 || tax_rate > 20.0 || tax_rate.is_nan() {
+        if !(0.0..=20.0).contains(&tax_rate) {
             return Err(InputError::InvalidTaxRate(
                 "Property tax rate must be between 0% and 20%.".to_string(),
             ));
         }
         // Check Annual Insurance
-        if annual_insurance < 0.0 || annual_insurance.is_nan() {
+        if annual_insurance < 0.0 || annual_insurance.is_nan() || annual_insurance.is_infinite() {
             return Err(InputError::InvalidInsurance(
                 "Annual insurance cannot be negative.".to_string(),
             ));
@@ -123,8 +122,8 @@ impl Mortgage {
             tax_rate,
             annual_insurance,
             base_payment: monthly_payment(price - down, rate / 100.0, term),
-            extra_payments: HashMap::new(),
-            schedule: HashMap::new(),
+            extra_payments: BTreeMap::new(),
+            schedule: BTreeMap::new(),
         };
 
         mortgage.recalculate();
@@ -237,29 +236,16 @@ impl Mortgage {
         let current = match self.schedule.get(&month) {
             Some(payment) => payment,
             None => {
-                println!(
-                    "Month {} is past the payoff date. Loan is already fully paid off! No extra payment added.",
-                    month
-                );
                 return Ok(0.0);
             }
         };
 
         let max_extra = current.balance + current.extra;
         if max_extra <= 0.0 {
-            println!(
-                "Loan balance at Month {} is already $0.00. No extra payment needed.",
-                month
-            );
             return Ok(0.0);
         }
 
         let actual_extra = if extra > max_extra {
-            println!(
-                "Requested extra payment (${:.2}) exceeds maximum remaining balance (${:.2}) at Month {}",
-                extra, max_extra, month
-            );
-            println!(" Capping extra payment to ${:.2}.", max_extra);
             max_extra
         } else {
             extra
@@ -272,14 +258,12 @@ impl Mortgage {
 
     /// Calculate annual aggregation summaries by grouping monthly schedule entries into yearly buckets
     pub fn annual_summaries(&self) -> Vec<AnnualSummary> {
-        let mut months: Vec<u32> = self.schedule.keys().copied().collect();
-        months.sort_unstable();
-
-        let mut summaries = Vec::new();
-        if months.is_empty() {
-            return summaries;
+        let total_entries = self.schedule.len();
+        if total_entries == 0 {
+            return Vec::new();
         }
 
+        let mut summaries = Vec::new();
         let mut current_year = 0;
         let mut principal_paid = 0.0;
         let mut extra_principal_paid = 0.0;
@@ -288,8 +272,7 @@ impl Mortgage {
         let mut total_outflow = 0.0;
         let mut year_end_balance = 0.0;
 
-        for (idx, &m) in months.iter().enumerate() {
-            let payment = &self.schedule[&m];
+        for (idx, (&m, payment)) in self.schedule.iter().enumerate() {
             let year = ((m - 1) / 12) + 1;
 
             if current_year != year {
@@ -319,7 +302,7 @@ impl Mortgage {
             total_outflow += payment.total_outflow;
             year_end_balance = payment.balance;
 
-            if idx == months.len() - 1 {
+            if idx == total_entries - 1 {
                 summaries.push(AnnualSummary {
                     year: current_year,
                     principal_paid,
@@ -337,14 +320,9 @@ impl Mortgage {
 
     /// Returns the first month where scheduled monthly principal is greater than or equal to monthly interest
     pub fn crossover_month(&self) -> Option<u32> {
-        let mut months: Vec<u32> = self.schedule.keys().copied().collect();
-        months.sort_unstable();
-
-        for m in months {
-            if let Some(payment) = self.schedule.get(&m) {
-                if payment.principal >= payment.interest {
-                    return Some(m);
-                }
+        for (&m, payment) in &self.schedule {
+            if payment.principal >= payment.interest {
+                return Some(m);
             }
         }
         None
@@ -352,16 +330,11 @@ impl Mortgage {
 
     /// Returns the first month where remaining balance is less than or equal to 50% of the initial loan amount
     pub fn half_equity_month(&self) -> Option<u32> {
-        let mut months: Vec<u32> = self.schedule.keys().copied().collect();
-        months.sort_unstable();
-
         let half_loan = self.loan / 2.0;
 
-        for m in months {
-            if let Some(payment) = self.schedule.get(&m) {
-                if payment.balance <= half_loan {
-                    return Some(m);
-                }
+        for (&m, payment) in &self.schedule {
+            if payment.balance <= half_loan {
+                return Some(m);
             }
         }
         None
@@ -392,61 +365,12 @@ impl Mortgage {
         mortgage.recalculate();
         Ok(mortgage)
     }
-
-    /// Exports monthly amortization schedule payments to a CSV file
-    #[allow(dead_code)]
-    pub fn export_to_csv(&self, filepath_input: &str) -> Result<String, Box<dyn std::error::Error>> {
-        let filepath_clean = if filepath_input.ends_with(".csv") {
-            filepath_input.to_string()
-        } else {
-            format!("{}.csv", filepath_input)
-        };
-
-        if let Some(parent) = Path::new(&filepath_clean).parent() {
-            if !parent.as_os_str().is_empty() {
-                fs::create_dir_all(parent)?;
-            }
-        }
-
-        let mut writer = csv::Writer::from_path(&filepath_clean)?;
-
-        writer.write_record(&[
-            "Month",
-            "P&I Total",
-            "Principal",
-            "Interest",
-            "Extra",
-            "Escrow",
-            "Total Outflow",
-            "Balance",
-        ])?;
-
-        let mut months: Vec<u32> = self.schedule.keys().copied().collect();
-        months.sort_unstable();
-
-        for m in months {
-            if let Some(payment) = self.schedule.get(&m) {
-                writer.write_record(&[
-                    payment.month.to_string(),
-                    format!("{:.2}", payment.total_p_i),
-                    format!("{:.2}", payment.principal),
-                    format!("{:.2}", payment.interest),
-                    format!("{:.2}", payment.extra),
-                    format!("{:.2}", payment.escrow),
-                    format!("{:.2}", payment.total_outflow),
-                    format!("{:.2}", payment.balance),
-                ])?;
-            }
-        }
-
-        writer.flush()?;
-        Ok(filepath_clean)
-    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::Path;
 
     #[test]
     fn test_phase3_escrow_calculations() {
@@ -522,7 +446,7 @@ mod tests {
     }
 
     #[test]
-    fn test_json_and_csv_persistence() {
+    fn test_json_persistence() {
         let temp_dir = std::env::temp_dir().join("mortgage_tests");
         let dir_str = temp_dir.to_str().unwrap();
 
@@ -538,11 +462,6 @@ mod tests {
         assert_eq!(loaded.price, 500_000.0);
         assert_eq!(loaded.extra_payments.get(&6).copied(), Some(10_000.0));
         assert_eq!(loaded.schedule.len(), original.schedule.len());
-
-        // Test CSV export
-        let csv_path = format!("{}/test_schedule.csv", dir_str);
-        let exported_csv = original.export_to_csv(&csv_path).unwrap();
-        assert!(Path::new(&exported_csv).exists());
 
         // Cleanup
         let _ = fs::remove_dir_all(temp_dir);
