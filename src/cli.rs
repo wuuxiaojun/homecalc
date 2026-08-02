@@ -5,6 +5,7 @@ use crate::display::{clear_screen, print_annual_summary_table, print_banner, pri
 use crate::mortgage::Mortgage;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+use inquire::validator::Validation;
 use inquire::{Confirm, CustomType, Text};
 use std::fs;
 use std::io::{self, Write};
@@ -127,13 +128,84 @@ fn prompt_mortgage_params() -> Option<(String, f64, f64, f64, u32, f64, f64)> {
     print_banner("🏠", "CREATE NEW MORTGAGE SCENARIO");
     println!();
 
-    let name = Text::new("Mortgage Scenario Name:").prompt().ok()?;
-    let price = CustomType::<f64>::new("Home Price ($):").prompt().ok()?;
-    let down = CustomType::<f64>::new("Down Payment ($):").prompt().ok()?;
-    let rate = CustomType::<f64>::new("Interest Rate (%):").prompt().ok()?;
-    let term = CustomType::<u32>::new("Loan Term (Years):").prompt().ok()?;
-    let tax_rate = CustomType::<f64>::new("Annual Property Tax Rate (%):").prompt().ok()?;
-    let annual_insurance = CustomType::<f64>::new("Annual Home Insurance ($):").prompt().ok()?;
+    let name = Text::new("Mortgage Scenario Name:")
+        .with_validator(|input: &str| {
+            if input.trim().is_empty() {
+                Ok(Validation::Invalid("Scenario name cannot be empty.".into()))
+            } else {
+                Ok(Validation::Valid)
+            }
+        })
+        .prompt()
+        .ok()?;
+
+    let price = CustomType::<f64>::new("Home Price ($):")
+        .with_validator(|val: &f64| {
+            if *val <= 0.0 || val.is_nan() || val.is_infinite() {
+                Ok(Validation::Invalid("Home price must be greater than 0.".into()))
+            } else {
+                Ok(Validation::Valid)
+            }
+        })
+        .prompt()
+        .ok()?;
+
+    let down = CustomType::<f64>::new("Down Payment ($):")
+        .with_validator(move |val: &f64| {
+            if *val < 0.0 || val.is_nan() || val.is_infinite() {
+                Ok(Validation::Invalid("Down payment cannot be negative.".into()))
+            } else if *val >= price {
+                Ok(Validation::Invalid(format!("Down payment cannot equal or exceed home price (${:.2}).", price).into()))
+            } else {
+                Ok(Validation::Valid)
+            }
+        })
+        .prompt()
+        .ok()?;
+
+    let rate = CustomType::<f64>::new("Interest Rate (%):")
+        .with_validator(|val: &f64| {
+            if *val < 0.0 || *val > 100.0 || val.is_nan() || val.is_infinite() {
+                Ok(Validation::Invalid("Interest rate must be between 0% and 100%.".into()))
+            } else {
+                Ok(Validation::Valid)
+            }
+        })
+        .prompt()
+        .ok()?;
+
+    let term = CustomType::<u32>::new("Loan Term (Years):")
+        .with_validator(|val: &u32| {
+            if *val < 1 || *val > 30 {
+                Ok(Validation::Invalid("Loan term must be between 1 and 30 years.".into()))
+            } else {
+                Ok(Validation::Valid)
+            }
+        })
+        .prompt()
+        .ok()?;
+
+    let tax_rate = CustomType::<f64>::new("Annual Property Tax Rate (%):")
+        .with_validator(|val: &f64| {
+            if *val < 0.0 || *val > 20.0 || val.is_nan() || val.is_infinite() {
+                Ok(Validation::Invalid("Property tax rate must be between 0% and 20%.".into()))
+            } else {
+                Ok(Validation::Valid)
+            }
+        })
+        .prompt()
+        .ok()?;
+
+    let annual_insurance = CustomType::<f64>::new("Annual Home Insurance ($):")
+        .with_validator(|val: &f64| {
+            if *val < 0.0 || val.is_nan() || val.is_infinite() {
+                Ok(Validation::Invalid("Annual insurance cannot be negative.".into()))
+            } else {
+                Ok(Validation::Valid)
+            }
+        })
+        .prompt()
+        .ok()?;
 
     let confirm = Confirm::new("Create mortgage scenario with these parameters?").prompt();
     if let Ok(true) = confirm {
@@ -206,14 +278,44 @@ fn handle_compare_mortgages(main_status: &mut Option<String>) {
     let _ = Text::new("Press Enter to return to Main Menu:").prompt();
 }
 
-fn prompt_extra_payment_input() -> Option<(u32, f64)> {
-    let month = CustomType::<u32>::new("Target Month for Extra Payment:").prompt().ok()?;
-    let amount = CustomType::<f64>::new("Extra Principal Amount ($):").prompt().ok()?;
+fn prompt_extra_payment_input(mortgage: &Mortgage) -> Option<(u32, f64)> {
+    let max_month = mortgage.schedule.len() as u32;
+    let month = CustomType::<u32>::new("Target Month for Extra Payment:")
+        .with_validator(move |val: &u32| {
+            if *val < 1 || *val > max_month {
+                Ok(Validation::Invalid(format!("Target month must be between 1 and {}.", max_month).into()))
+            } else {
+                Ok(Validation::Valid)
+            }
+        })
+        .prompt()
+        .ok()?;
+
+    let amount = CustomType::<f64>::new("Extra Principal Amount ($):")
+        .with_validator(|val: &f64| {
+            if *val <= 0.0 || val.is_nan() || val.is_infinite() {
+                Ok(Validation::Invalid("Extra payment amount must be greater than 0.".into()))
+            } else {
+                Ok(Validation::Valid)
+            }
+        })
+        .prompt()
+        .ok()?;
+
     Some((month, amount))
 }
 
 fn prompt_save_filename_input() -> Option<String> {
-    Text::new("Filename to save:").prompt().ok()
+    Text::new("Filename to save:")
+        .with_validator(|input: &str| {
+            if input.trim().is_empty() {
+                Ok(Validation::Invalid("Filename cannot be empty.".into()))
+            } else {
+                Ok(Validation::Valid)
+            }
+        })
+        .prompt()
+        .ok()
 }
 
 fn active_mortgage_menu(mut mortgage: Mortgage) {
@@ -245,7 +347,7 @@ fn active_mortgage_menu(mut mortgage: Mortgage) {
 
         match selection {
             0 => {
-                if let Some((month, amount)) = prompt_extra_payment_input() {
+                if let Some((month, amount)) = prompt_extra_payment_input(&mortgage) {
                     match mortgage.add_extra_payment(month, amount) {
                         Ok(added) => {
                             status_message = Some(format!("✅ Applied ${:.2} extra payment at Month {}.", added, month));

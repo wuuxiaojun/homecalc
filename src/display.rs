@@ -72,41 +72,97 @@ pub fn print_mortgage_summary(mortgage: &Mortgage) {
     let l8_val = crossover_str;
 
     // Plain text values for right column
-    let r1_val = format!("${:.2} ({:.1}%)", mortgage.down, (mortgage.down / mortgage.price) * 100.0);
+    let r1_val = format!(
+        "${:.2} ({:.1}%)",
+        mortgage.down,
+        (mortgage.down / mortgage.price) * 100.0
+    );
     let r2_val = format!("{:.2}%", mortgage.rate);
-    let r3_val = format!("{:.2}%/yr (${:.2}/mo)", mortgage.tax_rate, mortgage.monthly_tax());
+    let r3_val = format!(
+        "{:.2}%/yr (${:.2}/mo)",
+        mortgage.tax_rate,
+        mortgage.monthly_tax()
+    );
     let r4_val = format!("${:.2}/mo", mortgage.monthly_escrow());
-    let r5_val = format!("${:.2}/mo", mortgage.base_payment + mortgage.monthly_escrow());
+    let r5_val = format!(
+        "${:.2}/mo",
+        mortgage.base_payment + mortgage.monthly_escrow()
+    );
     let r6_val = format!("${:.2}", total_interest_paid);
     let r7_val = format!("${:.2}", total_housing_outflow);
     let r8_val = half_equity_str;
 
     // Formatted Left Columns (Exact 19-char label + 24-char value = 43 visual chars)
-    let l1 = format!("{:<19} {}{}{:<24}{}", "Home Price:", BOLD, GREEN, l1_val, RESET);
-    let l2 = format!("{:<19} {}{}{:<24}{}", "Loan Principal:", BOLD, GREEN, l2_val, RESET);
-    let l3 = format!("{:<19} {}{}{:<24}{}", "Original Term:", BOLD, CYAN, l3_val, RESET);
+    let l1 = format!(
+        "{:<19} {}{}{:<24}{}",
+        "Home Price:", BOLD, GREEN, l1_val, RESET
+    );
+    let l2 = format!(
+        "{:<19} {}{}{:<24}{}",
+        "Loan Principal:", BOLD, GREEN, l2_val, RESET
+    );
+    let l3 = format!(
+        "{:<19} {}{}{:<24}{}",
+        "Original Term:", BOLD, CYAN, l3_val, RESET
+    );
     let l4 = format!("{:<19} {:<24}", "Home Insurance:", l4_val);
-    let l5 = format!("{:<19} {}{}{:<24}{}", "Monthly P&I:", BOLD, CYAN, l5_val, RESET);
-    let l6 = format!("{:<19} {}{}{:<24}{}", "Actual Payoff:", BOLD, YELLOW, l6_val, RESET);
+    let l5 = format!(
+        "{:<19} {}{}{:<24}{}",
+        "Monthly P&I:", BOLD, CYAN, l5_val, RESET
+    );
+    let l6 = format!(
+        "{:<19} {}{}{:<24}{}",
+        "Actual Payoff:", BOLD, YELLOW, l6_val, RESET
+    );
     let l7 = format!("{:<19} {:<24}", "Total Escrow Paid:", l7_val);
-    let l8 = format!("{:<19} {}{}{:<24}{}", "Crossover Month:", BOLD, MAGENTA, l8_val, RESET);
+    let l8 = format!(
+        "{:<19} {}{}{:<24}{}",
+        "Crossover Month:", BOLD, MAGENTA, l8_val, RESET
+    );
 
     // Formatted Right Columns (Exact 20-char label + value)
-    let r1 = format!("{:<20} {}{}{}{}", "Down Payment:", BOLD, GREEN, r1_val, RESET);
-    let r2 = format!("{:<20} {}{}{}{}", "Interest Rate:", BOLD, CYAN, r2_val, RESET);
+    let r1 = format!(
+        "{:<20} {}{}{}{}",
+        "Down Payment:", BOLD, GREEN, r1_val, RESET
+    );
+    let r2 = format!(
+        "{:<20} {}{}{}{}",
+        "Interest Rate:", BOLD, CYAN, r2_val, RESET
+    );
     let r3 = format!("{:<20} {}", "Property Tax Rate:", r3_val);
     let r4 = format!("{:<20} {}", "Monthly Escrow:", r4_val);
-    let r5 = format!("{:<20} {}{}{}{}", "Total Monthly PITI:", BOLD, GREEN, r5_val, RESET);
-    let r6 = format!("{:<20} {}{}{}{}", "Total Interest:", BOLD, RED, r6_val, RESET);
-    let r7 = format!("{:<20} {}{}{}{}", "Total Housing Cost:", BOLD, WHITE, r7_val, RESET);
-    let r8 = format!("{:<20} {}{}{}{}", "50% Equity Month:", BOLD, MAGENTA, r8_val, RESET);
+    let r5 = format!(
+        "{:<20} {}{}{}{}",
+        "Total Monthly PITI:", BOLD, GREEN, r5_val, RESET
+    );
+    let r6 = format!(
+        "{:<20} {}{}{}{}",
+        "Total Interest:", BOLD, RED, r6_val, RESET
+    );
+    let r7 = format!(
+        "{:<20} {}{}{}{}",
+        "Total Housing Cost:", BOLD, WHITE, r7_val, RESET
+    );
+    let r8 = format!(
+        "{:<20} {}{}{}{}",
+        "50% Equity Month:", BOLD, MAGENTA, r8_val, RESET
+    );
 
     let box_border = "===============================================================================================================";
     let box_divider = "---------------------------------------------------------------------------------------------------------------";
 
     println!("\n{}{}{}", CYAN, box_border, RESET);
-    println!(" 🏠 {}{}SCENARIO: {}{}", BOLD, WHITE, mortgage.name.to_uppercase(), RESET);
-    println!("    {}FULL HOUSING COST ENGINE (PITI + ESCROW SUMMARY){}", DIM, RESET);
+    println!(
+        " 🏠 {}{}SCENARIO: {}{}",
+        BOLD,
+        WHITE,
+        mortgage.name.to_uppercase(),
+        RESET
+    );
+    println!(
+        "    {}FULL HOUSING COST ENGINE (PITI + ESCROW SUMMARY){}",
+        DIM, RESET
+    );
     println!("{}{}{}", CYAN, box_border, RESET);
     println!(" {} | {}", l1, r1);
     println!(" {} | {}", l2, r2);
@@ -128,7 +184,16 @@ pub fn print_mortgage_summary(mortgage: &Mortgage) {
     // Render Table Header
     println!(
         "{}{:<6} | {:<12} | {:<12} | {:<12} | {:<10} | {:<12} | {:<13} | {:<13}{}",
-        BOLD, "Month", "P&I Total", "Principal", "Interest", "Extra", "Escrow", "Total Outflow", "Balance", RESET
+        BOLD,
+        "Month",
+        "P&I Total",
+        "Principal",
+        "Interest",
+        "Extra",
+        "Escrow",
+        "Total Outflow",
+        "Balance",
+        RESET
     );
     println!("{}{}{}", DIM, box_divider, RESET);
 
@@ -157,7 +222,7 @@ pub fn print_mortgage_summary(mortgage: &Mortgage) {
             );
         } else if month == 7 {
             println!(
-                "{}{}  ...  |      ...     |      ...     |      ...     |    ...    |      ...     |      ...      |      ...     {}",
+                "{}{}  ...  |      ...     |      ...     |      ...     |    ...     |      ...     |      ...      |      ...     {}",
                 DIM, RESET, DIM
             );
         }
@@ -174,13 +239,24 @@ pub fn print_annual_summary_table(mortgage: &Mortgage) {
     print_banner("📅", "ANNUAL AGGREGATION SUMMARY (YEAR-BY-YEAR ROLLUP)");
     println!(
         "{}{:<6} | {:<12} | {:<12} | {:<12} | {:<12} | {:<14} | {:<13}{}",
-        BOLD, "Year", "Principal", "Extra Paid", "Interest", "Escrow", "Total Outflow", "End Balance", RESET
+        BOLD,
+        "Year",
+        "Principal",
+        "Extra Paid",
+        "Interest",
+        "Escrow",
+        "Total Outflow",
+        "End Balance",
+        RESET
     );
     println!("{}{}{}", DIM, box_divider, RESET);
 
     for s in &summaries {
         let extra_str = if s.extra_principal_paid > 0.0 {
-            format!("{}{}${:<11.2}{}", BOLD, GREEN, s.extra_principal_paid, RESET)
+            format!(
+                "{}{}${:<11.2}{}",
+                BOLD, GREEN, s.extra_principal_paid, RESET
+            )
         } else {
             format!("${:<11.2}", s.extra_principal_paid)
         };
@@ -200,18 +276,17 @@ pub fn print_annual_summary_table(mortgage: &Mortgage) {
 }
 
 /// Prints a 4-column side-by-side comparison report between Option A and Option B
-pub fn print_comparison_report(
-    report: &ComparisonReport,
-    title_a: &str,
-    title_b: &str,
-) {
+pub fn print_comparison_report(report: &ComparisonReport, title_a: &str, title_b: &str) {
     let box_border = "===============================================================================================================";
     let box_divider = "---------------------------------------------------------------------------------------------------------------";
 
     let col_a_title = format!("A: {}", title_a);
     let col_b_title = format!("B: {}", title_b);
 
-    print_banner("⚖️", "MORTGAGE SCENARIO COMPARISON REPORT (OPTION A vs. OPTION B)");
+    print_banner(
+        "⚖️",
+        "MORTGAGE SCENARIO COMPARISON REPORT (OPTION A vs. OPTION B)",
+    );
     println!(
         "{}{:<30} | {:<24} | {:<24} | {:<24}{}",
         BOLD, "Financial Metric", col_a_title, col_b_title, "Delta (Option B - A)", RESET
@@ -219,7 +294,10 @@ pub fn print_comparison_report(
     println!("{}{}{}", DIM, box_divider, RESET);
 
     // Section 1: Upfront Cash Needed
-    println!(" {}{}--- 1. UPFRONT CASH NEEDED ---{}", BOLD, MAGENTA, RESET);
+    println!(
+        " {}{}--- 1. UPFRONT CASH NEEDED ---{}",
+        BOLD, MAGENTA, RESET
+    );
     println!(
         "{:<30} | ${:<23.2} | ${:<23.2} | ${:<23.2}",
         "Down Payment",
@@ -245,7 +323,10 @@ pub fn print_comparison_report(
     println!("{}{}{}", DIM, box_divider, RESET);
 
     // Section 2: Monthly Cash Outflow
-    println!(" {}{}--- 2. MONTHLY CASH OUTFLOW ---{}", BOLD, MAGENTA, RESET);
+    println!(
+        " {}{}--- 2. MONTHLY CASH OUTFLOW ---{}",
+        BOLD, MAGENTA, RESET
+    );
     println!(
         "{:<30} | ${:<23.2} | ${:<23.2} | ${:<23.2}",
         "Monthly Principal & Interest",
@@ -271,7 +352,10 @@ pub fn print_comparison_report(
     println!("{}{}{}", DIM, box_divider, RESET);
 
     // Section 3: Loan Timeline & Equity
-    println!(" {}{}--- 3. LOAN TIMELINE & EQUITY ---{}", BOLD, MAGENTA, RESET);
+    println!(
+        " {}{}--- 3. LOAN TIMELINE & EQUITY ---{}",
+        BOLD, MAGENTA, RESET
+    );
     let a_months_fmt = format!(
         "{} mos ({:.1} yrs)",
         report.option_a.actual_payoff_months,
@@ -285,7 +369,8 @@ pub fn print_comparison_report(
     let delta_months_fmt = if report.delta_payoff_months > 0 {
         format!(
             "{}{}+{} mos (+{:.1} yrs){}",
-            BOLD, YELLOW,
+            BOLD,
+            YELLOW,
             report.delta_payoff_months,
             report.delta_payoff_months as f64 / 12.0,
             RESET
@@ -293,7 +378,8 @@ pub fn print_comparison_report(
     } else if report.delta_payoff_months < 0 {
         format!(
             "{}{}{} mos ({:.1} yrs){}",
-            BOLD, GREEN,
+            BOLD,
+            GREEN,
             report.delta_payoff_months,
             report.delta_payoff_months as f64 / 12.0,
             RESET
@@ -317,7 +403,10 @@ pub fn print_comparison_report(
     println!("{}{}{}", DIM, box_divider, RESET);
 
     // Section 4: Lifetime Financial Cost
-    println!(" {}{}--- 4. LIFETIME FINANCIAL COST ---{}", BOLD, MAGENTA, RESET);
+    println!(
+        " {}{}--- 4. LIFETIME FINANCIAL COST ---{}",
+        BOLD, MAGENTA, RESET
+    );
     let delta_int_fmt = format_delta_currency(report.delta_total_interest);
     println!(
         "{:<30} | ${:<23.2} | ${:<23.2} | {}",
