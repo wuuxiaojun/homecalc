@@ -30,9 +30,9 @@ where
         for (idx, opt) in options.iter().enumerate() {
             let num = idx + 1;
             if idx == selected_idx {
-                println!("  > [{}] {}", num, opt);
+                println!("  \x1B[1;33m➔ [{}] {}\x1B[0m", num, opt);
             } else {
-                println!("    [{}] {}", num, opt);
+                println!("    \x1B[2m[{}] {}\x1B[0m", num, opt);
             }
         }
         println!("===============================================================================================================");
