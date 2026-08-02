@@ -177,8 +177,7 @@ fn handle_new_mortgage(main_status: &mut Option<String>) {
 }
 
 fn handle_load_mortgage(main_status: &mut Option<String>) {
-    clear_screen();
-    let filepath = match select_json_file("Select a saved mortgage scenario file:") {
+    let filepath = match select_json_file("📂", "LOAD SAVED MORTGAGE SCENARIO") {
         Some(path) => path,
         None => return,
     };
@@ -194,13 +193,12 @@ fn handle_load_mortgage(main_status: &mut Option<String>) {
 }
 
 fn handle_compare_mortgages(main_status: &mut Option<String>) {
-    clear_screen();
-    let path1 = match select_json_file("Select Option A (First Scenario):") {
+    let path1 = match select_json_file("⚖️", "COMPARE MORTGAGES - SELECT OPTION A") {
         Some(path) => path,
         None => return,
     };
 
-    let path2 = match select_json_file("Select Option B (Second Scenario):") {
+    let path2 = match select_json_file("⚖️", "COMPARE MORTGAGES - SELECT OPTION B") {
         Some(path) => path,
         None => return,
     };
@@ -293,7 +291,7 @@ fn active_mortgage_menu(mut mortgage: Mortgage) {
     }
 }
 
-fn select_json_file(title: &str) -> Option<String> {
+fn select_json_file(emoji: &str, title: &str) -> Option<String> {
     let mut files = Vec::new();
     let dir_path = "./products";
 
@@ -310,7 +308,9 @@ fn select_json_file(title: &str) -> Option<String> {
     files.sort();
 
     if files.is_empty() {
-        let custom = Text::new("No files found in ./products. Enter custom file path:").prompt();
+        clear_screen();
+        print_banner(emoji, title);
+        let custom = Text::new("No saved files found in ./products. Enter custom file path:").prompt();
         match custom {
             Ok(path) if !path.trim().is_empty() => Some(path.trim().to_string()),
             _ => None,
@@ -324,12 +324,14 @@ fn select_json_file(title: &str) -> Option<String> {
 
         match select_menu(
             || {
-                print_banner("📂", title);
+                print_banner(emoji, title);
             },
             &str_options,
         ) {
             Ok(idx) if idx < files.len() => Some(format!("{}/{}", dir_path, files[idx])),
             Ok(idx) if idx == files.len() => {
+                clear_screen();
+                print_banner(emoji, title);
                 match Text::new("Enter custom JSON file path:").prompt() {
                     Ok(p) if !p.trim().is_empty() => Some(p.trim().to_string()),
                     _ => None,
