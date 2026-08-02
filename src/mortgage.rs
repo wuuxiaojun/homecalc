@@ -326,6 +326,38 @@ impl Mortgage {
 
         summaries
     }
+
+    /// Returns the first month where scheduled monthly principal is greater than or equal to monthly interest
+    pub fn crossover_month(&self) -> Option<u32> {
+        let mut months: Vec<u32> = self.schedule.keys().copied().collect();
+        months.sort_unstable();
+
+        for m in months {
+            if let Some(payment) = self.schedule.get(&m) {
+                if payment.principal >= payment.interest {
+                    return Some(m);
+                }
+            }
+        }
+        None
+    }
+
+    /// Returns the first month where remaining balance is less than or equal to 50% of the initial loan amount
+    pub fn half_equity_month(&self) -> Option<u32> {
+        let mut months: Vec<u32> = self.schedule.keys().copied().collect();
+        months.sort_unstable();
+
+        let half_loan = self.loan / 2.0;
+
+        for m in months {
+            if let Some(payment) = self.schedule.get(&m) {
+                if payment.balance <= half_loan {
+                    return Some(m);
+                }
+            }
+        }
+        None
+    }
 }
 
 #[cfg(test)]
@@ -378,5 +410,30 @@ mod tests {
         let annual_interest_sum: f64 = summaries.iter().map(|s| s.interest_paid).sum();
         let schedule_interest_sum: f64 = mortgage.schedule.values().map(|p| p.interest).sum();
         assert!((annual_interest_sum - schedule_interest_sum).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_milestones_standard_and_accelerated() {
+        let standard = Mortgage::new(1_500_000.0, 300_000.0, 5.9, 15, 1.2, 3_600.0).unwrap();
+        let crossover_std = standard.crossover_month();
+        let half_eq_std = standard.half_equity_month();
+
+        assert!(crossover_std.is_some());
+        assert!(half_eq_std.is_some());
+
+        let mut accelerated = Mortgage::new(1_500_000.0, 300_000.0, 5.9, 15, 1.2, 3_600.0).unwrap();
+        let _ = accelerated.add_extra_payment(1, 50_000.0);
+        let _ = accelerated.add_extra_payment(12, 100_000.0);
+        let _ = accelerated.add_extra_payment(24, 200_000.0);
+
+        let crossover_acc = accelerated.crossover_month();
+        let half_eq_acc = accelerated.half_equity_month();
+
+        assert!(crossover_acc.is_some());
+        assert!(half_eq_acc.is_some());
+
+        // Extra principal payments move both milestones earlier
+        assert!(crossover_acc.unwrap() <= crossover_std.unwrap());
+        assert!(half_eq_acc.unwrap() < half_eq_std.unwrap());
     }
 }

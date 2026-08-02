@@ -1,0 +1,46 @@
+Phase 4.3 Task: Crossover Point Detection and Amortization Milestones
+
+Objective:
+Add analysis methods to src/mortgage.rs to identify key amortization milestones: the interest vs. principal crossover month (when monthly principal >= interest) and the 50% equity milestone month (when balance <= 50% of original loan). Update display.rs to highlight these metrics.
+
+Code Requirements:
+
+    Update src/mortgage.rs:
+
+    Add pub fn crossover_month(&self) -> Option inside impl Mortgage:
+
+        Iterate through sorted schedule months.
+
+        Return Some(month) for the first month where payment.principal >= payment.interest.
+
+        Return None if principal never exceeds interest (e.g. extremely short loan edge cases or high interest terms where loan finishes before crossover).
+
+    Add pub fn half_equity_month(&self) -> Option inside impl Mortgage:
+
+        Iterate through sorted schedule months.
+
+        Return Some(month) for the first month where payment.balance <= (self.loan / 2.0).
+
+        Return None if not found.
+
+    Add unit tests in src/mortgage.rs:
+
+        Verify that a standard 15-year 5.9% loan correctly finds a crossover month.
+
+        Verify that applying a large extra payment moves the crossover month and half-equity month earlier.
+
+    Update src/display.rs:
+
+    Update print_mortgage_summary (or create print_milestones_summary):
+
+        Print the Crossover Month (Month X, Year Y.Z) and Half-Equity Month alongside total metrics.
+
+    Update src/main.rs:
+
+    Run mortgage scenarios and display the crossover and half-equity milestones in the terminal output.
+
+Verification:
+
+    Run cargo test to ensure all milestone unit tests pass.
+
+    Run cargo run to verify terminal milestone outputs.

@@ -64,6 +64,18 @@ pub fn print_mortgage_summary(mortgage: &Mortgage) {
     let l7 = format!("Total Escrow Paid:${:.2}", total_escrow_paid);
     let r7 = format!("Total Housing Cost: ${:.2}", total_housing_outflow);
 
+    let crossover_str = match mortgage.crossover_month() {
+        Some(m) => format!("Month {} (Yr {:.1})", m, m as f64 / 12.0),
+        None => "N/A".to_string(),
+    };
+    let half_equity_str = match mortgage.half_equity_month() {
+        Some(m) => format!("Month {} (Yr {:.1})", m, m as f64 / 12.0),
+        None => "N/A".to_string(),
+    };
+
+    let l8 = format!("Crossover Month:  {}", crossover_str);
+    let r8 = format!("50% Equity Month:  {}", half_equity_str);
+
     let box_border = "===============================================================================================================";
     let box_divider = "---------------------------------------------------------------------------------------------------------------";
 
@@ -78,6 +90,8 @@ pub fn print_mortgage_summary(mortgage: &Mortgage) {
     println!(" {:<44} | {}", l5, r5);
     println!(" {:<44} | {}", l6, r6);
     println!(" {:<44} | {}", l7, r7);
+    println!("{}", box_divider);
+    println!(" {:<44} | {}", l8, r8);
     println!("{}", box_divider);
     println!(
         " CLOSING DAY PREPAIDS: Upfront Ins: ${:.2} | Escrow Buffer: ${:.2} | Total Prepaids: ${:.2}",

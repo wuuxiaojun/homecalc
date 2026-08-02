@@ -10,7 +10,7 @@ use display::{print_annual_summary_table, print_comparison_report, print_mortgag
 use mortgage::Mortgage;
 
 fn main() {
-    println!("🚀 Running Full Housing Engine Verification Tests (Phase 4.2)...\n");
+    println!("🚀 Running Full Housing Engine Verification Tests (Phase 4.3)...\n");
 
     // $1.5M Home, $300k Down (Loan $1.2M), 5.9% Interest, 15 Years, 1.2% Property Tax, $3,600/yr Insurance
     let price = 1_500_000.0;
@@ -53,7 +53,7 @@ fn main() {
     print_mortgage_summary(&accelerated_loan);
     print_annual_summary_table(&accelerated_loan);
 
-    println!("--- Scenario 3: Side-by-Side Comparison Analysis ---");
+    println!("--- Comparison: Side-by-Side Comparison Analysis ---");
     let report = compare_mortgages(&standard_loan, &accelerated_loan);
     print_comparison_report(
         &report,
