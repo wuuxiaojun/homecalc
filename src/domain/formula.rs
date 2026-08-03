@@ -1,4 +1,4 @@
-// src/formula.rs
+// src/domain/formula.rs
 
 /// Calculate monthly payment based on loan amount, rate (as decimal), term (in years)
 pub fn monthly_payment(loan: f64, rate: f64, term: u32) -> f64 {

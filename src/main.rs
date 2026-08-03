@@ -1,8 +1,9 @@
 // src/main.rs
 
-use mortgage::cli;
+pub mod analysis;
+pub mod domain;
+pub mod ui;
 
 fn main() {
-    cli::run_cli();
+    ui::cli::run_cli();
 }
-

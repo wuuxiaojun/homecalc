@@ -1,19 +1,8 @@
-// src/display.rs
+// src/ui/display.rs
 
-use crate::analysis::ComparisonReport;
-use crate::mortgage::Mortgage;
+use crate::analysis::comparison::ComparisonReport;
+use crate::domain::mortgage::Mortgage;
 use std::io::{self, Write};
-
-// ANSI Color & Formatting Constants (Disabled for clean unstyled text)
-pub const RESET: &str = "";
-pub const BOLD: &str = "";
-pub const DIM: &str = "";
-pub const RED: &str = "";
-pub const GREEN: &str = "";
-pub const YELLOW: &str = "";
-pub const MAGENTA: &str = "";
-pub const CYAN: &str = "";
-pub const WHITE: &str = "";
 
 // Unified table border and divider constants (127 width)
 pub const BOX_BORDER: &str = "===========================================================================================================================";
@@ -27,9 +16,9 @@ pub fn clear_screen() {
 
 /// Helper function to print standardized double-line header banners
 pub fn print_banner(emoji: &str, title: &str) {
-    println!("{}{}{}", CYAN, BOX_BORDER, RESET);
-    println!(" {} {}{}{}", emoji, BOLD, title.to_uppercase(), RESET);
-    println!("{}{}{}", CYAN, BOX_BORDER, RESET);
+    println!("{}", BOX_BORDER);
+    println!(" {} {}", emoji, title.to_uppercase());
+    println!("{}", BOX_BORDER);
 }
 
 /// Prints a high-level summary and formatted amortization schedule to the terminal.
@@ -115,48 +104,39 @@ pub fn print_mortgage_summary(mortgage: &Mortgage) {
     let r7 = format!("{:<22} {}", "Total Housing Cost:", r7_val);
     let r8 = format!("{:<22} {}", "50% Equity Month:", r8_val);
 
-    println!("\n{}{}{}", CYAN, BOX_BORDER, RESET);
-    println!(
-        " 🏠 {}{}SCENARIO: {}{}",
-        BOLD,
-        WHITE,
-        mortgage.name.to_uppercase(),
-        RESET
-    );
-    println!(
-        "    {}FULL HOUSING COST ENGINE (PITI + ESCROW SUMMARY){}",
-        DIM, RESET
-    );
-    println!("{}{}{}", CYAN, BOX_BORDER, RESET);
+    println!("\n{}", BOX_BORDER);
+    println!(" 🏠 SCENARIO: {}", mortgage.name.to_uppercase());
+    println!("    FULL HOUSING COST ENGINE (PITI + ESCROW SUMMARY)");
+    println!("{}", BOX_BORDER);
     println!(" {} | {}", l1, r1);
     println!(" {} | {}", l2, r2);
     println!(" {} | {}", l3, r3);
     println!(" {} | {}", l4, r4);
-    println!("{}{}{}", DIM, BOX_DIVIDER, RESET);
+    println!("{}", BOX_DIVIDER);
     println!(" {} | {}", l5, r5);
     println!(" {} | {}", l6, r6);
     println!(" {} | {}", l7, r7);
-    println!("{}{}{}", DIM, BOX_DIVIDER, RESET);
+    println!("{}", BOX_DIVIDER);
     println!(" {} | {}", l8, r8);
-    println!("{}{}{}", DIM, BOX_DIVIDER, RESET);
+    println!("{}", BOX_DIVIDER);
     let year1_interest = mortgage
         .annual_summaries()
         .first()
         .map(|s| s.interest_paid)
         .unwrap_or(0.0);
     let (year1_annual_savings, year1_monthly_savings) =
-        crate::formula::calculate_annual_tax_savings(mortgage.loan, year1_interest);
+        crate::domain::formula::calculate_annual_tax_savings(mortgage.loan, year1_interest);
 
     println!(
         " CLOSING DAY PREPAIDS: Upfront Ins: ${:.2} | Escrow Buffer: ${:.2} | Total Prepaids: ${:.2}",
         upfront_ins, escrow_buffer, total_prepaids
     );
-    println!("{}{}{}", DIM, BOX_DIVIDER, RESET);
+    println!("{}", BOX_DIVIDER);
     println!(
         " TAX DEDUCTION ESTIMATE: Year 1 Tax Savings: ${:.2}/yr (${:.2}/mo) [Assumes CA MFJ 24% Fed / 9.3% CA]",
         year1_annual_savings, year1_monthly_savings
     );
-    println!("{}{}{}\n\n", CYAN, BOX_BORDER, RESET);
+    println!("{}\n\n", BOX_BORDER);
 
     // Render Table Header (Unified 14-width columns)
     println!(
@@ -170,7 +150,7 @@ pub fn print_mortgage_summary(mortgage: &Mortgage) {
         "Total Outflow",
         "Balance"
     );
-    println!("{}{}{}", DIM, BOX_DIVIDER, RESET);
+    println!("{}", BOX_DIVIDER);
 
     for (&month, entry) in &mortgage.schedule {
         let is_early_month = month <= 6;
@@ -196,7 +176,7 @@ pub fn print_mortgage_summary(mortgage: &Mortgage) {
             );
         }
     }
-    println!("{}{}{}\n\n", CYAN, BOX_BORDER, RESET);
+    println!("{}\n\n", BOX_BORDER);
 }
 
 /// Prints a year-by-year annual rollup summary table to the terminal.
@@ -215,7 +195,7 @@ pub fn print_annual_summary_table(mortgage: &Mortgage) {
         "Tax Savings",
         "Net Outlay"
     );
-    println!("{}{}{}", DIM, BOX_DIVIDER, RESET);
+    println!("{}", BOX_DIVIDER);
 
     for s in &summaries {
         println!(
@@ -230,7 +210,7 @@ pub fn print_annual_summary_table(mortgage: &Mortgage) {
             s.net_effective_outlay
         );
     }
-    println!("{}{}{}\n", CYAN, BOX_BORDER, RESET);
+    println!("{}\n", BOX_BORDER);
 }
 
 /// Prints a 4-column side-by-side comparison report between Option A and Option B
@@ -246,7 +226,7 @@ pub fn print_comparison_report(report: &ComparisonReport, title_a: &str, title_b
         "{:<33} | {:<28} | {:<28} | {:<28}",
         "Financial Metric", col_a_title, col_b_title, "Delta (Option B - A)"
     );
-    println!("{}{}{}", DIM, BOX_DIVIDER, RESET);
+    println!("{}", BOX_DIVIDER);
 
     // Section 1: Upfront Cash Needed
     println!(" --- 1. UPFRONT CASH NEEDED ---");
@@ -272,7 +252,7 @@ pub fn print_comparison_report(report: &ComparisonReport, title_a: &str, title_b
         report.option_b.total_cash_to_close,
         delta_cash_fmt
     );
-    println!("{}{}{}", DIM, BOX_DIVIDER, RESET);
+    println!("{}", BOX_DIVIDER);
 
     // Section 2: Monthly Cash Outflow
     println!(" --- 2. MONTHLY CASH OUTFLOW ---");
@@ -298,7 +278,7 @@ pub fn print_comparison_report(report: &ComparisonReport, title_a: &str, title_b
         report.option_b.monthly_piti,
         delta_piti_fmt
     );
-    println!("{}{}{}", DIM, BOX_DIVIDER, RESET);
+    println!("{}", BOX_DIVIDER);
 
     // Section 3: Loan Timeline & Equity
     println!(" --- 3. LOAN TIMELINE & EQUITY ---");
@@ -340,7 +320,7 @@ pub fn print_comparison_report(report: &ComparisonReport, title_a: &str, title_b
         report.option_b.equity_at_5_years,
         delta_eq_fmt
     );
-    println!("{}{}{}", DIM, BOX_DIVIDER, RESET);
+    println!("{}", BOX_DIVIDER);
 
     // Section 4: Lifetime Financial Cost
     println!(" --- 4. LIFETIME FINANCIAL COST ---");
@@ -360,7 +340,7 @@ pub fn print_comparison_report(report: &ComparisonReport, title_a: &str, title_b
         report.option_b.total_lifetime_outflow,
         delta_outflow_fmt
     );
-    println!("{}{}{}\n", CYAN, BOX_BORDER, RESET);
+    println!("{}\n", BOX_BORDER);
 }
 
 fn format_delta_currency(delta: f64) -> String {

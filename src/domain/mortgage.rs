@@ -1,21 +1,10 @@
-// src/mortgage.rs
+// src/domain/mortgage.rs
 
-use crate::formula::monthly_payment;
+use crate::domain::formula::monthly_payment;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::fs::{self, File};
 use std::io::BufReader;
-
-// Enum to check parameter input error
-#[derive(Debug, Clone, PartialEq)]
-pub enum InputError {
-    InvalidPrice(String),
-    InvalidDown(String),
-    InvalidRate(String),
-    InvalidTerm(String),
-    InvalidTaxRate(String),
-    InvalidInsurance(String),
-}
 
 // Payment struct representing a single month's breakdown
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -70,48 +59,36 @@ impl Mortgage {
         term: u32,
         tax_rate: f64,
         annual_insurance: f64,
-    ) -> Result<Self, InputError> {
+    ) -> Result<Self, String> {
         // Check Home Price
         if price <= 0.0 || price.is_nan() || price.is_infinite() {
-            return Err(InputError::InvalidPrice(
-                "Price must be greater than 0.".to_string(),
-            ));
+            return Err("Price must be greater than 0.".to_string());
         }
         // Check Down Payment
         if down < 0.0 || down.is_nan() || down.is_infinite() {
-            return Err(InputError::InvalidDown(
-                "Down payment cannot be negative.".to_string(),
-            ));
+            return Err("Down payment cannot be negative.".to_string());
         }
         if down > price {
-            return Err(InputError::InvalidDown(format!(
+            return Err(format!(
                 "Down payment (${:.2}) cannot exceed home price (${:.2}).",
                 down, price
-            )));
+            ));
         }
         // Check Interest Rate
         if !(0.0..=100.0).contains(&rate) {
-            return Err(InputError::InvalidRate(
-                "Interest rate must be between 0% and 100%.".to_string(),
-            ));
+            return Err("Interest rate must be between 0% and 100%.".to_string());
         }
         // Check Loan Term
         if !(1..=30).contains(&term) {
-            return Err(InputError::InvalidTerm(
-                "Loan term must be between 1 and 30 years.".to_string(),
-            ));
+            return Err("Loan term must be between 1 and 30 years.".to_string());
         }
         // Check Tax Rate
         if !(0.0..=20.0).contains(&tax_rate) {
-            return Err(InputError::InvalidTaxRate(
-                "Property tax rate must be between 0% and 20%.".to_string(),
-            ));
+            return Err("Property tax rate must be between 0% and 20%.".to_string());
         }
         // Check Annual Insurance
         if annual_insurance < 0.0 || annual_insurance.is_nan() || annual_insurance.is_infinite() {
-            return Err(InputError::InvalidInsurance(
-                "Annual insurance cannot be negative.".to_string(),
-            ));
+            return Err("Annual insurance cannot be negative.".to_string());
         }
 
         let mut mortgage = Mortgage {
@@ -279,7 +256,7 @@ impl Mortgage {
 
             if current_year != year {
                 if current_year != 0 {
-                    let (tax_savings, _) = crate::formula::calculate_annual_tax_savings(self.loan, interest_paid);
+                    let (tax_savings, _) = crate::domain::formula::calculate_annual_tax_savings(self.loan, interest_paid);
                     let net_effective_outlay = total_outflow - tax_savings;
 
                     summaries.push(AnnualSummary {
@@ -310,7 +287,7 @@ impl Mortgage {
             year_end_balance = payment.balance;
 
             if idx == total_entries - 1 {
-                let (tax_savings, _) = crate::formula::calculate_annual_tax_savings(self.loan, interest_paid);
+                let (tax_savings, _) = crate::domain::formula::calculate_annual_tax_savings(self.loan, interest_paid);
                 let net_effective_outlay = total_outflow - tax_savings;
 
                 summaries.push(AnnualSummary {

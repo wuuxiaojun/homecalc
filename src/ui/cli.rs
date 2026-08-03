@@ -1,8 +1,10 @@
-// src/cli.rs
+// src/ui/cli.rs
 
-use crate::analysis::compare_mortgages;
-use crate::display::{clear_screen, print_annual_summary_table, print_banner, print_comparison_report, print_mortgage_summary};
-use crate::mortgage::Mortgage;
+use crate::analysis::comparison::compare_mortgages;
+use crate::domain::mortgage::Mortgage;
+use crate::ui::display::{
+    clear_screen, print_annual_summary_table, print_banner, print_comparison_report, print_mortgage_summary,
+};
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use inquire::validator::Validation;
@@ -222,7 +224,7 @@ fn handle_new_mortgage(main_status: &mut Option<String>) {
                 active_mortgage_menu(mortgage);
             }
             Err(e) => {
-                *main_status = Some(format!("❌ Error creating mortgage: {:?}", e));
+                *main_status = Some(format!("❌ Error creating mortgage: {}", e));
             }
         }
     }
