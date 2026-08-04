@@ -227,6 +227,31 @@ impl LocEngine {
             end_balance,
         }
     }
+
+    /// Saves the current `LocEngine` scenario configuration to a JSON file on disk.
+    pub fn save_to_json(&self, dir_path: &str, filename: &str) -> Result<String, Box<dyn std::error::Error>> {
+        std::fs::create_dir_all(dir_path)?;
+
+        let clean_filename = if filename.to_lowercase().ends_with(".json") {
+            filename.to_string()
+        } else {
+            format!("{}.json", filename)
+        };
+
+        let file_path = std::path::Path::new(dir_path).join(clean_filename);
+        let json_data = serde_json::to_string_pretty(self)?;
+        std::fs::write(&file_path, json_data)?;
+
+        Ok(file_path.to_string_lossy().to_string())
+    }
+
+    /// Loads a `LocEngine` scenario configuration from a JSON file on disk.
+    pub fn load_from_json(filepath: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        let content = std::fs::read_to_string(filepath)?;
+        let mut engine: LocEngine = serde_json::from_str(&content)?;
+        engine.recalculate();
+        Ok(engine)
+    }
 }
 
 #[cfg(test)]
@@ -339,8 +364,6 @@ mod tests {
         engine.set_recurring_extra_payment(100_000.0);
 
         let annual = engine.annual_summaries();
-        // Month 1 to 5 (Aug 2026 - Dec 2026) -> Year 2026 (5 months)
-        // Month 6 to 15 (Jan 2027 - Oct 2027) -> Year 2027 (10 months)
         assert_eq!(annual.len(), 2);
         assert_eq!(annual[0].year_label, "2026");
         assert_eq!(annual[0].start_balance, 1_500_000.0);
@@ -349,5 +372,24 @@ mod tests {
         assert_eq!(annual[1].year_label, "2027");
         assert_eq!(annual[1].start_balance, 1_000_000.0);
         assert_eq!(annual[1].end_balance, 0.0);
+    }
+
+    #[test]
+    fn test_json_save_and_load() {
+        let start_date = NaiveDate::from_ymd_opt(2026, 1, 27).unwrap();
+        let mut engine = LocEngine::new("JSON Test Scenario", start_date, 1_500_000.0, 6.0, 1.2, 3600.0).unwrap();
+        engine.add_extra_payment(3, 50_000.0);
+
+        let temp_dir = std::env::temp_dir().join("sbloc_test_persistence");
+        let path_str = engine.save_to_json(&temp_dir.to_string_lossy(), "test_sbloc").unwrap();
+
+        let loaded = LocEngine::load_from_json(&path_str).unwrap();
+        assert_eq!(loaded.name, engine.name);
+        assert_eq!(loaded.initial_draw, engine.initial_draw);
+        assert_eq!(loaded.extra_payments, engine.extra_payments);
+        assert_eq!(loaded.schedule.len(), engine.schedule.len());
+
+        let _ = std::fs::remove_file(path_str);
+        let _ = std::fs::remove_dir(temp_dir);
     }
 }
