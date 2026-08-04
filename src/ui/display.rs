@@ -25,6 +25,32 @@ fn format_currency(val: f64) -> String {
     }
 }
 
+fn format_delta_currency(val: f64) -> String {
+    if val > 0.0 {
+        format!("+{}", format_currency(val))
+    } else if val < 0.0 {
+        format_currency(val)
+    } else {
+        "$0.00".to_string()
+    }
+}
+
+fn format_delta_pct(val: f64) -> String {
+    if val > 0.0 {
+        format!("+{:.2}%", val)
+    } else {
+        format!("{:.2}%", val)
+    }
+}
+
+fn format_delta_count(val: i64) -> String {
+    if val > 0 {
+        format!("+{}", val)
+    } else {
+        val.to_string()
+    }
+}
+
 /// Renders a boxed title banner with an emoji prefix.
 pub fn print_banner(emoji: &str, title: &str) {
     println!("{}", BOX_BORDER);
@@ -190,6 +216,131 @@ pub fn print_annual_summary_table(engine: &LocEngine) {
         format_currency(total_extra),
         format_currency(total_outflow),
         ""
+    );
+    println!("{}", BOX_BORDER);
+}
+
+/// Renders a 4-column side-by-side comparison table between two SBLOC scenarios.
+/// Strictly divided into 3 financial sections.
+pub fn print_loc_comparison_report(
+    report: &crate::analysis::comparison::LocComparisonReport,
+    title_a: &str,
+    title_b: &str,
+) {
+    print_banner("⚖️", "SBLOC SCENARIO COMPARISON REPORT");
+
+    let a = &report.option_a;
+    let b = &report.option_b;
+
+    let title_a_fmt = if title_a.len() > 25 {
+        format!("{}...", &title_a[..22])
+    } else {
+        title_a.to_string()
+    };
+
+    let title_b_fmt = if title_b.len() > 25 {
+        format!("{}...", &title_b[..22])
+    } else {
+        title_b.to_string()
+    };
+
+    println!(
+        "| {:^36} | {:^25} | {:^25} | {:^25} |",
+        "Financial Metric", title_a_fmt, title_b_fmt, "Delta (Option B - A)"
+    );
+    println!("{}", BOX_BORDER);
+
+    // --- SECTION 1: BASELINE TERMS ---
+    println!(
+        "| {:^120} |",
+        "--- SECTION 1: BASELINE TERMS ---"
+    );
+    println!("{}", BOX_DIVIDER);
+    println!(
+        "| {:36} | {:>25} | {:>25} | {:>25} |",
+        "Initial Draw ($)",
+        format_currency(a.initial_draw),
+        format_currency(b.initial_draw),
+        format_delta_currency(b.initial_draw - a.initial_draw)
+    );
+    println!(
+        "| {:36} | {:>25} | {:>25} | {:>25} |",
+        "Interest Rate (%)",
+        format!("{:.2}%", a.annual_rate),
+        format!("{:.2}%", b.annual_rate),
+        format_delta_pct(b.annual_rate - a.annual_rate)
+    );
+    println!(
+        "| {:36} | {:>25} | {:>25} | {:>25} |",
+        "Annual Property Tax & Insurance ($)",
+        format_currency(a.annual_tax_and_insurance),
+        format_currency(b.annual_tax_and_insurance),
+        format_delta_currency(b.annual_tax_and_insurance - a.annual_tax_and_insurance)
+    );
+    println!("{}", BOX_BORDER);
+
+    // --- SECTION 2: LUMP-SUM REPAYMENTS ---
+    println!(
+        "| {:^120} |",
+        "--- SECTION 2: LUMP-SUM REPAYMENTS ---"
+    );
+    println!("{}", BOX_DIVIDER);
+    println!(
+        "| {:36} | {:>25} | {:>25} | {:>25} |",
+        "Total Extra Lump-Sums Paid ($)",
+        format_currency(a.total_lump_sum_paid),
+        format_currency(b.total_lump_sum_paid),
+        format_delta_currency(report.delta_lump_sum_paid)
+    );
+    println!(
+        "| {:36} | {:>25} | {:>25} | {:>25} |",
+        "Number of Lump-Sum Payment Events",
+        a.lump_sum_event_count,
+        b.lump_sum_event_count,
+        format_delta_count(b.lump_sum_event_count as i64 - a.lump_sum_event_count as i64)
+    );
+    println!("{}", BOX_BORDER);
+
+    // --- SECTION 3: LIFETIME FINANCIAL COSTS ---
+    println!(
+        "| {:^120} |",
+        "--- SECTION 3: LIFETIME FINANCIAL COSTS ---"
+    );
+    println!("{}", BOX_DIVIDER);
+    println!(
+        "| {:36} | {:>25} | {:>25} | {:>25} |",
+        "Total Billed Interest ($)",
+        format_currency(a.total_interest_paid),
+        format_currency(b.total_interest_paid),
+        format_delta_currency(report.delta_total_interest)
+    );
+    println!(
+        "| {:36} | {:>25} | {:>25} | {:>25} |",
+        "Total Tax & Insurance Paid ($)",
+        format_currency(a.total_tax_and_insurance_paid),
+        format_currency(b.total_tax_and_insurance_paid),
+        format_delta_currency(b.total_tax_and_insurance_paid - a.total_tax_and_insurance_paid)
+    );
+    println!(
+        "| {:36} | {:>25} | {:>25} | {:>25} |",
+        "Total Lifetime Cash Outflow ($)",
+        format_currency(a.total_lifetime_outflow),
+        format_currency(b.total_lifetime_outflow),
+        format_delta_currency(report.delta_lifetime_outflow)
+    );
+    println!(
+        "| {:36} | {:>25} | {:>25} | {:>25} |",
+        "Year 5 Balance ($)",
+        format_currency(a.balance_at_year_5),
+        format_currency(b.balance_at_year_5),
+        format_delta_currency(report.delta_year5_balance)
+    );
+    println!(
+        "| {:36} | {:>25} | {:>25} | {:>25} |",
+        "Year 5 Equity Built ($)",
+        format_currency(a.equity_at_year_5),
+        format_currency(b.equity_at_year_5),
+        format_delta_currency(report.delta_year5_equity)
     );
     println!("{}", BOX_BORDER);
 }

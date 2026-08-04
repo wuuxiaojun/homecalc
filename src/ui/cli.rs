@@ -11,11 +11,12 @@ use inquire::{CustomType, Text};
 
 use crate::domain::loc::LocEngine;
 use crate::ui::display::{
-    print_annual_summary_table, print_banner, print_loc_summary, print_monthly_statement_table,
+    print_annual_summary_table, print_banner, print_loc_comparison_report, print_loc_summary,
+    print_monthly_statement_table,
 };
 use crate::ui::terminal::{clear_screen, BOX_BORDER};
 
-/// Renders a interactive menu with keyboard (Up/Down arrow, 1-9 digits, Enter) navigation.
+/// Renders an interactive menu with keyboard (Up/Down arrow, 1-9 digits, Enter) navigation.
 pub fn select_menu<F>(render_header: F, options: &[&str]) -> Result<usize, io::Error>
 where
     F: Fn(),
@@ -225,6 +226,107 @@ fn handle_load_sbloc(main_status: &mut Option<String>) {
     }
 }
 
+/// Handles comparing 2 saved SBLOC scenarios from `./products`.
+fn handle_compare_loc_scenarios(main_status: &mut Option<String>) {
+    let products_dir = Path::new("./products");
+    if !products_dir.exists() {
+        *main_status = Some("No ./products directory found. Save at least 2 scenarios first.".to_string());
+        return;
+    }
+
+    let entries = match fs::read_dir(products_dir) {
+        Ok(read_dir) => read_dir,
+        Err(e) => {
+            *main_status = Some(format!("Failed to read ./products: {}", e));
+            return;
+        }
+    };
+
+    let mut json_files = Vec::new();
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("json") {
+            json_files.push(path);
+        }
+    }
+
+    json_files.sort();
+
+    if json_files.len() < 2 {
+        *main_status = Some(format!(
+            "At least 2 saved scenarios (.json) are required in ./products for comparison (found {}).",
+            json_files.len()
+        ));
+        return;
+    }
+
+    let options_a: Vec<String> = json_files
+        .iter()
+        .map(|p| p.file_name().unwrap_or_default().to_string_lossy().to_string())
+        .collect();
+    let option_a_strs: Vec<&str> = options_a.iter().map(|s| s.as_str()).collect();
+
+    let render_header_a = || {
+        print_banner("⚖️", "SELECT OPTION A (BASELINE SCENARIO)");
+    };
+
+    let idx_a = match select_menu(render_header_a, &option_a_strs) {
+        Ok(idx) => idx,
+        Err(_) => return,
+    };
+
+    let file_a = &json_files[idx_a];
+    let engine_a = match LocEngine::load_from_json(&file_a.to_string_lossy()) {
+        Ok(eng) => eng,
+        Err(e) => {
+            *main_status = Some(format!("Failed to load Option A: {}", e));
+            return;
+        }
+    };
+
+    let remaining_files: Vec<&std::path::PathBuf> = json_files.iter().filter(|f| *f != file_a).collect();
+    let options_b: Vec<String> = remaining_files
+        .iter()
+        .map(|p| p.file_name().unwrap_or_default().to_string_lossy().to_string())
+        .collect();
+    let option_b_strs: Vec<&str> = options_b.iter().map(|s| s.as_str()).collect();
+
+    let render_header_b = || {
+        print_banner("⚖️", "SELECT OPTION B (COMPARISON SCENARIO)");
+    };
+
+    let idx_b = match select_menu(render_header_b, &option_b_strs) {
+        Ok(idx) => idx,
+        Err(_) => return,
+    };
+
+    let file_b = remaining_files[idx_b];
+    let engine_b = match LocEngine::load_from_json(&file_b.to_string_lossy()) {
+        Ok(eng) => eng,
+        Err(e) => {
+            *main_status = Some(format!("Failed to load Option B: {}", e));
+            return;
+        }
+    };
+
+    let report = crate::analysis::comparison::compare_loc_scenarios(&engine_a, &engine_b);
+
+    loop {
+        let report_ref = &report;
+        let title_a_ref = &engine_a.name;
+        let title_b_ref = &engine_b.name;
+
+        let render_report = move || {
+            print_loc_comparison_report(report_ref, title_a_ref, title_b_ref);
+        };
+
+        let options = ["Back to Main Menu"];
+        if let Ok(_) = select_menu(render_report, &options) {
+            break;
+        }
+    }
+}
+
 /// Active interactive menu loop for managing a specific `LocEngine` scenario.
 fn active_sbloc_menu(mut engine: LocEngine) {
     let mut status_msg: Option<String> = None;
@@ -355,6 +457,7 @@ pub fn run_cli() {
         let options = [
             "Start New SBLOC Scenario",
             "Load Saved SBLOC Scenario from ./products",
+            "Compare 2 LOC Scenarios",
             "Exit",
         ];
 
@@ -367,7 +470,11 @@ pub fn run_cli() {
                 main_status = None;
                 handle_load_sbloc(&mut main_status);
             }
-            Ok(2) | Err(_) => {
+            Ok(2) => {
+                main_status = None;
+                handle_compare_loc_scenarios(&mut main_status);
+            }
+            Ok(3) | Err(_) => {
                 clear_screen();
                 println!("Thank you for using SBLOC Housing Calculator. Goodbye!");
                 break;
