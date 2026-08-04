@@ -10,15 +10,28 @@ pub struct LocMonthlyStatement {
     pub month_index: u32,
     pub date_label: String,
     pub start_balance: f64,
-    pub extra_principal_paid: f64,
     pub interest_billed: f64,
+    pub tax_and_insurance: f64,
     pub monthly_property_tax: f64,
     pub monthly_insurance: f64,
+    pub extra_principal_paid: f64,
     pub total_outflow: f64,
     pub end_balance: f64,
 }
 
-/// SBLOC Housing Engine simulating Day 0 draw, monthly simple interest, escrow, and principal payments.
+/// Annual summary rollup aggregating monthly statements for a calendar year.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct LocAnnualSummary {
+    pub year_label: String,
+    pub start_balance: f64,
+    pub total_interest_paid: f64,
+    pub total_tax_and_insurance_paid: f64,
+    pub total_extra_principal_paid: f64,
+    pub total_outflow: f64,
+    pub end_balance: f64,
+}
+
+/// SBLOC Housing Engine simulating Day 0 draw, monthly simple interest, tax + insurance, and principal payments.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LocEngine {
     pub name: String,
@@ -33,7 +46,7 @@ pub struct LocEngine {
 }
 
 impl LocEngine {
-    /// Creates a new `LocEngine` instance and calculates the initial amortization/statement schedule.
+    /// Creates a new `LocEngine` instance and calculates the initial statement schedule.
     pub fn new(
         name: impl Into<String>,
         start_date: NaiveDate,
@@ -122,23 +135,25 @@ impl LocEngine {
             let daily_rate = formula::daily_interest_rate(self.annual_rate);
             let interest_billed = balance_after_extra * daily_rate * (days_in_month as f64);
 
-            // 5. Calculate monthly escrow
+            // 5. Calculate monthly property tax & insurance
             let monthly_property_tax = (self.initial_draw * (self.property_tax_rate / 100.0)) / 12.0;
             let monthly_insurance = self.annual_insurance / 12.0;
+            let tax_and_insurance = monthly_property_tax + monthly_insurance;
 
             // 6. Record total outflow
             let total_outflow =
-                interest_billed + monthly_property_tax + monthly_insurance + extra_principal_paid;
+                interest_billed + tax_and_insurance + extra_principal_paid;
 
             // 7. Push statement
             self.schedule.push(LocMonthlyStatement {
                 month_index,
                 date_label,
                 start_balance,
-                extra_principal_paid,
                 interest_billed,
+                tax_and_insurance,
                 monthly_property_tax,
                 monthly_insurance,
+                extra_principal_paid,
                 total_outflow,
                 end_balance: balance_after_extra,
             });
@@ -150,6 +165,66 @@ impl LocEngine {
             }
 
             month_index += 1;
+        }
+    }
+
+    /// Aggregates monthly statements into annual summaries grouped by calendar year.
+    pub fn annual_summaries(&self) -> Vec<LocAnnualSummary> {
+        let mut summaries = Vec::new();
+        if self.schedule.is_empty() {
+            return summaries;
+        }
+
+        let mut current_year: Option<String> = None;
+        let mut current_statements: Vec<&LocMonthlyStatement> = Vec::new();
+
+        for stmt in &self.schedule {
+            let year = stmt
+                .date_label
+                .split_whitespace()
+                .last()
+                .unwrap_or("Unknown")
+                .to_string();
+
+            if let Some(ref cy) = current_year {
+                if cy != &year {
+                    summaries.push(Self::build_annual_summary(cy, &current_statements));
+                    current_year = Some(year);
+                    current_statements = vec![stmt];
+                } else {
+                    current_statements.push(stmt);
+                }
+            } else {
+                current_year = Some(year);
+                current_statements.push(stmt);
+            }
+        }
+
+        if let Some(cy) = current_year {
+            if !current_statements.is_empty() {
+                summaries.push(Self::build_annual_summary(&cy, &current_statements));
+            }
+        }
+
+        summaries
+    }
+
+    fn build_annual_summary(year_label: &str, stmts: &[&LocMonthlyStatement]) -> LocAnnualSummary {
+        let start_balance = stmts.first().map(|s| s.start_balance).unwrap_or(0.0);
+        let end_balance = stmts.last().map(|s| s.end_balance).unwrap_or(0.0);
+        let total_interest_paid = stmts.iter().map(|s| s.interest_billed).sum();
+        let total_tax_and_insurance_paid = stmts.iter().map(|s| s.tax_and_insurance).sum();
+        let total_extra_principal_paid = stmts.iter().map(|s| s.extra_principal_paid).sum();
+        let total_outflow = stmts.iter().map(|s| s.total_outflow).sum();
+
+        LocAnnualSummary {
+            year_label: year_label.to_string(),
+            start_balance,
+            total_interest_paid,
+            total_tax_and_insurance_paid,
+            total_extra_principal_paid,
+            total_outflow,
+            end_balance,
         }
     }
 }
@@ -182,11 +257,10 @@ mod tests {
             stmt1.interest_billed
         );
 
-        // Escrow checks
+        // Tax & Insurance checks
         let expected_tax = (1_500_000.0 * 0.012) / 12.0; // 1500.0
         let expected_insurance = 3600.0 / 12.0; // 300.0
-        assert_eq!(stmt1.monthly_property_tax, expected_tax);
-        assert_eq!(stmt1.monthly_insurance, expected_insurance);
+        assert_eq!(stmt1.tax_and_insurance, expected_tax + expected_insurance);
         assert_eq!(
             stmt1.total_outflow,
             stmt1.interest_billed + expected_tax + expected_insurance
@@ -248,5 +322,32 @@ mod tests {
             assert_eq!(stmt.start_balance, expected_start);
             assert_eq!(stmt.end_balance, expected_end);
         }
+    }
+
+    #[test]
+    fn test_annual_summaries_grouping() {
+        let start_date = NaiveDate::from_ymd_opt(2026, 8, 1).unwrap();
+        let mut engine = LocEngine::new(
+            "Annual Summary Test",
+            start_date,
+            1_500_000.0,
+            6.0,
+            1.2,
+            3600.0,
+        )
+        .unwrap();
+        engine.set_recurring_extra_payment(100_000.0);
+
+        let annual = engine.annual_summaries();
+        // Month 1 to 5 (Aug 2026 - Dec 2026) -> Year 2026 (5 months)
+        // Month 6 to 15 (Jan 2027 - Oct 2027) -> Year 2027 (10 months)
+        assert_eq!(annual.len(), 2);
+        assert_eq!(annual[0].year_label, "2026");
+        assert_eq!(annual[0].start_balance, 1_500_000.0);
+        assert_eq!(annual[0].end_balance, 1_000_000.0);
+
+        assert_eq!(annual[1].year_label, "2027");
+        assert_eq!(annual[1].start_balance, 1_000_000.0);
+        assert_eq!(annual[1].end_balance, 0.0);
     }
 }
