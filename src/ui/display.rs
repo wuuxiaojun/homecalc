@@ -28,7 +28,7 @@ fn format_currency(val: f64) -> String {
 /// Renders a boxed title banner with an emoji prefix.
 pub fn print_banner(emoji: &str, title: &str) {
     println!("{}", BOX_BORDER);
-    println!("{} {}", emoji, title.to_uppercase());
+    println!("|  {} {:<116} |", emoji, title.to_uppercase());
     println!("{}", BOX_BORDER);
 }
 
@@ -64,35 +64,35 @@ pub fn print_loc_summary(engine: &LocEngine) {
     let total_interest_str = format_currency(total_projected_interest);
 
     println!(
-        "  {:24} {:>16}  │  {:26} {:>16}",
+        "| {:26} {:>31} | {:26} {:>32} |",
         "Initial Draw:", initial_draw_str, "Interest Rate:", annual_rate_str
     );
     println!(
-        "  {:24} {:>16}  │  {:26} {:>16}",
+        "| {:26} {:>31} | {:26} {:>32} |",
         "Current Balance:", current_balance_str, "Property Tax Rate:", property_tax_rate_str
     );
     println!(
-        "  {:24} {:>16}  │  {:26} {:>16}",
+        "| {:26} {:>31} | {:26} {:>32} |",
         "Start Date:", start_date_str, "Annual Insurance:", annual_insurance_str
     );
     println!(
-        "  {:24} {:>16}  │  {:26} {:>16}",
+        "| {:26} {:>31} | {:26} {:>32} |",
         "Monthly Interest Charge:", monthly_interest_str, "Monthly Tax + Insurance:", monthly_tax_and_ins_str
     );
     println!(
-        "  {:24} {:>16}  │  {:26} {:>16}",
+        "| {:26} {:>31} | {:26} {:>32} |",
         "", "", "Total Projected Interest:", total_interest_str
     );
-    println!("{}", BOX_DIVIDER);
+    println!("{}", BOX_BORDER);
 }
 
 /// Displays the month-by-month statement table with middle truncation for long schedules.
 pub fn print_monthly_statement_table(engine: &LocEngine) {
     println!("{}", BOX_BORDER);
-    println!("📅 MONTHLY STATEMENT SCHEDULE");
+    println!("|  📅 {:<115} |", "MONTHLY STATEMENT SCHEDULE");
     println!("{}", BOX_BORDER);
     println!(
-        "| {:^14} | {:^16} | {:^16} | {:^14} | {:^17} | {:^16} | {:^16} |",
+        "| {:^15} | {:^16} | {:^16} | {:^14} | {:^17} | {:^16} | {:^16} |",
         "Month",
         "Start Balance",
         "Interest Billed",
@@ -112,7 +112,7 @@ pub fn print_monthly_statement_table(engine: &LocEngine) {
 
         // Print truncation row
         println!(
-            "| {:^14} | {:^16} | {:^16} | {:^14} | {:^17} | {:^16} | {:^16} |",
+            "| {:^15} | {:^16} | {:^16} | {:^14} | {:^17} | {:^16} | {:^16} |",
             "...", "...", "...", "...", "...", "...", "..."
         );
 
@@ -126,13 +126,13 @@ pub fn print_monthly_statement_table(engine: &LocEngine) {
         }
     }
 
-    println!("{}", BOX_DIVIDER);
+    println!("{}", BOX_BORDER);
 }
 
 fn print_monthly_statement_row(stmt: &crate::domain::loc::LocMonthlyStatement) {
     let month_str = format!("{} (#{})", stmt.date_label, stmt.month_index);
     println!(
-        "| {:^14} | {:>16} | {:>16} | {:>14} | {:>17} | {:>16} | {:>16} |",
+        "| {:^15} | {:>16} | {:>16} | {:>14} | {:>17} | {:>16} | {:>16} |",
         month_str,
         format_currency(stmt.start_balance),
         format_currency(stmt.interest_billed),
@@ -148,10 +148,10 @@ pub fn print_annual_summary_table(engine: &LocEngine) {
     let summaries = engine.annual_summaries();
 
     println!("{}", BOX_BORDER);
-    println!("📊 ANNUAL ROLLUP SUMMARY");
+    println!("|  📊 {:<115} |", "ANNUAL ROLLUP SUMMARY");
     println!("{}", BOX_BORDER);
     println!(
-        "| {:^14} | {:^16} | {:^16} | {:^14} | {:^17} | {:^16} | {:^16} |",
+        "| {:^15} | {:^16} | {:^16} | {:^14} | {:^17} | {:^16} | {:^16} |",
         "Year",
         "Start Balance",
         "Interest Billed",
@@ -164,7 +164,7 @@ pub fn print_annual_summary_table(engine: &LocEngine) {
 
     for summary in &summaries {
         println!(
-            "| {:^14} | {:>16} | {:>16} | {:>14} | {:>17} | {:>16} | {:>16} |",
+            "| {:^15} | {:>16} | {:>16} | {:>14} | {:>17} | {:>16} | {:>16} |",
             summary.year_label,
             format_currency(summary.start_balance),
             format_currency(summary.total_interest_paid),
@@ -182,7 +182,7 @@ pub fn print_annual_summary_table(engine: &LocEngine) {
 
     println!("{}", BOX_DIVIDER);
     println!(
-        "| {:^14} | {:^16} | {:>16} | {:>14} | {:>17} | {:>16} | {:^16} |",
+        "| {:^15} | {:^16} | {:>16} | {:>14} | {:>17} | {:>16} | {:^16} |",
         "TOTAL",
         "",
         format_currency(total_interest),
