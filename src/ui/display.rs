@@ -10,7 +10,7 @@ pub const BOX_DIVIDER: &str = "-------------------------------------------------
 
 /// Clears the terminal screen buffer cleanly
 pub fn clear_screen() {
-    print!("\x1B[2J\x1B[1;1H");
+    print!("\x1B[3J\x1B[2J\x1B[1;1H");
     let _ = io::stdout().flush();
 }
 

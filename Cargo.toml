@@ -3,6 +3,10 @@ name = "mortgage"
 version = "1.1.0"
 edition = "2024"
 
+[lib]
+name = "mortgage"
+path = "src/lib.rs"
+
 [dependencies]
 inquire = "0.7"
 serde = { version = "1.0", features = ["derive"] }
