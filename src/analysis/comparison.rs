@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use crate::domain::loc::LocEngine;
 
-/// Metrics extracted from an SBLOC Engine scenario for comparison analysis.
+/// Metrics extracted from an LOC Engine scenario for comparison analysis.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LocMetrics {
     pub initial_draw: f64,
@@ -16,7 +16,7 @@ pub struct LocMetrics {
     pub equity_at_year_5: f64,
 }
 
-/// Comparison report between two SBLOC scenarios (Option B minus Option A).
+/// Comparison report between two LOC scenarios (Option B minus Option A).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LocComparisonReport {
     pub option_a: LocMetrics,
@@ -71,7 +71,7 @@ pub fn extract_loc_metrics(engine: &LocEngine) -> LocMetrics {
     }
 }
 
-/// Compares two SBLOC scenario engines and computes delta metrics (Option B - Option A).
+/// Compares two LOC scenario engines and computes delta metrics (Option B - Option A).
 pub fn compare_loc_scenarios(option_a: &LocEngine, option_b: &LocEngine) -> LocComparisonReport {
     let a_metrics = extract_loc_metrics(option_a);
     let b_metrics = extract_loc_metrics(option_b);
@@ -143,7 +143,7 @@ mod tests {
     #[test]
     fn test_extract_loc_metrics() {
         let start_date = NaiveDate::from_ymd_opt(2026, 1, 1).unwrap();
-        let engine = LocEngine::new("Test SBLOC", start_date, 1_000_000.0, 5.0, 1.0, 2400.0).unwrap();
+        let engine = LocEngine::new("Test LOC", start_date, 1_000_000.0, 5.0, 1.0, 2400.0).unwrap();
         let metrics = extract_loc_metrics(&engine);
 
         assert_eq!(metrics.initial_draw, 1_000_000.0);

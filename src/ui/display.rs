@@ -58,9 +58,9 @@ pub fn print_banner(emoji: &str, title: &str) {
     println!("{}", BOX_BORDER);
 }
 
-/// Displays a 2-column top summary card for the SBLOC line of credit setup.
+/// Displays a 2-column top summary card for the LOC line of credit setup.
 pub fn print_loc_summary(engine: &LocEngine) {
-    print_banner("🏡", &format!("SBLOC HOUSING CALCULATOR SUMMARY - {}", engine.name));
+    print_banner("🏡", &format!("LOC HOUSING CALCULATOR SUMMARY - {}", engine.name));
 
     let initial_draw_str = format_currency(engine.initial_draw);
     let current_balance = engine
@@ -219,14 +219,14 @@ pub fn print_annual_summary_table(engine: &LocEngine) {
     println!("{}", BOX_BORDER);
 }
 
-/// Renders a 4-column side-by-side comparison table between two SBLOC scenarios.
+/// Renders a 4-column side-by-side comparison table between two LOC scenarios.
 /// Strictly divided into 3 financial sections.
 pub fn print_loc_comparison_report(
     report: &crate::analysis::comparison::LocComparisonReport,
     title_a: &str,
     title_b: &str,
 ) {
-    print_banner("⚖️", "SBLOC SCENARIO COMPARISON REPORT");
+    print_banner("⚖️", "LOC SCENARIO COMPARISON REPORT");
 
     let a = &report.option_a;
     let b = &report.option_b;

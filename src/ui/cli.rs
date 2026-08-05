@@ -80,14 +80,14 @@ where
     }
 }
 
-/// Prompts the user interactively for SBLOC parameters using `inquire`.
-fn prompt_sbloc_params() -> Option<(String, f64, f64, f64, f64, NaiveDate)> {
+/// Prompts the user interactively for LOC parameters using `inquire`.
+fn prompt_loc_params() -> Option<(String, f64, f64, f64, f64, NaiveDate)> {
     clear_screen();
-    print_banner("📝", "NEW SBLOC SCENARIO PARAMETERS");
+    print_banner("📝", "NEW LOC SCENARIO PARAMETERS");
     println!();
 
     let name = match Text::new("Scenario Name:")
-        .with_default("Primary SBLOC Home Loan")
+        .with_default("Primary LOC Home Loan")
         .prompt()
     {
         Ok(val) => val,
@@ -153,22 +153,22 @@ fn prompt_sbloc_params() -> Option<(String, f64, f64, f64, f64, NaiveDate)> {
     ))
 }
 
-/// Handles creating a new SBLOC scenario.
-fn handle_new_sbloc(main_status: &mut Option<String>) {
-    if let Some((name, draw, rate, tax, ins, start_date)) = prompt_sbloc_params() {
+/// Handles creating a new LOC scenario.
+fn handle_new_loc(main_status: &mut Option<String>) {
+    if let Some((name, draw, rate, tax, ins, start_date)) = prompt_loc_params() {
         match LocEngine::new(name, start_date, draw, rate, tax, ins) {
             Ok(engine) => {
-                active_sbloc_menu(engine);
+                active_loc_menu(engine);
             }
             Err(e) => {
-                *main_status = Some(format!("Error creating SBLOC engine: {}", e));
+                *main_status = Some(format!("Error creating LOC engine: {}", e));
             }
         }
     }
 }
 
-/// Handles loading a saved SBLOC scenario from JSON files in `./products`.
-fn handle_load_sbloc(main_status: &mut Option<String>) {
+/// Handles loading a saved LOC scenario from JSON files in `./products`.
+fn handle_load_loc(main_status: &mut Option<String>) {
     let products_dir = Path::new("./products");
     if !products_dir.exists() {
         *main_status = Some("No ./products directory found. Save a scenario first.".to_string());
@@ -205,7 +205,7 @@ fn handle_load_sbloc(main_status: &mut Option<String>) {
     let option_strs: Vec<&str> = options.iter().map(|s| s.as_str()).collect();
 
     let render_header = || {
-        print_banner("📂", "LOAD SAVED SBLOC SCENARIO");
+        print_banner("📂", "LOAD SAVED LOC SCENARIO");
     };
 
     match select_menu(render_header, &option_strs) {
@@ -213,7 +213,7 @@ fn handle_load_sbloc(main_status: &mut Option<String>) {
             let selected_file = &json_files[idx];
             match LocEngine::load_from_json(&selected_file.to_string_lossy()) {
                 Ok(engine) => {
-                    active_sbloc_menu(engine);
+                    active_loc_menu(engine);
                 }
                 Err(e) => {
                     *main_status = Some(format!("Failed to load JSON scenario: {}", e));
@@ -226,7 +226,7 @@ fn handle_load_sbloc(main_status: &mut Option<String>) {
     }
 }
 
-/// Handles comparing 2 saved SBLOC scenarios from `./products`.
+/// Handles comparing 2 saved LOC scenarios from `./products`.
 fn handle_compare_loc_scenarios(main_status: &mut Option<String>) {
     let products_dir = Path::new("./products");
     if !products_dir.exists() {
@@ -328,7 +328,7 @@ fn handle_compare_loc_scenarios(main_status: &mut Option<String>) {
 }
 
 /// Active interactive menu loop for managing a specific `LocEngine` scenario.
-fn active_sbloc_menu(mut engine: LocEngine) {
+fn active_loc_menu(mut engine: LocEngine) {
     let mut status_msg: Option<String> = None;
 
     loop {
@@ -416,7 +416,7 @@ fn active_sbloc_menu(mut engine: LocEngine) {
                 println!();
 
                 let default_filename = engine.name.to_lowercase().replace(' ', "_");
-                let filename = match Text::new("Filename (e.g. my_sbloc):")
+                let filename = match Text::new("Filename (e.g. my_loc):")
                     .with_default(&default_filename)
                     .prompt()
                 {
@@ -448,15 +448,15 @@ pub fn run_cli() {
     loop {
         let status_ref = &main_status;
         let render_header = move || {
-            print_banner("🏛️", "SBLOC HOUSING CALCULATOR - MAIN MENU");
+            print_banner("🏛️", "LOC HOUSING CALCULATOR - MAIN MENU");
             if let Some(msg) = status_ref {
                 println!("\n  \x1b[31m⚠ {}\x1b[0m", msg);
             }
         };
 
         let options = [
-            "Start New SBLOC Scenario",
-            "Load Saved SBLOC Scenario from ./products",
+            "Start New LOC Scenario",
+            "Load Saved LOC Scenario from ./products",
             "Compare 2 LOC Scenarios",
             "Exit",
         ];
@@ -464,11 +464,11 @@ pub fn run_cli() {
         match select_menu(render_header, &options) {
             Ok(0) => {
                 main_status = None;
-                handle_new_sbloc(&mut main_status);
+                handle_new_loc(&mut main_status);
             }
             Ok(1) => {
                 main_status = None;
-                handle_load_sbloc(&mut main_status);
+                handle_load_loc(&mut main_status);
             }
             Ok(2) => {
                 main_status = None;
@@ -476,7 +476,7 @@ pub fn run_cli() {
             }
             Ok(3) | Err(_) => {
                 clear_screen();
-                println!("Thank you for using SBLOC Housing Calculator. Goodbye!");
+                println!("Thank you for using LOC Housing Calculator. Goodbye!");
                 break;
             }
             _ => {}

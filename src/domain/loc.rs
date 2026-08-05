@@ -31,7 +31,7 @@ pub struct LocAnnualSummary {
     pub end_balance: f64,
 }
 
-/// SBLOC Housing Engine simulating Day 0 draw, monthly simple interest, tax + insurance, and principal payments.
+/// LOC Housing Engine simulating Day 0 draw, monthly simple interest, tax + insurance, and principal payments.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LocEngine {
     pub name: String,
@@ -387,8 +387,8 @@ mod tests {
         engine.add_extra_payment(24, 250_000.0);
         engine.set_recurring_extra_payment(5_000.0);
 
-        let temp_dir = std::env::temp_dir().join("sbloc_test_bit_exact");
-        let path_str = engine.save_to_json(&temp_dir.to_string_lossy(), "test_sbloc_bitexact").unwrap();
+        let temp_dir = std::env::temp_dir().join("loc_test_bit_exact");
+        let path_str = engine.save_to_json(&temp_dir.to_string_lossy(), "test_loc_bitexact").unwrap();
 
         let loaded = LocEngine::load_from_json(&path_str).unwrap();
         assert_eq!(loaded.name, engine.name);
