@@ -32,8 +32,7 @@ pub struct LocComparisonReport {
 pub fn extract_loc_metrics(engine: &LocEngine) -> LocMetrics {
     let initial_draw = engine.initial_draw;
     let annual_rate = engine.annual_rate;
-    let annual_tax_and_insurance =
-        (initial_draw * (engine.property_tax_rate / 100.0)) + engine.annual_insurance;
+    let annual_tax_and_insurance = engine.annual_tax_and_insurance();
 
     let total_lump_sum_paid: f64 = engine.schedule.iter().map(|s| s.extra_principal_paid).sum();
     let lump_sum_event_count = engine
@@ -98,6 +97,48 @@ pub fn compare_loc_scenarios(option_a: &LocEngine, option_b: &LocEngine) -> LocC
 mod tests {
     use super::*;
     use chrono::NaiveDate;
+
+    #[test]
+    fn test_compare_identical_scenarios() {
+        let start_date = NaiveDate::from_ymd_opt(2026, 1, 1).unwrap();
+        let engine_a = LocEngine::new("Identical A", start_date, 1_500_000.0, 6.0, 1.2, 3600.0).unwrap();
+        let engine_b = LocEngine::new("Identical B", start_date, 1_500_000.0, 6.0, 1.2, 3600.0).unwrap();
+
+        let report = compare_loc_scenarios(&engine_a, &engine_b);
+
+        assert_eq!(report.delta_lump_sum_paid, 0.0);
+        assert_eq!(report.delta_total_interest, 0.0);
+        assert_eq!(report.delta_lifetime_outflow, 0.0);
+        assert_eq!(report.delta_year5_balance, 0.0);
+        assert_eq!(report.delta_year5_equity, 0.0);
+    }
+
+    #[test]
+    fn test_early_payoff_comparison() {
+        let start_date = NaiveDate::from_ymd_opt(2026, 1, 1).unwrap();
+        // Option A: Interest-only baseline (360 months)
+        let engine_a = LocEngine::new("Interest Only", start_date, 1_500_000.0, 6.0, 1.2, 3600.0).unwrap();
+
+        // Option B: Paid off in Month 12 ($125,000 extra principal per month)
+        let mut engine_b = LocEngine::new("Payoff Month 12", start_date, 1_500_000.0, 6.0, 1.2, 3600.0).unwrap();
+        engine_b.set_recurring_extra_payment(125_000.0);
+
+        assert_eq!(engine_b.schedule.len(), 12);
+        assert_eq!(engine_b.schedule.last().unwrap().end_balance, 0.0);
+
+        let report = compare_loc_scenarios(&engine_a, &engine_b);
+
+        // Verify Year 5 balance metrics handle short schedules gracefully without out-of-bounds indexing
+        assert_eq!(report.option_b.balance_at_year_5, 0.0);
+        assert_eq!(report.option_b.equity_at_year_5, 1_500_000.0);
+
+        assert_eq!(report.option_a.balance_at_year_5, 1_500_000.0);
+        assert_eq!(report.option_a.equity_at_year_5, 0.0);
+
+        assert_eq!(report.delta_year5_balance, -1_500_000.0);
+        assert_eq!(report.delta_year5_equity, 1_500_000.0);
+        assert!(report.delta_total_interest < 0.0);
+    }
 
     #[test]
     fn test_extract_loc_metrics() {

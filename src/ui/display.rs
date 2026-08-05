@@ -12,7 +12,7 @@ fn format_currency(val: f64) -> String {
     let mut result = String::new();
     let len = dollars_str.len();
     for (i, ch) in dollars_str.chars().enumerate() {
-        if i > 0 && (len - i) % 3 == 0 {
+        if i > 0 && (len - i).is_multiple_of(3) {
             result.push(',');
         }
         result.push(ch);
@@ -82,8 +82,7 @@ pub fn print_loc_summary(engine: &LocEngine) {
     let property_tax_rate_str = format!("{:.2}%", engine.property_tax_rate);
     let annual_insurance_str = format_currency(engine.annual_insurance);
 
-    let monthly_tax_and_ins = (engine.initial_draw * (engine.property_tax_rate / 100.0) / 12.0)
-        + (engine.annual_insurance / 12.0);
+    let monthly_tax_and_ins = engine.monthly_tax_and_insurance();
     let monthly_tax_and_ins_str = format_currency(monthly_tax_and_ins);
 
     let total_projected_interest: f64 = engine.schedule.iter().map(|s| s.interest_billed).sum();

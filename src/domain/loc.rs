@@ -55,8 +55,8 @@ impl LocEngine {
         property_tax_rate: f64,
         annual_insurance: f64,
     ) -> Result<Self, String> {
-        if initial_draw < 0.0 {
-            return Err("Initial draw must be non-negative".to_string());
+        if initial_draw <= 0.0 {
+            return Err("Initial draw must be positive".to_string());
         }
         if annual_rate < 0.0 {
             return Err("Annual rate must be non-negative".to_string());
@@ -84,6 +84,26 @@ impl LocEngine {
         Ok(engine)
     }
 
+    /// Returns the monthly property tax charge based on initial draw and property tax rate.
+    pub fn monthly_property_tax(&self) -> f64 {
+        (self.initial_draw * (self.property_tax_rate / 100.0)) / 12.0
+    }
+
+    /// Returns the monthly insurance cost based on annual insurance.
+    pub fn monthly_insurance(&self) -> f64 {
+        self.annual_insurance / 12.0
+    }
+
+    /// Returns the combined monthly property tax and insurance cost.
+    pub fn monthly_tax_and_insurance(&self) -> f64 {
+        self.monthly_property_tax() + self.monthly_insurance()
+    }
+
+    /// Returns the combined annual property tax and insurance cost.
+    pub fn annual_tax_and_insurance(&self) -> f64 {
+        (self.initial_draw * (self.property_tax_rate / 100.0)) + self.annual_insurance
+    }
+
     /// Adds or updates a one-off extra principal payment for a specific month index.
     pub fn add_extra_payment(&mut self, month_index: u32, amount: f64) {
         self.extra_payments.insert(month_index, amount);
@@ -108,7 +128,7 @@ impl LocEngine {
         let mut month_index: u32 = 1;
 
         let start_total_months =
-            self.start_date.year() * 12 + (self.start_date.month() - 1) as i32;
+            self.start_date.year() as i64 * 12 + (self.start_date.month() - 1) as i64;
 
         while balance > 0.0 && month_index <= 360 {
             // 1. Determine extra principal payment for current month
@@ -121,9 +141,9 @@ impl LocEngine {
             let balance_after_extra = (balance - extra_principal_paid).max(0.0);
 
             // 3. Determine current date label and calendar days in month
-            let total_months = start_total_months + (month_index - 1) as i32;
-            let current_year = total_months / 12;
-            let current_month = (total_months % 12 + 1) as u32;
+            let total_months = start_total_months + (month_index - 1) as i64;
+            let current_year = total_months.div_euclid(12) as i32;
+            let current_month = (total_months.rem_euclid(12) + 1) as u32;
 
             let current_date = NaiveDate::from_ymd_opt(current_year, current_month, 1)
                 .unwrap_or(self.start_date);
@@ -136,9 +156,9 @@ impl LocEngine {
             let interest_billed = balance_after_extra * daily_rate * (days_in_month as f64);
 
             // 5. Calculate monthly property tax & insurance
-            let monthly_property_tax = (self.initial_draw * (self.property_tax_rate / 100.0)) / 12.0;
-            let monthly_insurance = self.annual_insurance / 12.0;
-            let tax_and_insurance = monthly_property_tax + monthly_insurance;
+            let monthly_property_tax = self.monthly_property_tax();
+            let monthly_insurance = self.monthly_insurance();
+            let tax_and_insurance = self.monthly_tax_and_insurance();
 
             // 6. Record total outflow
             let total_outflow =
@@ -200,10 +220,8 @@ impl LocEngine {
             }
         }
 
-        if let Some(cy) = current_year {
-            if !current_statements.is_empty() {
-                summaries.push(Self::build_annual_summary(&cy, &current_statements));
-            }
+        if let Some(cy) = current_year.filter(|_| !current_statements.is_empty()) {
+            summaries.push(Self::build_annual_summary(&cy, &current_statements));
         }
 
         summaries
@@ -257,6 +275,131 @@ impl LocEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_single_month_full_payoff() {
+        let start_date = NaiveDate::from_ymd_opt(2026, 8, 1).unwrap();
+        let mut engine =
+            LocEngine::new("Full Payoff Test", start_date, 1_500_000.0, 6.0, 1.2, 3600.0).unwrap();
+
+        engine.add_extra_payment(1, 1_500_000.0);
+
+        assert_eq!(engine.schedule.len(), 1);
+        let stmt1 = &engine.schedule[0];
+        assert_eq!(stmt1.month_index, 1);
+        assert_eq!(stmt1.start_balance, 1_500_000.0);
+        assert_eq!(stmt1.extra_principal_paid, 1_500_000.0);
+        assert_eq!(stmt1.end_balance, 0.0);
+    }
+
+    #[test]
+    fn test_overpaying_principal_caps_and_no_negative_balance() {
+        let start_date = NaiveDate::from_ymd_opt(2026, 8, 1).unwrap();
+        let mut engine =
+            LocEngine::new("Overpay Test", start_date, 1_500_000.0, 6.0, 1.2, 3600.0).unwrap();
+
+        // Extra payment of $2.0M on a $1.5M balance
+        engine.add_extra_payment(1, 2_000_000.0);
+
+        assert_eq!(engine.schedule.len(), 1);
+        let stmt1 = &engine.schedule[0];
+        assert_eq!(stmt1.month_index, 1);
+        assert_eq!(stmt1.start_balance, 1_500_000.0);
+        assert_eq!(stmt1.extra_principal_paid, 1_500_000.0);
+        assert_eq!(stmt1.end_balance, 0.0);
+    }
+
+    #[test]
+    fn test_daily_interest_calculation_across_differing_month_lengths() {
+        // Test leap year Feb 2028 (29 days), Mar 2028 (31 days), Apr 2028 (30 days)
+        let start_date = NaiveDate::from_ymd_opt(2028, 2, 1).unwrap();
+        let engine =
+            LocEngine::new("Leap Intersect Test", start_date, 1_000_000.0, 7.3, 1.0, 1200.0).unwrap();
+
+        assert!(engine.schedule.len() >= 3);
+
+        // Month 1: Feb 2028 (29 days)
+        let stmt_feb = &engine.schedule[0];
+        assert_eq!(stmt_feb.date_label, "Feb 2028");
+        let expected_feb_interest = 1_000_000.0 * (0.073 / 365.0) * 29.0;
+        assert!(
+            (stmt_feb.interest_billed - expected_feb_interest).abs() < 1e-6,
+            "Feb 2028 (29 days) interest failed: got {}, expected {}",
+            stmt_feb.interest_billed,
+            expected_feb_interest
+        );
+
+        // Month 2: Mar 2028 (31 days)
+        let stmt_mar = &engine.schedule[1];
+        assert_eq!(stmt_mar.date_label, "Mar 2028");
+        let expected_mar_interest = 1_000_000.0 * (0.073 / 365.0) * 31.0;
+        assert!(
+            (stmt_mar.interest_billed - expected_mar_interest).abs() < 1e-6,
+            "Mar 2028 (31 days) interest failed: got {}, expected {}",
+            stmt_mar.interest_billed,
+            expected_mar_interest
+        );
+
+        // Month 3: Apr 2028 (30 days)
+        let stmt_apr = &engine.schedule[2];
+        assert_eq!(stmt_apr.date_label, "Apr 2028");
+        let expected_apr_interest = 1_000_000.0 * (0.073 / 365.0) * 30.0;
+        assert!(
+            (stmt_apr.interest_billed - expected_apr_interest).abs() < 1e-6,
+            "Apr 2028 (30 days) interest failed: got {}, expected {}",
+            stmt_apr.interest_billed,
+            expected_apr_interest
+        );
+
+        // Test non-leap year Feb 2027 (28 days)
+        let start_date_2027 = NaiveDate::from_ymd_opt(2027, 2, 1).unwrap();
+        let engine_2027 =
+            LocEngine::new("Non-Leap Test", start_date_2027, 1_000_000.0, 7.3, 1.0, 1200.0).unwrap();
+        let stmt_feb_2027 = &engine_2027.schedule[0];
+        assert_eq!(stmt_feb_2027.date_label, "Feb 2027");
+        let expected_feb_2027_interest = 1_000_000.0 * (0.073 / 365.0) * 28.0;
+        assert!(
+            (stmt_feb_2027.interest_billed - expected_feb_2027_interest).abs() < 1e-6,
+            "Feb 2027 (28 days) interest failed: got {}, expected {}",
+            stmt_feb_2027.interest_billed,
+            expected_feb_2027_interest
+        );
+    }
+
+    #[test]
+    fn test_zero_extra_payment_runs_to_360_months() {
+        let start_date = NaiveDate::from_ymd_opt(2026, 1, 1).unwrap();
+        let engine =
+            LocEngine::new("Zero Extra Test", start_date, 1_500_000.0, 12.5, 1.2, 3600.0).unwrap();
+
+        assert_eq!(engine.schedule.len(), 360);
+        assert_eq!(engine.schedule.first().unwrap().month_index, 1);
+        assert_eq!(engine.schedule.last().unwrap().month_index, 360);
+        assert_eq!(engine.schedule.last().unwrap().end_balance, 1_500_000.0);
+    }
+
+    #[test]
+    fn test_json_roundtrip_bit_exact_schedule() {
+        let start_date = NaiveDate::from_ymd_opt(2026, 1, 27).unwrap();
+        let mut engine = LocEngine::new("JSON Bit-Exact Scenario", start_date, 1_500_000.0, 6.5, 1.2, 3600.0).unwrap();
+        engine.add_extra_payment(3, 50_000.0);
+        engine.add_extra_payment(12, 100_000.0);
+        engine.add_extra_payment(24, 250_000.0);
+        engine.set_recurring_extra_payment(5_000.0);
+
+        let temp_dir = std::env::temp_dir().join("sbloc_test_bit_exact");
+        let path_str = engine.save_to_json(&temp_dir.to_string_lossy(), "test_sbloc_bitexact").unwrap();
+
+        let loaded = LocEngine::load_from_json(&path_str).unwrap();
+        assert_eq!(loaded.name, engine.name);
+        assert_eq!(loaded.initial_draw, engine.initial_draw);
+        assert_eq!(loaded.extra_payments, engine.extra_payments);
+        assert_eq!(loaded.recurring_extra_principal, engine.recurring_extra_principal);
+        assert_eq!(loaded.schedule, engine.schedule);
+
+        let _ = std::fs::remove_file(path_str);
+        let _ = std::fs::remove_dir(temp_dir);
+    }
 
     #[test]
     fn test_month_1_august_interest() {
@@ -375,21 +518,41 @@ mod tests {
     }
 
     #[test]
-    fn test_json_save_and_load() {
-        let start_date = NaiveDate::from_ymd_opt(2026, 1, 27).unwrap();
-        let mut engine = LocEngine::new("JSON Test Scenario", start_date, 1_500_000.0, 6.0, 1.2, 3600.0).unwrap();
-        engine.add_extra_payment(3, 50_000.0);
+    fn test_domain_helper_methods() {
+        let start_date = NaiveDate::from_ymd_opt(2026, 1, 1).unwrap();
+        let engine = LocEngine::new("Helper Test", start_date, 1_200_000.0, 5.0, 1.2, 3600.0).unwrap();
 
-        let temp_dir = std::env::temp_dir().join("sbloc_test_persistence");
-        let path_str = engine.save_to_json(&temp_dir.to_string_lossy(), "test_sbloc").unwrap();
+        // 1,200,000 * 0.012 / 12 = 1200.0
+        assert_eq!(engine.monthly_property_tax(), 1200.0);
+        // 3600.0 / 12 = 300.0
+        assert_eq!(engine.monthly_insurance(), 300.0);
+        // 1200 + 300 = 1500.0
+        assert_eq!(engine.monthly_tax_and_insurance(), 1500.0);
+        // 1500 * 12 = 18000.0
+        assert_eq!(engine.annual_tax_and_insurance(), 18000.0);
+    }
 
-        let loaded = LocEngine::load_from_json(&path_str).unwrap();
-        assert_eq!(loaded.name, engine.name);
-        assert_eq!(loaded.initial_draw, engine.initial_draw);
-        assert_eq!(loaded.extra_payments, engine.extra_payments);
-        assert_eq!(loaded.schedule.len(), engine.schedule.len());
+    #[test]
+    fn test_initial_draw_guard_check() {
+        let start_date = NaiveDate::from_ymd_opt(2026, 1, 1).unwrap();
+        assert!(LocEngine::new("Zero Draw", start_date, 0.0, 5.0, 1.2, 3600.0).is_err());
+        assert!(LocEngine::new("Negative Draw", start_date, -100.0, 5.0, 1.2, 3600.0).is_err());
+        let res = LocEngine::new("Zero Draw Msg", start_date, 0.0, 5.0, 1.2, 3600.0);
+        assert_eq!(res.unwrap_err(), "Initial draw must be positive");
+    }
 
-        let _ = std::fs::remove_file(path_str);
-        let _ = std::fs::remove_dir(temp_dir);
+    #[test]
+    fn test_recalculate_handles_zero_balances_and_boundary_months() {
+        let start_date = NaiveDate::from_ymd_opt(2026, 1, 1).unwrap();
+        let mut engine = LocEngine::new("Boundary Test", start_date, 100_000.0, 5.0, 1.2, 3600.0).unwrap();
+
+        // Add extra payment for month > 360
+        engine.add_extra_payment(400, 50_000.0);
+        // Schedule should still cap at max 360 months or payoff
+        assert!(engine.schedule.len() <= 360);
+
+        // Clear schedule and test empty schedule handling
+        engine.schedule.clear();
+        assert!(engine.annual_summaries().is_empty());
     }
 }

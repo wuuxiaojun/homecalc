@@ -321,7 +321,7 @@ fn handle_compare_loc_scenarios(main_status: &mut Option<String>) {
         };
 
         let options = ["Back to Main Menu"];
-        if let Ok(_) = select_menu(render_report, &options) {
+        if select_menu(render_report, &options).is_ok() {
             break;
         }
     }
