@@ -2,6 +2,7 @@
 members = [
     "crates/mortgage",
     "crates/loc",
-    "crates/homecalc_cli",
+    "crates/homecalc-cli",
 ]
 resolver = "2"
+
