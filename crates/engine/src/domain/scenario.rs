@@ -8,5 +8,6 @@ pub struct Scenario {
     pub name: String,
     pub house: House,
     pub tools: Vec<Tool>,
-    pub repay: BTreeMap<u32, f64>,
+    pub mortgage_repay: BTreeMap<u32, f64>,
+    pub loc_repay: BTreeMap<u32, f64>,
 }
