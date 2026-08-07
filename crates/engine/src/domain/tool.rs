@@ -1,4 +1,3 @@
-use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -18,7 +17,6 @@ pub struct Mortgage {
 pub struct Loc {
     pub amount: f64,
     pub rate: f64,
-    pub date: NaiveDate,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

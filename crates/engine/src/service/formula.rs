@@ -17,4 +17,13 @@ pub fn calculate_mortgage_pmt(principal: f64, rate: f64, year: u32) -> f64 {
     principal * (monthly_rate * factor) / (factor - 1.0)
 }
 
-//
+pub fn calculate_monthly_compound(amount: f64, annual_rate: f64) -> f64 {
+    if amount <= 0.0 || annual_rate <= 0.0 {
+        return 0.0;
+    }
+
+    let monthly_rate = (rate / 100.0) / 12.0;
+    amount * monthly_rate
+}
+
+pub fn calculate_daily_compound(amount: f64, annual_rate: f64) -> f64 {}
