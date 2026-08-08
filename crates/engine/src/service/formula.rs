@@ -17,6 +17,7 @@ pub fn calculate_mortgage_pmt(principal: f64, rate: f64, year: u32) -> f64 {
     principal * (monthly_rate * factor) / (factor - 1.0)
 }
 
+// Monthly Compound Function for Mortgage & Loc & Cash
 pub struct Compound {
     pub interest: f64,
     pub total: f64,

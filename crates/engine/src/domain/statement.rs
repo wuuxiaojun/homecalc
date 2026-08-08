@@ -27,7 +27,6 @@ pub struct HouseStatement {
     pub property_tax_paid: f64,
     pub insurance_paid: f64,
     pub hoa_paid: f64,
-    pub total_holding_cost: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -40,7 +39,8 @@ pub struct MonthlyStatementRow {
     pub total_interest_earned: f64,
     pub total_debt_paid: f64,
     pub total_extra_payment: f64,
-    pub total_paid: f64, // debt + extra + housing - interest
+    pub total_holding_cost: f64,
+    pub total_paid: f64, // debt + extra + holding - interest
     pub total_remaining_balance: f64,
 }
 
@@ -51,6 +51,7 @@ pub struct YearlyStatementRow {
     pub total_debt_paid: f64,
     pub total_tax_savings: f64,
     pub total_extra_payment: f64,
-    pub total_paid: f64, // debt + extra + housing - interest - tax
+    pub total_holding_cost: f64,
+    pub total_paid: f64, // debt + extra + holding - interest - tax
     pub total_remaining_balance: f64,
 }

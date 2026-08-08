@@ -1,0 +1,112 @@
+use crate::config::constants::*;
+use crate::config::utility::*;
+use crate::domain::scenario::Scenario;
+use crate::domain::statement::HouseStatement;
+use crate::domain::statement::LocStatement;
+use crate::domain::statement::{CashStatement, MonthlyStatementRow, MortgageStatement};
+use crate::domain::tool::Tool;
+use crate::service::formula::{calculate_monthly_compound, calculate_mortgage_pmt};
+
+// Simulate Monthly Statement Row
+pub fn simulation(scenario: &Scenario) -> Vec<MonthlyStatementRow> {
+    let mut schedule = Vec::with_capacity(360);
+
+    // 1. Extract Tool Configuration
+    let mut cash_opt = None;
+    let mut mortgage_opt = None;
+    let mut loc_opt = None;
+
+    for tool in &scenario.tools {
+        match tool {
+            Tool::Cash(c) => cash_opt = Some(c.clone()),
+            Tool::Mortgage(m) => mortgage_opt = Some(m.clone()),
+            Tool::Loc(l) => loc_opt = Some(l.clone()),
+        }
+    }
+
+    // 2. State Tracking Variables
+    let mut cash_balance = cash_opt
+        .as_ref()
+        .map_or(0.0, |c| DEFAULT_STARTING_CASH - c.amount);
+    let mut mortgage_balance = mortgage_opt.as_ref().map_or(0.0, |m| m.amount);
+    let mut loc_balance = loc_opt.as_ref().map_or(0.0, |l| l.amount);
+    let mut monthly_property_tax = scenario.house.purchase_price * scenario.house.annual_property_tax_rate * 0.01 / 12.0;
+    let mut monthly_insurance = scenario.house.annual_insurance / 12.0;
+    let mut monthly_hoa = scenario.house.monthly_hoa;
+
+    // 3. PMT
+    let mortgage_pmt = mortgage_opt
+        .as_ref()
+        .map_or(0.0, |m| calculate_mortgage_pmt(m.amount, m.rate, m.term));
+
+    // 4. Monthly Simulation Loop
+    for month in 1..=360 {
+        // Cash Statement
+        let cash_statement = cash_opt.as_ref().map(|c| {
+            let cash_compound = calculate_monthly_compound(cash_balance, c.rate);
+            cash_balance = cash_compound.total;
+            CashStatement {
+                cash_now: cash_balance,
+                interest_earned: cash_compound.interest,
+            }
+        });
+
+        // Mortgage Statement
+        let mortgage_statement = mortgage_opt.as_ref().and_then(|m| {
+            if mortgage_balance <= 0.0 {
+                return None;
+            }
+
+            let interest_paid = calculate_monthly_compound(mortgage_balance, m.rate)
+                .interest
+                .min(mortgage_pmt);
+            let principal_paid = (mortgage_pmt - interest_paid).min(mortgage_balance);
+            let extra_payment = scenario.mortgage_repay.get(&month).copied().unwrap_or(0.0);
+
+            let total_principal_paid = (principal_paid + extra_payment).min(mortgage_balance);
+            mortgage_balance = clamp_zero(mortgage_balance - total_principal_paid);
+
+            Some(MortgageStatement {
+                monthly_payment: mortgage_pmt,
+                principal_paid,
+                interest_paid,
+                extra_payment,
+                remaining_balance: mortgage_balance,
+            })
+        });
+
+        // Loc Statement
+        let loc_statement = loc_opt.as_ref().and_then(|l| {
+            if loc_balance <= 0.0 {
+                return None;
+            }
+            let monthly_payment = calculate_monthly_compound(loc_balance, l.rate).interest;
+            let extra_payment = scenario
+                .loc_repay
+                .get(&month)
+                .copied()
+                .unwrap_or(0.0)
+                .min(loc_balance);
+            loc_balance = clamp_zero(loc_balance - extra_payment);
+
+            Some(LocStatement {
+                monthly_payment,
+                extra_payment,
+                remaining_balance: loc_balance,
+            })
+        });
+
+        // House Statement
+        if month > 1 && (month - 1) % 12 == 0 {
+            monthly_property_tax *= 1.0 + DEFAULT_TAX_GROWTH_RATE;
+            monthly_insurance *= 1.0 + DEFAULT_INSURANCE_GROWTH_RATE;
+            monthly_hoa *= 1.0 + DEFAULT_HOA_GROWTH_RATE;
+        }
+
+        let house_statement = HouseStatement {
+
+        }
+    }
+
+    schedule
+}
