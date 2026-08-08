@@ -1,9 +1,7 @@
 use crate::config::constants::*;
 use crate::config::utility::*;
 use crate::domain::scenario::Scenario;
-use crate::domain::statement::HouseStatement;
-use crate::domain::statement::LocStatement;
-use crate::domain::statement::{CashStatement, MonthlyStatementRow, MortgageStatement};
+use crate::domain::statement::*;
 use crate::domain::tool::Tool;
 use crate::service::formula::{calculate_monthly_compound, calculate_mortgage_pmt};
 
@@ -30,7 +28,8 @@ pub fn simulation(scenario: &Scenario) -> Vec<MonthlyStatementRow> {
         .map_or(0.0, |c| DEFAULT_STARTING_CASH - c.amount);
     let mut mortgage_balance = mortgage_opt.as_ref().map_or(0.0, |m| m.amount);
     let mut loc_balance = loc_opt.as_ref().map_or(0.0, |l| l.amount);
-    let mut monthly_property_tax = scenario.house.purchase_price * scenario.house.annual_property_tax_rate * 0.01 / 12.0;
+    let mut monthly_property_tax =
+        scenario.house.purchase_price * scenario.house.annual_property_tax_rate * 0.01 / 12.0;
     let mut monthly_insurance = scenario.house.annual_insurance / 12.0;
     let mut monthly_hoa = scenario.house.monthly_hoa;
 
@@ -104,8 +103,38 @@ pub fn simulation(scenario: &Scenario) -> Vec<MonthlyStatementRow> {
         }
 
         let house_statement = HouseStatement {
+            monthly_property_tax,
+            monthly_insurance,
+            monthly_hoa,
+        };
 
-        }
+        // Aggregate
+        let total_debt_paid = mortgage_statement
+            .as_ref()
+            .map_or(0.0, |m| m.monthly_payment)
+            + loc_statement.as_ref().map_or(0.0, |l| l.monthly_payment);
+        let total_extra_payment = mortgage_statement.as_ref().map_or(0.0, |m| m.extra_payment)
+            + loc_statement.as_ref().map_or(0.0, |l| l.extra_payment);
+        let total_holding_cost = monthly_property_tax + monthly_insurance + monthly_hoa;
+        let total_paid = total_debt_paid + total_extra_payment + total_holding_cost
+            - cash_statement.as_ref().map_or(0.0, |c| c.interest_earned);
+        let total_remaining_balance = mortgage_statement
+            .as_ref()
+            .map_or(0.0, |m| m.remaining_balance)
+            + loc_statement.as_ref().map_or(0.0, |l| l.remaining_balance);
+
+        schedule.push(MonthlyStatementRow {
+            month,
+            cash: cash_statement,
+            mortgage: mortgage_statement,
+            loc: loc_statement,
+            house: house_statement,
+            total_debt_paid,
+            total_extra_payment,
+            total_holding_cost,
+            total_paid,
+            total_remaining_balance,
+        });
     }
 
     schedule
