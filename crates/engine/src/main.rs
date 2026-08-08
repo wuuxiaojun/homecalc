@@ -9,33 +9,43 @@ fn main() {
     let scenario = Scenario {
         name: "Sample 30-Year Mortgage with Extra Payments".to_string(),
         house: House {
-            purchase_price: 800_000.0,
+            purchase_price: 1500_000.0,
             annual_property_tax_rate: 1.2, // 1.2%
-            annual_insurance: 2_400.0,
-            monthly_hoa: 300.0,
+            annual_insurance: 3_600.0,
+            monthly_hoa: 100.0,
         },
         tools: vec![
             Tool::Cash(Cash {
-                amount: 160_000.0, // Down payment: 20%
-                rate: 4.5,         // Cash annual interest rate: 4.5%
+                amount: 500_000.0,
+                rate: 3.9,
             }),
             Tool::Mortgage(Mortgage {
-                amount: 640_000.0, // Mortgage amount: 80%
-                rate: 6.5,         // Interest rate: 6.5%
-                term: 30,          // 30 years
+                amount: 1_000_000.0,
+                rate: 5.9,
+                term: 15,
             }),
         ],
         mortgage_repay: BTreeMap::from([
-            (6, 5_000.0),  // $5,000 extra principal payment at Month 6
-            (12, 10_000.0), // $10,000 extra principal payment at Month 12
+            (3, 100_000.0),
+            (6, 100_000.0),
+            (9, 100_000.0),
+            (12, 100_000.0),
+            (15, 100_000.0),
         ]),
         loc_repay: BTreeMap::new(),
     };
 
-    println!("=========================================================================================");
+    println!(
+        "========================================================================================="
+    );
     println!(" Scenario: {}", scenario.name);
-    println!(" House Purchase Price: ${:.2}", scenario.house.purchase_price);
-    println!("=========================================================================================");
+    println!(
+        " House Purchase Price: ${:.2}",
+        scenario.house.purchase_price
+    );
+    println!(
+        "========================================================================================="
+    );
 
     // Run simulation
     let schedule = simulation(&scenario);
@@ -47,37 +57,47 @@ fn main() {
     );
     println!("{}", "-".repeat(98));
 
-    // Print first 12 months of simulation
-    for row in schedule.iter().take(12) {
-        if let Some(m) = &row.mortgage {
-            println!(
-                "{:<6} | ${:<11.2} | ${:<11.2} | ${:<11.2} | ${:<11.2} | ${:<14.2} | ${:<14.2}",
-                row.month,
-                m.monthly_payment,
-                m.principal_paid,
-                m.interest_paid,
-                m.extra_payment,
-                m.remaining_balance,
-                row.total_paid
-            );
+    // Print schedule: first 6 rows, any row with extra payments (mortgage or LOC), and last 3 rows
+    let total_len = schedule.len();
+    let mut indices_to_print = Vec::new();
+
+    for (i, row) in schedule.iter().enumerate() {
+        let is_first_6 = i < 6;
+        let is_last_3 = i >= total_len.saturating_sub(3);
+        let has_extra_payment = row.total_extra_payment > 0.0;
+
+        if is_first_6 || is_last_3 || has_extra_payment {
+            indices_to_print.push(i);
         }
     }
 
-    if schedule.len() > 12 {
-        println!("... [{} months truncated for preview]", schedule.len() - 12);
-        if let Some(last_row) = schedule.last() {
-            println!("{}", "-".repeat(98));
-            if let Some(m) = &last_row.mortgage {
-                println!(
-                    "Final Month {:<3}: Mortgage Rem Bal = ${:.2}, Total Debt Paid = ${:.2}",
-                    last_row.month, m.remaining_balance, last_row.total_debt_paid
-                );
-            } else {
-                println!(
-                    "Final Month {:<3}: Remaining Balance = ${:.2}",
-                    last_row.month, last_row.total_remaining_balance
-                );
+    let mut last_printed_idx: Option<usize> = None;
+
+    for &idx in &indices_to_print {
+        if let Some(prev) = last_printed_idx {
+            if idx > prev + 1 {
+                let skipped = idx - prev - 1;
+                println!("... [{} month(s) skipped]", skipped);
             }
         }
+        last_printed_idx = Some(idx);
+
+        let row = &schedule[idx];
+        let mortgage_pmt = row.mortgage.as_ref().map_or(0.0, |m| m.monthly_payment);
+        let principal_paid = row.mortgage.as_ref().map_or(0.0, |m| m.principal_paid);
+        let interest_paid = row.mortgage.as_ref().map_or(0.0, |m| m.interest_paid);
+        let extra_payment = row.total_extra_payment;
+        let rem_balance = row.total_remaining_balance;
+
+        println!(
+            "{:<6} | ${:<11.2} | ${:<11.2} | ${:<11.2} | ${:<11.2} | ${:<14.2} | ${:<14.2}",
+            row.month,
+            mortgage_pmt,
+            principal_paid,
+            interest_paid,
+            extra_payment,
+            rem_balance,
+            row.total_paid
+        );
     }
 }
