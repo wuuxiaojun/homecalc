@@ -1,8 +1,5 @@
 [workspace]
 members = [
-    "crates/mortgage",
-    "crates/loc",
-    "crates/homecalc-cli",
     "crates/engine",
 ]
 resolver = "2"
