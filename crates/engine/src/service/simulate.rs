@@ -172,7 +172,8 @@ pub fn aggregate_yearly(schedule: &[MonthlyStatementRow]) -> Vec<YearlyStatement
                 }
                 if let Some(m) = &row.mortgage {
                     annual_mortgage_interest += m.interest_paid;
-                    monthly_mortgage_balance.push(m.principal_paid + m.remaining_balance);
+                    monthly_mortgage_balance
+                        .push(m.principal_paid + m.remaining_balance + m.extra_payment);
                 }
                 annual_debt_paid += row.total_debt_paid;
                 annual_extra_payment += row.total_extra_payment;

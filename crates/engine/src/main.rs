@@ -1,7 +1,7 @@
 use engine::domain::house::House;
 use engine::domain::scenario::Scenario;
 use engine::domain::tool::{Cash, Loc, Mortgage, Tool};
-use engine::service::simulate::simulate_monthly;
+use engine::service::simulate::{aggregate_yearly, simulate_monthly};
 use std::collections::BTreeMap;
 
 fn main() {
@@ -44,36 +44,19 @@ fn main() {
         ]),
     };
 
-    println!(
-        "=================================================================================================================================================="
-    );
+    println!("==================================================================================================================================================");
     println!(" Scenario: {}", scenario.name);
-    println!(
-        " House Purchase Price: ${:.2}",
-        scenario.house.purchase_price
-    );
+    println!(" House Purchase Price: ${:.2}", scenario.house.purchase_price);
     println!(" Tools: Cash ($300k @ 3.9%), Mortgage ($1M @ 5.9%, 15yr), LOC ($200k @ 7.5%)");
-    println!(
-        "=================================================================================================================================================="
-    );
+    println!("==================================================================================================================================================");
 
-    // Run simulation
+    // 1. Run monthly simulation
     let schedule = simulate_monthly(&scenario);
 
-    println!("\nTotal Months Simulated: {}\n", schedule.len());
+    println!("\nMONTHLY STATEMENT SCHEDULE (Total Months: {})\n", schedule.len());
     println!(
         "{:<5} | {:<12} | {:<11} | {:<11} | {:<12} | {:<10} | {:<10} | {:<11} | {:<12} | {:<12} | {:<13}",
-        "Month",
-        "Cash Bal",
-        "Mortg PMT",
-        "Mortg Extra",
-        "Mortg Bal",
-        "LOC PMT",
-        "LOC Extra",
-        "LOC Bal",
-        "Holding Cost",
-        "Total Paid",
-        "Total Rem Bal"
+        "Month", "Cash Bal", "Mortg PMT", "Mortg Extra", "Mortg Bal", "LOC PMT", "LOC Extra", "LOC Bal", "Holding Cost", "Total Paid", "Total Rem Bal"
     );
     println!("{}", "-".repeat(146));
 
@@ -104,9 +87,10 @@ fn main() {
 
         let row = &schedule[idx];
         let cash_bal = row.cash.as_ref().map_or(0.0, |c| c.cash_now);
-        let mortg_pmt = row.mortgage.as_ref().map_or(0.0, |m| {
-            (m.principal_paid + m.interest_paid).min(m.monthly_payment)
-        });
+        let mortg_pmt = row
+            .mortgage
+            .as_ref()
+            .map_or(0.0, |m| (m.principal_paid + m.interest_paid).min(m.monthly_payment));
         let mortg_extra = row.mortgage.as_ref().map_or(0.0, |m| m.extra_payment);
         let mortg_bal = row.mortgage.as_ref().map_or(0.0, |m| m.remaining_balance);
 
@@ -131,6 +115,32 @@ fn main() {
             holding_cost,
             total_paid,
             rem_balance
+        );
+    }
+
+    // 2. Aggregate into yearly summary
+    let yearly_summary = aggregate_yearly(&schedule);
+
+    println!("\n\n==================================================================================================================================================");
+    println!(" YEARLY SUMMARY STATEMENT");
+    println!("==================================================================================================================================================");
+    println!(
+        "{:<5} | {:<13} | {:<12} | {:<12} | {:<13} | {:<12} | {:<15} | {:<15}",
+        "Year", "Cash Yield", "Debt Paid", "Extra Paid", "Holding Cost", "Tax Savings", "Net Annual Paid", "Ending Rem Bal"
+    );
+    println!("{}", "-".repeat(116));
+
+    for y in &yearly_summary {
+        println!(
+            "{:<5} | ${:<12.2} | ${:<11.2} | ${:<11.2} | ${:<12.2} | ${:<11.2} | ${:<14.2} | ${:<14.2}",
+            y.year,
+            y.annual_cash_interest,
+            y.annual_debt_paid,
+            y.annual_extra_payment,
+            y.annual_holding_cost,
+            y.annual_tax_savings,
+            y.annual_paid,
+            y.ending_remaining_balance
         );
     }
 }
