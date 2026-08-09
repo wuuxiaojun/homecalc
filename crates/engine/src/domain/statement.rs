@@ -46,11 +46,11 @@ pub struct MonthlyStatementRow {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct YearlyStatementRow {
     pub year: u32,
-    pub total_interest_earned: f64,
-    pub total_debt_paid: f64,
-    pub total_tax_savings: f64,
-    pub total_extra_payment: f64,
-    pub total_holding_cost: f64,
-    pub total_paid: f64, // debt + extra + holding - interest - tax
-    pub total_remaining_balance: f64,
+    pub annual_cash_interest: f64,
+    pub annual_debt_paid: f64,
+    pub annual_tax_savings: f64,
+    pub annual_extra_payment: f64,
+    pub annual_holding_cost: f64,
+    pub annual_paid: f64, // debt + extra + holding - interest - tax
+    pub ending_remaining_balance: f64,
 }

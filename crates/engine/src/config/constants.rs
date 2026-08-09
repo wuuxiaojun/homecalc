@@ -4,3 +4,4 @@ pub const DEFAULT_HOA_GROWTH_RATE: f64 = 0.04;
 pub const DEFAULT_MARGINAL_TAX_RATE: f64 = 0.24;
 pub const DEFAULT_STARTING_CASH: f64 = 500_000.00;
 pub const EPSILON: f64 = 1e-6;
+pub const IRS_MORTGAGE_LIMIT: f64 = 750_000.00;

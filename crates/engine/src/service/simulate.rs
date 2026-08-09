@@ -6,7 +6,7 @@ use crate::domain::tool::*;
 use crate::service::formula::*;
 
 // Simulate Monthly Statement Row
-pub fn simulation(scenario: &Scenario) -> Vec<MonthlyStatementRow> {
+pub fn simulate_monthly(scenario: &Scenario) -> Vec<MonthlyStatementRow> {
     let mut schedule = Vec::with_capacity(360);
 
     // 1. Extract Tool Configuration
@@ -148,4 +148,68 @@ pub fn simulation(scenario: &Scenario) -> Vec<MonthlyStatementRow> {
     }
 
     schedule
+}
+
+pub fn aggregate_yearly(schedule: &[MonthlyStatementRow]) -> Vec<YearlyStatementRow> {
+    schedule
+        .chunks(12)
+        .enumerate()
+        .map(|(year_id, chunk)| {
+            let year = (year_id + 1) as u32;
+
+            let mut annual_cash_interest = 0.0;
+            let mut annual_mortgage_interest = 0.0;
+            let mut annual_debt_paid = 0.0;
+            let mut annual_extra_payment = 0.0;
+            let mut annual_holding_cost = 0.0;
+            let mut annual_paid_unadjusted = 0.0;
+
+            let mut monthly_mortgage_balance = Vec::with_capacity(chunk.len());
+
+            for row in chunk {
+                if let Some(c) = &row.cash {
+                    annual_cash_interest += c.interest_earned;
+                }
+                if let Some(m) = &row.mortgage {
+                    annual_mortgage_interest += m.interest_paid;
+                    monthly_mortgage_balance.push(m.principal_paid + m.remaining_balance);
+                }
+                annual_debt_paid += row.total_debt_paid;
+                annual_extra_payment += row.total_extra_payment;
+                annual_holding_cost += row.total_holding_cost;
+                annual_paid_unadjusted += row.total_paid;
+            }
+
+            // Annual Tax Savings
+            let annual_tax_savings = if annual_mortgage_interest > 0.0
+                && !monthly_mortgage_balance.is_empty()
+            {
+                let average_mortgage_balance: f64 = monthly_mortgage_balance.iter().sum::<f64>()
+                    / monthly_mortgage_balance.len() as f64;
+                let eligible_ratio = if average_mortgage_balance > IRS_MORTGAGE_LIMIT {
+                    IRS_MORTGAGE_LIMIT / average_mortgage_balance
+                } else {
+                    1.0
+                };
+                let deductible_interest = annual_mortgage_interest * eligible_ratio;
+                deductible_interest * DEFAULT_MARGINAL_TAX_RATE
+            } else {
+                0.0
+            };
+
+            // Last Row
+            let last_row = chunk.last().expect("Chunk contains at least 1 month");
+
+            YearlyStatementRow {
+                year,
+                annual_cash_interest,
+                annual_debt_paid,
+                annual_tax_savings,
+                annual_extra_payment,
+                annual_holding_cost,
+                annual_paid: annual_paid_unadjusted - annual_tax_savings,
+                ending_remaining_balance: last_row.total_remaining_balance,
+            }
+        })
+        .collect()
 }
