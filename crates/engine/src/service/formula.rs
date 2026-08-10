@@ -1,3 +1,6 @@
+// formula.rs
+// Common Formulas
+
 // Fixed Mortgage Monthly Payment
 pub fn calculate_mortgage_pmt(principal: f64, rate: f64, year: u32) -> f64 {
     if principal <= 0.0 || year == 0 {

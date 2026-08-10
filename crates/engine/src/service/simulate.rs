@@ -1,9 +1,9 @@
 use crate::config::constants::*;
-use crate::config::utility::*;
 use crate::domain::scenario::*;
-use crate::domain::statement::*;
+use crate::domain::summary::*;
 use crate::domain::tool::*;
 use crate::service::formula::*;
+use crate::service::utility::*;
 
 // Simulate Monthly Statement Row
 pub fn simulate_monthly(scenario: &Scenario) -> Vec<MonthlyStatementRow> {
@@ -28,6 +28,11 @@ pub fn simulate_monthly(scenario: &Scenario) -> Vec<MonthlyStatementRow> {
         .map_or(0.0, |c| DEFAULT_STARTING_CASH - c.amount);
     let mut mortgage_balance = mortgage_opt.as_ref().map_or(0.0, |m| m.amount);
     let mut loc_balance = loc_opt.as_ref().map_or(0.0, |l| l.amount);
+
+    if mortgage_balance <= 0.0 && loc_balance <= 0.0 {
+        return Vec::new();
+    }
+
     let mut monthly_property_tax =
         scenario.house.purchase_price * scenario.house.annual_property_tax_rate * 0.01 / 12.0;
     let mut monthly_insurance = scenario.house.annual_insurance / 12.0;
@@ -150,6 +155,7 @@ pub fn simulate_monthly(scenario: &Scenario) -> Vec<MonthlyStatementRow> {
     schedule
 }
 
+// Aggregate Yearly Statement Row
 pub fn aggregate_yearly(schedule: &[MonthlyStatementRow]) -> Vec<YearlyStatementRow> {
     schedule
         .chunks(12)
@@ -159,6 +165,7 @@ pub fn aggregate_yearly(schedule: &[MonthlyStatementRow]) -> Vec<YearlyStatement
 
             let mut annual_cash_interest = 0.0;
             let mut annual_mortgage_interest = 0.0;
+            let mut annual_loc_interest = 0.0;
             let mut annual_debt_paid = 0.0;
             let mut annual_extra_payment = 0.0;
             let mut annual_holding_cost = 0.0;
@@ -174,6 +181,9 @@ pub fn aggregate_yearly(schedule: &[MonthlyStatementRow]) -> Vec<YearlyStatement
                     annual_mortgage_interest += m.interest_paid;
                     monthly_mortgage_balance
                         .push(m.principal_paid + m.remaining_balance + m.extra_payment);
+                }
+                if let Some(l) = &row.loc {
+                    annual_loc_interest += l.monthly_payment;
                 }
                 annual_debt_paid += row.total_debt_paid;
                 annual_extra_payment += row.total_extra_payment;
@@ -204,6 +214,7 @@ pub fn aggregate_yearly(schedule: &[MonthlyStatementRow]) -> Vec<YearlyStatement
             YearlyStatementRow {
                 year,
                 annual_cash_interest,
+                annual_interest_paid: annual_mortgage_interest + annual_loc_interest,
                 annual_debt_paid,
                 annual_tax_savings,
                 annual_extra_payment,
@@ -213,4 +224,25 @@ pub fn aggregate_yearly(schedule: &[MonthlyStatementRow]) -> Vec<YearlyStatement
             }
         })
         .collect()
+}
+
+// Compute Scenario Metrics
+pub fn compute_metrics(
+    monthly_schedule: &[MonthlyStatementRow],
+    yearly_schedule: &[YearlyStatementRow],
+) -> ScenarioMetrics {
+    let payoff_month = monthly_schedule.last().map_or(0, |r| r.month);
+    let total_cash_interest: f64 = yearly_schedule.iter().map(|r| r.annual_cash_interest).sum();
+    let total_holding_cost: f64 = yearly_schedule.iter().map(|r| r.annual_holding_cost).sum();
+    let total_interest_paid: f64 = yearly_schedule.iter().map(|r| r.annual_interest_paid).sum();
+    let total_tax_savings: f64 = yearly_schedule.iter().map(|r| r.annual_tax_savings).sum();
+    let total_paid: f64 = yearly_schedule.iter().map(|r| r.annual_paid).sum();
+    ScenarioMetrics {
+        payoff_month,
+        total_cash_interest,
+        total_holding_cost,
+        total_interest_paid,
+        total_tax_savings,
+        total_paid,
+    }
 }
