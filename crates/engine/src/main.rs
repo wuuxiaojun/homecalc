@@ -1,12 +1,12 @@
 use engine::domain::house::House;
-use engine::domain::scenario::Scenario;
+use engine::domain::purchase::Purchase;
 use engine::domain::tool::{Cash, Loc, Mortgage, Tool};
 use engine::service::simulate::{aggregate_yearly, simulate_monthly};
 use std::collections::BTreeMap;
 
 fn main() {
-    // Sample Scenario with House, Cash, Mortgage, and Line of Credit (LOC)
-    let scenario = Scenario {
+    // Sample Purchase with House, Cash, Mortgage, and Line of Credit (LOC)
+    let purchase = Purchase {
         name: "Sample Purchase with Cash, Mortgage & Line of Credit".to_string(),
         house: House {
             purchase_price: 1_500_000.0,
@@ -44,19 +44,39 @@ fn main() {
         ]),
     };
 
-    println!("==================================================================================================================================================");
-    println!(" Scenario: {}", scenario.name);
-    println!(" House Purchase Price: ${:.2}", scenario.house.purchase_price);
+    println!(
+        "=================================================================================================================================================="
+    );
+    println!(" Purchase: {}", purchase.name);
+    println!(
+        " House Purchase Price: ${:.2}",
+        purchase.house.purchase_price
+    );
     println!(" Tools: Cash ($300k @ 3.9%), Mortgage ($1M @ 5.9%, 15yr), LOC ($200k @ 7.5%)");
-    println!("==================================================================================================================================================");
+    println!(
+        "=================================================================================================================================================="
+    );
 
     // 1. Run monthly simulation
-    let schedule = simulate_monthly(&scenario);
+    let schedule = simulate_monthly(&purchase);
 
-    println!("\nMONTHLY STATEMENT SCHEDULE (Total Months: {})\n", schedule.len());
+    println!(
+        "\nMONTHLY STATEMENT SCHEDULE (Total Months: {})\n",
+        schedule.len()
+    );
     println!(
         "{:<5} | {:<12} | {:<11} | {:<11} | {:<12} | {:<10} | {:<10} | {:<11} | {:<12} | {:<12} | {:<13}",
-        "Month", "Cash Bal", "Mortg PMT", "Mortg Extra", "Mortg Bal", "LOC PMT", "LOC Extra", "LOC Bal", "Holding Cost", "Total Paid", "Total Rem Bal"
+        "Month",
+        "Cash Bal",
+        "Mortg PMT",
+        "Mortg Extra",
+        "Mortg Bal",
+        "LOC PMT",
+        "LOC Extra",
+        "LOC Bal",
+        "Holding Cost",
+        "Total Paid",
+        "Total Rem Bal"
     );
     println!("{}", "-".repeat(146));
 
@@ -87,10 +107,9 @@ fn main() {
 
         let row = &schedule[idx];
         let cash_bal = row.cash.as_ref().map_or(0.0, |c| c.cash_now);
-        let mortg_pmt = row
-            .mortgage
-            .as_ref()
-            .map_or(0.0, |m| (m.principal_paid + m.interest_paid).min(m.monthly_payment));
+        let mortg_pmt = row.mortgage.as_ref().map_or(0.0, |m| {
+            (m.principal_paid + m.interest_paid).min(m.monthly_payment)
+        });
         let mortg_extra = row.mortgage.as_ref().map_or(0.0, |m| m.extra_payment);
         let mortg_bal = row.mortgage.as_ref().map_or(0.0, |m| m.remaining_balance);
 
@@ -121,12 +140,23 @@ fn main() {
     // 2. Aggregate into yearly summary
     let yearly_summary = aggregate_yearly(&schedule);
 
-    println!("\n\n==================================================================================================================================================");
+    println!(
+        "\n\n=================================================================================================================================================="
+    );
     println!(" YEARLY SUMMARY STATEMENT");
-    println!("==================================================================================================================================================");
+    println!(
+        "=================================================================================================================================================="
+    );
     println!(
         "{:<5} | {:<13} | {:<12} | {:<12} | {:<13} | {:<12} | {:<15} | {:<15}",
-        "Year", "Cash Yield", "Debt Paid", "Extra Paid", "Holding Cost", "Tax Savings", "Net Annual Paid", "Ending Rem Bal"
+        "Year",
+        "Cash Yield",
+        "Debt Paid",
+        "Extra Paid",
+        "Holding Cost",
+        "Tax Savings",
+        "Net Annual Paid",
+        "Ending Rem Bal"
     );
     println!("{}", "-".repeat(116));
 

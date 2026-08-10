@@ -57,7 +57,7 @@ pub struct YearlyStatementRow {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ScenarioMetrics {
+pub struct Metadata {
     pub payoff_month: u32,
     pub total_cash_interest: f64,
     pub total_holding_cost: f64,

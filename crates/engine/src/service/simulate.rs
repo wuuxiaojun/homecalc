@@ -1,12 +1,12 @@
 use crate::config::constants::*;
-use crate::domain::scenario::*;
+use crate::domain::purchase::*;
 use crate::domain::summary::*;
 use crate::domain::tool::*;
 use crate::service::formula::*;
 use crate::service::utility::*;
 
 // Simulate Monthly Statement Row
-pub fn simulate_monthly(scenario: &Scenario) -> Vec<MonthlyStatementRow> {
+pub fn simulate_monthly(purchase: &Purchase) -> Vec<MonthlyStatementRow> {
     let mut schedule = Vec::with_capacity(360);
 
     // 1. Extract Tool Configuration
@@ -14,7 +14,7 @@ pub fn simulate_monthly(scenario: &Scenario) -> Vec<MonthlyStatementRow> {
     let mut mortgage_opt = None;
     let mut loc_opt = None;
 
-    for tool in &scenario.tools {
+    for tool in &purchase.tools {
         match tool {
             Tool::Cash(c) => cash_opt = Some(c.clone()),
             Tool::Mortgage(m) => mortgage_opt = Some(m.clone()),
@@ -34,9 +34,9 @@ pub fn simulate_monthly(scenario: &Scenario) -> Vec<MonthlyStatementRow> {
     }
 
     let mut monthly_property_tax =
-        scenario.house.purchase_price * scenario.house.annual_property_tax_rate * 0.01 / 12.0;
-    let mut monthly_insurance = scenario.house.annual_insurance / 12.0;
-    let mut monthly_hoa = scenario.house.monthly_hoa;
+        purchase.house.purchase_price * purchase.house.annual_property_tax_rate * 0.01 / 12.0;
+    let mut monthly_insurance = purchase.house.annual_insurance / 12.0;
+    let mut monthly_hoa = purchase.house.monthly_hoa;
 
     // 3. PMT
     let mortgage_pmt = mortgage_opt
@@ -65,7 +65,7 @@ pub fn simulate_monthly(scenario: &Scenario) -> Vec<MonthlyStatementRow> {
                 .interest
                 .min(mortgage_pmt);
             let principal_paid = (mortgage_pmt - interest_paid).min(mortgage_balance);
-            let extra_payment = scenario
+            let extra_payment = purchase
                 .mortgage_repay
                 .get(&month)
                 .copied()
@@ -89,7 +89,7 @@ pub fn simulate_monthly(scenario: &Scenario) -> Vec<MonthlyStatementRow> {
                 return None;
             }
             let monthly_payment = calculate_monthly_compound(loc_balance, l.rate).interest;
-            let extra_payment = scenario
+            let extra_payment = purchase
                 .loc_repay
                 .get(&month)
                 .copied()
@@ -226,18 +226,18 @@ pub fn aggregate_yearly(schedule: &[MonthlyStatementRow]) -> Vec<YearlyStatement
         .collect()
 }
 
-// Compute Scenario Metrics
+// Compute Purchase Metrics
 pub fn compute_metrics(
     monthly_schedule: &[MonthlyStatementRow],
     yearly_schedule: &[YearlyStatementRow],
-) -> ScenarioMetrics {
+) -> Metadata {
     let payoff_month = monthly_schedule.last().map_or(0, |r| r.month);
     let total_cash_interest: f64 = yearly_schedule.iter().map(|r| r.annual_cash_interest).sum();
     let total_holding_cost: f64 = yearly_schedule.iter().map(|r| r.annual_holding_cost).sum();
     let total_interest_paid: f64 = yearly_schedule.iter().map(|r| r.annual_interest_paid).sum();
     let total_tax_savings: f64 = yearly_schedule.iter().map(|r| r.annual_tax_savings).sum();
     let total_paid: f64 = yearly_schedule.iter().map(|r| r.annual_paid).sum();
-    ScenarioMetrics {
+    Metadata {
         payoff_month,
         total_cash_interest,
         total_holding_cost,
