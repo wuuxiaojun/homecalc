@@ -58,11 +58,11 @@ fn main() {
     );
 
     // 1. Run monthly simulation
-    let schedule = simulate_monthly(&purchase);
+    let statement = simulate_monthly(&purchase);
 
     println!(
-        "\nMONTHLY STATEMENT SCHEDULE (Total Months: {})\n",
-        schedule.len()
+        "\nMONTHLY STATEMENT statement (Total Months: {})\n",
+        statement.len()
     );
     println!(
         "{:<5} | {:<12} | {:<11} | {:<11} | {:<12} | {:<10} | {:<10} | {:<11} | {:<12} | {:<12} | {:<13}",
@@ -80,11 +80,11 @@ fn main() {
     );
     println!("{}", "-".repeat(146));
 
-    // Print schedule: first 6 rows, any row with extra payments (mortgage or LOC), and last 3 rows
-    let total_len = schedule.len();
+    // Print statement: first 6 rows, any row with extra payments (mortgage or LOC), and last 3 rows
+    let total_len = statement.len();
     let mut indices_to_print = Vec::new();
 
-    for (i, row) in schedule.iter().enumerate() {
+    for (i, row) in statement.iter().enumerate() {
         let is_first_6 = i < 6;
         let is_last_3 = i >= total_len.saturating_sub(3);
         let has_extra_payment = row.total_extra_payment > 0.0;
@@ -105,7 +105,7 @@ fn main() {
         }
         last_printed_idx = Some(idx);
 
-        let row = &schedule[idx];
+        let row = &statement[idx];
         let cash_bal = row.cash.as_ref().map_or(0.0, |c| c.cash_now);
         let mortg_pmt = row.mortgage.as_ref().map_or(0.0, |m| {
             (m.principal_paid + m.interest_paid).min(m.monthly_payment)
@@ -138,7 +138,7 @@ fn main() {
     }
 
     // 2. Aggregate into yearly summary
-    let yearly_summary = aggregate_yearly(&schedule);
+    let yearly_summary = aggregate_yearly(&statement);
 
     println!(
         "\n\n=================================================================================================================================================="

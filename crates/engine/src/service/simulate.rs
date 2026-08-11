@@ -1,13 +1,13 @@
 use crate::config::constants::*;
 use crate::domain::purchase::*;
-use crate::domain::summary::*;
+use crate::domain::statement::*;
 use crate::domain::tool::*;
 use crate::service::formula::*;
 use crate::service::utility::*;
 
 // Simulate Monthly Statement Row
 pub fn simulate_monthly(purchase: &Purchase) -> Vec<MonthlyStatementRow> {
-    let mut schedule = Vec::with_capacity(360);
+    let mut statement = Vec::with_capacity(360);
 
     // 1. Extract Tool Configuration
     let mut cash_opt = None;
@@ -133,7 +133,7 @@ pub fn simulate_monthly(purchase: &Purchase) -> Vec<MonthlyStatementRow> {
                 + loc_statement.as_ref().map_or(0.0, |l| l.remaining_balance),
         );
 
-        schedule.push(MonthlyStatementRow {
+        statement.push(MonthlyStatementRow {
             month,
             cash: cash_statement,
             mortgage: mortgage_statement,
@@ -152,12 +152,12 @@ pub fn simulate_monthly(purchase: &Purchase) -> Vec<MonthlyStatementRow> {
         }
     }
 
-    schedule
+    statement
 }
 
 // Aggregate Yearly Statement Row
-pub fn aggregate_yearly(schedule: &[MonthlyStatementRow]) -> Vec<YearlyStatementRow> {
-    schedule
+pub fn aggregate_yearly(statement: &[MonthlyStatementRow]) -> Vec<YearlyStatementRow> {
+    statement
         .chunks(12)
         .enumerate()
         .map(|(year_id, chunk)| {
@@ -227,18 +227,19 @@ pub fn aggregate_yearly(schedule: &[MonthlyStatementRow]) -> Vec<YearlyStatement
 }
 
 // Compute Purchase Metrics
-pub fn compute_metrics(
-    monthly_schedule: &[MonthlyStatementRow],
-    yearly_schedule: &[YearlyStatementRow],
-) -> Metadata {
-    let payoff_month = monthly_schedule.last().map_or(0, |r| r.month);
-    let total_cash_interest: f64 = yearly_schedule.iter().map(|r| r.annual_cash_interest).sum();
-    let total_holding_cost: f64 = yearly_schedule.iter().map(|r| r.annual_holding_cost).sum();
-    let total_interest_paid: f64 = yearly_schedule.iter().map(|r| r.annual_interest_paid).sum();
-    let total_tax_savings: f64 = yearly_schedule.iter().map(|r| r.annual_tax_savings).sum();
-    let total_paid: f64 = yearly_schedule.iter().map(|r| r.annual_paid).sum();
-    Metadata {
-        payoff_month,
+pub fn compute_metrics(yearly_statement: &[YearlyStatementRow]) -> TotalStatement {
+    let total_cash_interest: f64 = yearly_statement
+        .iter()
+        .map(|r| r.annual_cash_interest)
+        .sum();
+    let total_holding_cost: f64 = yearly_statement.iter().map(|r| r.annual_holding_cost).sum();
+    let total_interest_paid: f64 = yearly_statement
+        .iter()
+        .map(|r| r.annual_interest_paid)
+        .sum();
+    let total_tax_savings: f64 = yearly_statement.iter().map(|r| r.annual_tax_savings).sum();
+    let total_paid: f64 = yearly_statement.iter().map(|r| r.annual_paid).sum();
+    TotalStatement {
         total_cash_interest,
         total_holding_cost,
         total_interest_paid,

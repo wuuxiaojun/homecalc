@@ -29,6 +29,7 @@ pub struct HouseStatement {
     pub monthly_hoa: f64,
 }
 
+// Monthly Statement
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MonthlyStatementRow {
     pub month: u32,
@@ -43,6 +44,7 @@ pub struct MonthlyStatementRow {
     pub total_remaining_balance: f64,
 }
 
+// Yearly Statement
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct YearlyStatementRow {
     pub year: u32,
@@ -56,9 +58,9 @@ pub struct YearlyStatementRow {
     pub ending_remaining_balance: f64,
 }
 
+// Total Statement
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Metadata {
-    pub payoff_month: u32,
+pub struct TotalStatement {
     pub total_cash_interest: f64,
     pub total_holding_cost: f64,
     pub total_interest_paid: f64,
