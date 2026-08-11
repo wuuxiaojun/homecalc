@@ -16,7 +16,7 @@ pub struct ScenarioAnalysis {
     pub effective_monthly_cost: f64,
 }
 
-pub fn compute_scenario_analysis(scenario: &Scenario) -> ScenarioAnalysis {
+pub fn analyze_scenario(scenario: &Scenario) -> ScenarioAnalysis {
     let monthly = &scenario.monthly_statement;
     let total = &scenario.total_statement;
     let purchase = &scenario.purchase;

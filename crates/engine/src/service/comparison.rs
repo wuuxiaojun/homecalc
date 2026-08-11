@@ -1,4 +1,4 @@
-use crate::domain::scenario::Scenario;
+use crate::{config::constant::DEFAULT_DISCOUNT_RATE, domain::scenario::Scenario};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -9,9 +9,6 @@ pub struct ScenarioComparison {
     pub months_saved: i32,
 
     // 2. Outflows
-    pub baseline_monthly_payment: f64,
-    pub alternative_monthly_payment: f64,
-    pub delta_monthly_payment: f64,
     pub baseline_extra_payment: f64,
     pub alternative_extra_payment: f64,
     pub delta_extra_payment: f64,
@@ -32,9 +29,81 @@ pub struct ScenarioComparison {
     pub alternative_gross_paid: f64,
     pub delta_gross_paid: f64,
 
-    // 5. Internal Rate of Return
+    // 5. Analytics
+    pub baseline_pv: f64,
+    pub alternative_pv: f64,
+    pub delta_pv: f64,
     pub irr: f64,
-    pub pv: f64,
+}
+
+pub fn compare_scenarios(baseline: &Scenario, alternative: &Scenario) -> ScenarioComparison {
+    // 1. Timeline
+    let baseline_payoff_month = baseline.monthly_statement.last().map_or(0, |r| r.month);
+    let alternative_payoff_month = alternative.monthly_statement.last().map_or(0, |r| r.month);
+    let months_saved = baseline_payoff_month as i32 - alternative_payoff_month as i32;
+
+    // 2. Outflows
+    let baseline_extra_payment: f64 = baseline
+        .yearly_statement
+        .iter()
+        .map(|y| y.annual_extra_payment)
+        .sum();
+    let alternative_extra_payment: f64 = alternative
+        .yearly_statement
+        .iter()
+        .map(|y| y.annual_extra_payment)
+        .sum();
+    let delta_extra_payment = alternative_extra_payment - baseline_extra_payment;
+
+    let baseline_interest_paid = baseline.total_statement.total_interest_paid;
+    let alternative_interest_paid = alternative.total_statement.total_interest_paid;
+    let delta_interest_paid = alternative_interest_paid - baseline_interest_paid;
+
+    // 3. Inflows
+    let baseline_cash_interest = baseline.total_statement.total_cash_interest;
+    let alternative_cash_interest = alternative.total_statement.total_cash_interest;
+    let delta_cash_interest = alternative_cash_interest - baseline_cash_interest;
+
+    let baseline_tax_savings = baseline.total_statement.total_tax_savings;
+    let alternative_tax_savings = alternative.total_statement.total_tax_savings;
+    let delta_tax_savings = alternative_tax_savings - baseline_tax_savings;
+
+    // 4. Aggregate
+    let baseline_gross_paid = baseline.total_statement.total_paid;
+    let alternative_gross_paid = alternative.total_statement.total_paid;
+    let delta_gross_paid = alternative_gross_paid - baseline_gross_paid;
+
+    // 5. Analytics
+    let baseline_pv = calculate_scenario_pv(baseline);
+    let alternative_pv = calculate_scenario_pv(alternative);
+    let delta_pv = alternative_pv - baseline_pv;
+
+    let irr = calculate_strategy_irr(baseline, alternative).unwrap_or(0.0);
+
+    ScenarioComparison {
+        baseline_payoff_month,
+        alternative_payoff_month,
+        months_saved,
+        baseline_extra_payment,
+        alternative_extra_payment,
+        delta_extra_payment,
+        baseline_interest_paid,
+        alternative_interest_paid,
+        delta_interest_paid,
+        baseline_cash_interest,
+        alternative_cash_interest,
+        delta_cash_interest,
+        baseline_tax_savings,
+        alternative_tax_savings,
+        delta_tax_savings,
+        baseline_gross_paid,
+        alternative_gross_paid,
+        delta_gross_paid,
+        baseline_pv,
+        alternative_pv,
+        delta_pv,
+        irr,
+    }
 }
 
 pub fn extract_monthly_outflow(scenario: &Scenario, month_idx: usize) -> f64 {
@@ -116,8 +185,8 @@ fn solve_irr_newton_raphson(cash_flows: &[f64]) -> Option<f64> {
 
 /// Calculates the Present Value (PV) of a Scenario's net cash outflows
 /// discounted at a given annual discount rate (e.g., 0.066 for 6.6%).
-pub fn calculate_scenario_pv(scenario: &Scenario, discount_rate_annual: f64) -> f64 {
-    let monthly_r = discount_rate_annual / 12.0;
+pub fn calculate_scenario_pv(scenario: &Scenario) -> f64 {
+    let monthly_r = DEFAULT_DISCOUNT_RATE / 12.0;
 
     // Number of active months in the schedule
     let total_months = scenario.monthly_statement.len();
