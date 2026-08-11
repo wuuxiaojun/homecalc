@@ -111,7 +111,7 @@ pub fn compare_scenarios(baseline: &Scenario, alternative: &Scenario) -> Scenari
 }
 
 // Calculate the present value (pv)
-fn calculate_scenario_pv(scenario: &Scenario) -> f64 {
+pub fn calculate_scenario_pv(scenario: &Scenario) -> f64 {
     let monthly_r = DEFAULT_DISCOUNT_RATE / 12.0;
     let total_months = scenario.monthly_statement.len();
     let mut total_pv = 0.0;
@@ -127,7 +127,7 @@ fn calculate_scenario_pv(scenario: &Scenario) -> f64 {
 }
 
 // Calculates the internal rate of return (irr)
-fn calculate_strategy_irr(baseline: &Scenario, alternative: &Scenario) -> Option<f64> {
+pub fn calculate_strategy_irr(baseline: &Scenario, alternative: &Scenario) -> Option<f64> {
     let last_month_a = baseline.monthly_statement.last().map_or(0, |r| r.month) as usize;
     let last_month_b = alternative.monthly_statement.last().map_or(0, |r| r.month) as usize;
 
@@ -150,7 +150,7 @@ fn calculate_strategy_irr(baseline: &Scenario, alternative: &Scenario) -> Option
 }
 
 // Newton-Raphson solver for irr
-fn solve_irr_newton_raphson(cash_flows: &[f64]) -> Option<f64> {
+pub fn solve_irr_newton_raphson(cash_flows: &[f64]) -> Option<f64> {
     let mut rate: f64 = 0.005; // Initial guess: 0.5% monthly (~6.0% annual)
     let max_iterations = 100;
     let tolerance = 1e-7;
@@ -185,7 +185,7 @@ fn solve_irr_newton_raphson(cash_flows: &[f64]) -> Option<f64> {
 
 // Extracts monthly outflow
 // Auxiliary function for irr & pv calculation
-fn extract_monthly_outflow(scenario: &Scenario, month_idx: usize) -> f64 {
+pub fn extract_monthly_outflow(scenario: &Scenario, month_idx: usize) -> f64 {
     let monthly_row = match scenario.monthly_statement.get(month_idx) {
         Some(row) => row,
         None => return 0.0,
@@ -204,4 +204,118 @@ fn extract_monthly_outflow(scenario: &Scenario, month_idx: usize) -> f64 {
         0.0
     };
     (total_paid - annual_tax_savings).max(0.0)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::domain::house::House;
+    use crate::domain::purchase::Purchase;
+    use crate::domain::statement::{HouseStatement, MonthlyStatementRow, TotalStatement, YearlyStatementRow};
+    use std::collections::BTreeMap;
+
+    fn create_mock_scenario(months: u32, monthly_paid: f64, annual_tax_savings: f64) -> Scenario {
+        let mut monthly_statement = Vec::new();
+        for m in 1..=months {
+            monthly_statement.push(MonthlyStatementRow {
+                month: m,
+                cash: None,
+                mortgage: None,
+                loc: None,
+                house: HouseStatement {
+                    monthly_property_tax: 200.0,
+                    monthly_insurance: 50.0,
+                    monthly_hoa: 10.0,
+                },
+                total_debt_paid: monthly_paid - 260.0,
+                total_extra_payment: 0.0,
+                total_holding_cost: 260.0,
+                total_paid: monthly_paid,
+                total_remaining_balance: if m == months { 0.0 } else { 100_000.0 },
+            });
+        }
+
+        let num_years = (months + 11) / 12;
+        let mut yearly_statement = Vec::new();
+        for y in 1..=num_years {
+            yearly_statement.push(YearlyStatementRow {
+                year: y,
+                annual_cash_interest: 0.0,
+                annual_interest_paid: 5000.0,
+                annual_debt_paid: monthly_paid * 12.0 - 3120.0,
+                annual_tax_savings,
+                annual_extra_payment: 0.0,
+                annual_holding_cost: 3120.0,
+                annual_paid: monthly_paid * 12.0 - annual_tax_savings,
+                ending_remaining_balance: 0.0,
+            });
+        }
+
+        Scenario {
+            purchase: Purchase {
+                name: "Mock Purchase".to_string(),
+                house: House {
+                    purchase_price: 300_000.0,
+                    annual_property_tax_rate: 1.0,
+                    annual_insurance: 600.0,
+                    monthly_hoa: 10.0,
+                },
+                tools: vec![],
+                mortgage_repay: BTreeMap::new(),
+                loc_repay: BTreeMap::new(),
+            },
+            monthly_statement,
+            yearly_statement,
+            total_statement: TotalStatement {
+                total_cash_interest: 0.0,
+                total_holding_cost: 3120.0 * num_years as f64,
+                total_interest_paid: 5000.0 * num_years as f64,
+                total_tax_savings: annual_tax_savings * num_years as f64,
+                total_paid: (monthly_paid * 12.0 - annual_tax_savings) * num_years as f64,
+            },
+        }
+    }
+
+    #[test]
+    fn test_extract_monthly_outflow_bounds() {
+        let scenario = create_mock_scenario(12, 1000.0, 0.0);
+        assert_eq!(extract_monthly_outflow(&scenario, 0), 1000.0);
+        assert_eq!(extract_monthly_outflow(&scenario, 5), 1000.0);
+        assert_eq!(extract_monthly_outflow(&scenario, 11), 1000.0);
+        assert_eq!(extract_monthly_outflow(&scenario, 99), 0.0);
+    }
+
+    #[test]
+    fn test_extract_monthly_outflow_annual_tax() {
+        let scenario = create_mock_scenario(24, 1000.0, 200.0);
+        // Month 1 (index 0) - tax savings should NOT apply
+        assert_eq!(extract_monthly_outflow(&scenario, 0), 1000.0);
+        // Month 12 (index 11) - tax savings (200.0) SHOULD apply
+        assert_eq!(extract_monthly_outflow(&scenario, 11), 800.0);
+        // Month 24 (index 23) - tax savings SHOULD apply
+        assert_eq!(extract_monthly_outflow(&scenario, 23), 800.0);
+    }
+
+    #[test]
+    fn test_solve_irr_newton_raphson() {
+        // Known stream: -100 upfront, +110 in month 1 -> monthly rate r = 10%
+        let cash_flows = vec![-100.0, 110.0];
+        let result = solve_irr_newton_raphson(&cash_flows);
+        assert!(result.is_some());
+        let annual_irr = result.unwrap();
+        let expected_annual = (1.10_f64).powi(12) - 1.0;
+        assert!((annual_irr - expected_annual).abs() < 1e-4);
+
+        // Non-convergent stream: all positive cash flows
+        let bad_flows = vec![100.0, 100.0, 100.0];
+        assert!(solve_irr_newton_raphson(&bad_flows).is_none());
+    }
+
+    #[test]
+    fn test_calculate_scenario_pv() {
+        let scenario = create_mock_scenario(12, 1000.0, 0.0);
+        let pv = calculate_scenario_pv(&scenario);
+        assert!(pv > 0.0);
+        assert!(pv < 12_000.0); // Discounted total must be strictly less than nominal sum of 12,000
+    }
 }

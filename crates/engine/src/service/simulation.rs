@@ -290,3 +290,62 @@ fn calculate_monthly_compound(amount: f64, annual_rate: f64) -> Compound {
         total: amount + interest,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::domain::house::House;
+    use std::collections::BTreeMap;
+
+    #[test]
+    fn test_calculate_mortgage_pmt_standard() {
+        let pmt = calculate_mortgage_pmt(800_000.0, 6.5, 30);
+        assert!((pmt - 5056.54).abs() < 0.1);
+    }
+
+    #[test]
+    fn test_calculate_mortgage_pmt_zero_rate() {
+        let pmt = calculate_mortgage_pmt(800_000.0, 0.0, 30);
+        assert_eq!(pmt, 800_000.0 / 360.0);
+    }
+
+    #[test]
+    fn test_calculate_mortgage_pmt_zero_principal_or_term() {
+        assert_eq!(calculate_mortgage_pmt(0.0, 6.5, 30), 0.0);
+        assert_eq!(calculate_mortgage_pmt(800_000.0, 6.5, 0), 0.0);
+    }
+
+    #[test]
+    fn test_calculate_monthly_compound() {
+        let c1 = calculate_monthly_compound(100_000.0, 6.0);
+        assert_eq!(c1.interest, 500.0);
+        assert_eq!(c1.total, 100_500.0);
+
+        let c2 = calculate_monthly_compound(100_000.0, 0.0);
+        assert_eq!(c2.interest, 0.0);
+        assert_eq!(c2.total, 100_000.0);
+
+        let c3 = calculate_monthly_compound(-50_000.0, 6.0);
+        assert_eq!(c3.interest, 0.0);
+        assert_eq!(c3.total, 0.0);
+    }
+
+    #[test]
+    fn test_simulate_monthly_empty_tools() {
+        let purchase = Purchase {
+            name: "Empty Tools Purchase".to_string(),
+            house: House {
+                purchase_price: 500_000.0,
+                annual_property_tax_rate: 1.2,
+                annual_insurance: 1_200.0,
+                monthly_hoa: 50.0,
+            },
+            tools: vec![],
+            mortgage_repay: BTreeMap::new(),
+            loc_repay: BTreeMap::new(),
+        };
+
+        let result = simulate_monthly(&purchase);
+        assert!(result.is_empty());
+    }
+}
