@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CashStatement {
     pub cash_now: f64,
-    pub interest_earned: f64,
+    pub cash_interest: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

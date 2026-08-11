@@ -1,4 +1,4 @@
-use crate::config::constants::*;
+use crate::config::constant::*;
 use crate::domain::purchase::*;
 use crate::domain::statement::*;
 use crate::domain::tool::*;
@@ -51,7 +51,7 @@ pub fn simulate_monthly(purchase: &Purchase) -> Vec<MonthlyStatementRow> {
             cash_balance = cash_compound.total;
             CashStatement {
                 cash_now: cash_balance,
-                interest_earned: cash_compound.interest,
+                cash_interest: cash_compound.interest,
             }
         });
 
@@ -125,7 +125,7 @@ pub fn simulate_monthly(purchase: &Purchase) -> Vec<MonthlyStatementRow> {
             + loc_statement.as_ref().map_or(0.0, |l| l.extra_payment);
         let total_holding_cost = monthly_property_tax + monthly_insurance + monthly_hoa;
         let total_paid = total_debt_paid + total_extra_payment + total_holding_cost
-            - cash_statement.as_ref().map_or(0.0, |c| c.interest_earned);
+            - cash_statement.as_ref().map_or(0.0, |c| c.cash_interest);
         let total_remaining_balance = clamp_zero(
             mortgage_statement
                 .as_ref()
@@ -175,7 +175,7 @@ pub fn aggregate_yearly(statement: &[MonthlyStatementRow]) -> Vec<YearlyStatemen
 
             for row in chunk {
                 if let Some(c) = &row.cash {
-                    annual_cash_interest += c.interest_earned;
+                    annual_cash_interest += c.cash_interest;
                 }
                 if let Some(m) = &row.mortgage {
                     annual_mortgage_interest += m.interest_paid;

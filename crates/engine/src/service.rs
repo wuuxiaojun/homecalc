@@ -1,4 +1,5 @@
 pub mod analysis;
+pub mod comparison;
 pub mod formula;
-pub mod simulate;
+pub mod simulation;
 pub mod utility;

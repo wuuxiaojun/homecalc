@@ -1,7 +1,7 @@
 use engine::domain::house::House;
 use engine::domain::purchase::Purchase;
 use engine::domain::tool::{Cash, Loc, Mortgage, Tool};
-use engine::service::simulate::{aggregate_yearly, simulate_monthly};
+use engine::service::simulation::{aggregate_yearly, simulate_monthly};
 use std::collections::BTreeMap;
 
 fn main() {

@@ -1,4 +1,4 @@
-use crate::config::constants::EPSILON;
+use crate::config::constant::EPSILON;
 
 #[inline]
 pub fn clamp_zero(val: f64) -> f64 {
