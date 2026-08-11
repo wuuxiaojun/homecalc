@@ -1,6 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::domain::scenario::Scenario;
-
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ScenarioComparison {
@@ -34,8 +33,6 @@ pub struct ScenarioComparison {
     pub delta_gross_paid: f64,
 
     // 5. Internal Rate of Return
-
-    IRR,
-    PV,
-
+    pub irr: f64,
+    pub pv: f64,
 }
