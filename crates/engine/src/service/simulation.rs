@@ -2,7 +2,6 @@ use crate::config::constant::*;
 use crate::domain::purchase::*;
 use crate::domain::statement::*;
 use crate::domain::tool::*;
-use crate::service::formula::{calculate_monthly_compound, calculate_mortgage_pmt};
 use crate::service::utility::*;
 
 // Simulate Monthly Statement Row
@@ -245,5 +244,46 @@ pub fn compute_metrics(yearly_statement: &[YearlyStatementRow]) -> TotalStatemen
         total_interest_paid,
         total_tax_savings,
         total_paid,
+    }
+}
+
+fn calculate_mortgage_pmt(principal: f64, rate: f64, year: u32) -> f64 {
+    if principal <= 0.0 || year == 0 {
+        return 0.0;
+    }
+
+    let total_payments = (year * 12) as i32;
+
+    if rate <= 0.0 {
+        return principal / total_payments as f64;
+    }
+
+    let monthly_rate = (rate * 0.01) / 12.0;
+
+    let factor = (1.0 + monthly_rate).powi(total_payments);
+
+    principal * (monthly_rate * factor) / (factor - 1.0)
+}
+
+// Monthly Compound Function for Mortgage & Loc & Cash
+struct Compound {
+    pub interest: f64,
+    pub total: f64,
+}
+
+fn calculate_monthly_compound(amount: f64, annual_rate: f64) -> Compound {
+    if amount <= 0.0 || annual_rate <= 0.0 {
+        return Compound {
+            interest: 0.0,
+            total: amount.max(0.0),
+        };
+    }
+
+    let monthly_rate = (annual_rate * 0.01) / 12.0;
+    let interest = amount * monthly_rate;
+
+    Compound {
+        interest,
+        total: amount + interest,
     }
 }

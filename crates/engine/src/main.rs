@@ -2,7 +2,7 @@ use engine::domain::house::House;
 use engine::domain::purchase::Purchase;
 use engine::domain::scenario::Scenario;
 use engine::domain::tool::{Cash, Loc, Mortgage, Tool};
-use engine::service::analysis::{compute_scenario_analysis, ScenarioAnalysis};
+use engine::service::analysis::{ScenarioAnalysis, compute_scenario_analysis};
 use engine::service::simulation::{aggregate_yearly, compute_metrics, simulate_monthly};
 use std::collections::BTreeMap;
 
@@ -24,16 +24,32 @@ fn print_scenario(scenario: &Scenario) {
         "\n=================================================================================================================================================="
     );
     println!(" PURCHASE SCENARIO: {}", scenario.purchase.name);
-    println!(" House Purchase Price: ${:.2}", scenario.purchase.house.purchase_price);
+    println!(
+        " House Purchase Price: ${:.2}",
+        scenario.purchase.house.purchase_price
+    );
     println!(
         "=================================================================================================================================================="
     );
 
     // 1. Monthly Schedule
-    println!("\n--- MONTHLY STATEMENT SCHEDULE (Total Months: {}) ---\n", scenario.monthly_statement.len());
+    println!(
+        "\n--- MONTHLY STATEMENT SCHEDULE (Total Months: {}) ---\n",
+        scenario.monthly_statement.len()
+    );
     println!(
         "{:<5} | {:<12} | {:<11} | {:<11} | {:<12} | {:<10} | {:<10} | {:<11} | {:<12} | {:<12} | {:<13}",
-        "Month", "Cash Bal", "Mortg PMT", "Mortg Extra", "Mortg Bal", "LOC PMT", "LOC Extra", "LOC Bal", "Holding Cost", "Total Paid", "Total Rem Bal"
+        "Month",
+        "Cash Bal",
+        "Mortg PMT",
+        "Mortg Extra",
+        "Mortg Bal",
+        "LOC PMT",
+        "LOC Extra",
+        "LOC Bal",
+        "Holding Cost",
+        "Total Paid",
+        "Total Rem Bal"
     );
     println!("{}", "-".repeat(146));
 
@@ -63,10 +79,9 @@ fn print_scenario(scenario: &Scenario) {
 
         let row = &scenario.monthly_statement[idx];
         let cash_bal = row.cash.as_ref().map_or(0.0, |c| c.cash_now);
-        let mortg_pmt = row
-            .mortgage
-            .as_ref()
-            .map_or(0.0, |m| (m.principal_paid + m.interest_paid).min(m.monthly_payment));
+        let mortg_pmt = row.mortgage.as_ref().map_or(0.0, |m| {
+            (m.principal_paid + m.interest_paid).min(m.monthly_payment)
+        });
         let mortg_extra = row.mortgage.as_ref().map_or(0.0, |m| m.extra_payment);
         let mortg_bal = row.mortgage.as_ref().map_or(0.0, |m| m.remaining_balance);
 
@@ -98,7 +113,15 @@ fn print_scenario(scenario: &Scenario) {
     println!("\n--- YEARLY SUMMARY STATEMENT ---");
     println!(
         "{:<5} | {:<13} | {:<14} | {:<12} | {:<12} | {:<13} | {:<12} | {:<15} | {:<15}",
-        "Year", "Cash Yield", "Interest Paid", "Debt Paid", "Extra Paid", "Holding Cost", "Tax Savings", "Net Annual Paid", "Ending Rem Bal"
+        "Year",
+        "Cash Yield",
+        "Interest Paid",
+        "Debt Paid",
+        "Extra Paid",
+        "Holding Cost",
+        "Tax Savings",
+        "Net Annual Paid",
+        "Ending Rem Bal"
     );
     println!("{}", "-".repeat(133));
 
@@ -132,9 +155,18 @@ fn print_analysis(name: &str, analysis: &ScenarioAnalysis) {
     println!(" SCENARIO ANALYSIS RESULTS: {}", name);
     println!("--------------------------------------------------");
     println!(" Payoff Month:              {}", analysis.payoff_month);
-    println!(" Effective Monthly Cost:   ${:.2}", analysis.effective_monthly_cost);
-    println!(" Waste Ratio (Int/Borrow):  {:.2}%", analysis.waste_ratio * 100.0);
-    println!(" Tax Savings Ratio:        {:.2}%", analysis.tax_savings_ratio * 100.0);
+    println!(
+        " Effective Monthly Cost:   ${:.2}",
+        analysis.effective_monthly_cost
+    );
+    println!(
+        " Waste Ratio (Int/Borrow):  {:.2}%",
+        analysis.waste_ratio * 100.0
+    );
+    println!(
+        " Tax Savings Ratio:        {:.2}%",
+        analysis.tax_savings_ratio * 100.0
+    );
 }
 
 fn main() {
@@ -213,9 +245,31 @@ fn main() {
     let analysis_a = compute_scenario_analysis(&scenario_a);
     let analysis_b = compute_scenario_analysis(&scenario_b);
 
-    println!("\n==================================================================================================================================================");
+    println!(
+        "\n=================================================================================================================================================="
+    );
     println!(" SINGLE SCENARIO ANALYSIS COMPARISON");
-    println!("==================================================================================================================================================");
+    println!(
+        "=================================================================================================================================================="
+    );
     print_analysis(&scenario_a.purchase.name, &analysis_a);
     print_analysis(&scenario_b.purchase.name, &analysis_b);
+
+    // Compute and print Strategy IRR
+    let irr = calculate_strategy_irr(&scenario_a, &scenario_b);
+
+    println!(
+        "\n=================================================================================================================================================="
+    );
+    println!(" STRATEGY IRR COMPARISON (Baseline: A, Alternative: B)");
+    println!(
+        "=================================================================================================================================================="
+    );
+    match irr {
+        Some(rate) => println!(
+            " Calculated Strategy IRR (Annualized): {:.2}%",
+            rate * 100.0
+        ),
+        None => println!(" Strategy IRR: Failed to converge (or non-convergent cash flows)"),
+    }
 }
