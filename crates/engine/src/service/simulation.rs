@@ -3,6 +3,7 @@
 
 use crate::config::constant::*;
 use crate::domain::purchase::*;
+use crate::domain::scenario::*;
 use crate::domain::statement::*;
 use crate::domain::tool::*;
 use crate::service::utility::*;
@@ -247,6 +248,20 @@ pub fn compute_metrics(yearly_statement: &[YearlyStatementRow]) -> TotalStatemen
         total_interest_paid,
         total_tax_savings,
         total_paid,
+    }
+}
+
+// Create scenario
+pub fn create_scenario(purchase: Purchase) -> Scenario {
+    let monthly_statement = simulate_monthly(&purchase);
+    let yearly_statement = aggregate_yearly(&monthly_statement);
+    let total_statement = compute_metrics(&yearly_statement);
+
+    Scenario {
+        purchase,
+        monthly_statement,
+        yearly_statement,
+        total_statement,
     }
 }
 
