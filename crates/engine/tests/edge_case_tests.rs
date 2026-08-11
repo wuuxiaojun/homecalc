@@ -1,7 +1,9 @@
 use engine::domain::house::House;
 use engine::domain::purchase::Purchase;
-use engine::domain::tool::{Mortgage, Tool};
-use engine::service::simulation::simulate_monthly;
+use engine::domain::scenario::Scenario;
+use engine::domain::tool::{Cash, Mortgage, Tool};
+use engine::service::comparison::calculate_strategy_irr;
+use engine::service::simulation::{aggregate_yearly, compute_metrics, simulate_monthly};
 use std::collections::BTreeMap;
 
 #[test]
@@ -98,4 +100,97 @@ fn test_high_inflation_holding_costs() {
 
     // HOA grows at 4% (1.04)
     assert!((m13_hoa - (m1_hoa * 1.04)).abs() < 1e-4);
+}
+
+#[test]
+fn test_over_repayment_extra_payment_clamped() {
+    let mut mortgage_repay = BTreeMap::new();
+    mortgage_repay.insert(1, 50_000.0); // $50,000 extra on a $10,000 mortgage
+
+    let purchase = Purchase {
+        name: "Small Mortgage Over-Repayment".to_string(),
+        house: House {
+            purchase_price: 200_000.0,
+            annual_property_tax_rate: 1.0,
+            annual_insurance: 1_000.0,
+            monthly_hoa: 50.0,
+        },
+        tools: vec![Tool::Mortgage(Mortgage {
+            amount: 10_000.0,
+            rate: 5.0,
+            term: 5,
+        })],
+        mortgage_repay,
+        loc_repay: BTreeMap::new(),
+    };
+
+    let monthly = simulate_monthly(&purchase);
+
+    assert_eq!(monthly.len(), 1);
+    let m1 = &monthly[0];
+    let extra = m1.mortgage.as_ref().unwrap().extra_payment;
+    assert!(extra <= 10_000.0);
+    assert_eq!(m1.total_remaining_balance, 0.0);
+}
+
+#[test]
+fn test_zero_debt_setup() {
+    let purchase = Purchase {
+        name: "Zero Debt Setup".to_string(),
+        house: House {
+            purchase_price: 500_000.0,
+            annual_property_tax_rate: 1.0,
+            annual_insurance: 1_200.0,
+            monthly_hoa: 100.0,
+        },
+        tools: vec![Tool::Cash(Cash {
+            amount: 500_000.0,
+            rate: 4.0,
+        })],
+        mortgage_repay: BTreeMap::new(),
+        loc_repay: BTreeMap::new(),
+    };
+
+    let monthly = simulate_monthly(&purchase);
+    assert!(monthly.is_empty());
+}
+
+#[test]
+fn test_irr_non_convergence_safety() {
+    let purchase = Purchase {
+        name: "Baseline Purchase".to_string(),
+        house: House {
+            purchase_price: 500_000.0,
+            annual_property_tax_rate: 1.2,
+            annual_insurance: 1_200.0,
+            monthly_hoa: 100.0,
+        },
+        tools: vec![Tool::Mortgage(Mortgage {
+            amount: 400_000.0,
+            rate: 6.0,
+            term: 30,
+        })],
+        mortgage_repay: BTreeMap::new(),
+        loc_repay: BTreeMap::new(),
+    };
+
+    let monthly_a = simulate_monthly(&purchase);
+    let yearly_a = aggregate_yearly(&monthly_a);
+    let total_a = compute_metrics(&yearly_a);
+    let scenario_a = Scenario {
+        purchase: purchase.clone(),
+        monthly_statement: monthly_a,
+        yearly_statement: yearly_a,
+        total_statement: total_a,
+    };
+
+    // Scenario B has strictly higher outflows every month without debt reduction
+    // Delta cash flows are all strictly positive (+1000.0), so NPV(r) = 0 has no real root and IRR solver returns None.
+    let mut scenario_b = scenario_a.clone();
+    for row in &mut scenario_b.monthly_statement {
+        row.total_paid += 1000.0;
+    }
+
+    let irr_result = calculate_strategy_irr(&scenario_a, &scenario_b);
+    assert!(irr_result.is_none());
 }
