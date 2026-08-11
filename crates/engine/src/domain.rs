@@ -1,3 +1,6 @@
+//! domain.rs
+//! Domain Module
+
 pub mod house;
 pub mod purchase;
 pub mod scenario;

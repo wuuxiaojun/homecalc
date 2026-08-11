@@ -1,20 +1,25 @@
+//! statement.rs
+//! Monthly, yearly and total statement
 use serde::{Deserialize, Serialize};
 
+// Cash-related
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CashStatement {
-    pub cash_now: f64,
-    pub cash_interest: f64,
+    pub cash_now: f64,      // unused cash current amount
+    pub cash_interest: f64, // current - initial
 }
 
+// Mortgage-related
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MortgageStatement {
-    pub monthly_payment: f64,
-    pub principal_paid: f64,
-    pub interest_paid: f64,
+    pub monthly_payment: f64, // mortgage pmt
+    pub principal_paid: f64,  // principal amount in pmt
+    pub interest_paid: f64,   // interest amount in pmt
     pub extra_payment: f64,
     pub remaining_balance: f64,
 }
 
+// Loc-related
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LocStatement {
     pub monthly_payment: f64,
@@ -22,6 +27,7 @@ pub struct LocStatement {
     pub remaining_balance: f64,
 }
 
+// House-related
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HouseStatement {
     pub monthly_property_tax: f64,
@@ -29,7 +35,7 @@ pub struct HouseStatement {
     pub monthly_hoa: f64,
 }
 
-// Monthly Statement
+// Monthly statement
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MonthlyStatementRow {
     pub month: u32,
@@ -37,28 +43,28 @@ pub struct MonthlyStatementRow {
     pub mortgage: Option<MortgageStatement>,
     pub loc: Option<LocStatement>,
     pub house: HouseStatement,
-    pub total_debt_paid: f64,
+    pub total_debt_paid: f64, // monthly mortgage + loc required payment
     pub total_extra_payment: f64,
     pub total_holding_cost: f64,
-    pub total_paid: f64, // debt + extra + holding - interest
+    pub total_paid: f64, // debt + extra + holding - cash interest
     pub total_remaining_balance: f64,
 }
 
-// Yearly Statement
+// Yearly statement
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct YearlyStatementRow {
     pub year: u32,
     pub annual_cash_interest: f64,
-    pub annual_interest_paid: f64,
-    pub annual_debt_paid: f64,
-    pub annual_tax_savings: f64,
+    pub annual_interest_paid: f64, // mortgage + loc interest
+    pub annual_debt_paid: f64,     // annual required payment
+    pub annual_tax_savings: f64,   // tax savings for mortgage interest
     pub annual_extra_payment: f64,
     pub annual_holding_cost: f64,
-    pub annual_paid: f64, // debt + extra + holding - interest - tax
+    pub annual_paid: f64, // debt + extra + holding - cash - tax savings
     pub ending_remaining_balance: f64,
 }
 
-// Total Statement
+// Aggregate for all
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TotalStatement {
     pub total_cash_interest: f64,

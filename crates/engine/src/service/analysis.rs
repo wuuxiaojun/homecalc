@@ -1,21 +1,20 @@
-// analysis.rs
-// Single Purchase Analysis
+//! analysis.rs
+//! Single scenario analysis module
 
 use crate::domain::scenario::Scenario;
 use crate::domain::tool::Tool;
 use serde::{Deserialize, Serialize};
 
+// Single scenario metrics
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ScenarioAnalysis {
-    // 1. Efficiency & Friction Ratios
-    pub waste_ratio: f64,
-    pub tax_savings_ratio: f64,
-
-    // 2. Speed & Capital Acceleration
+    pub waste_ratio: f64,       // interest paid / principal borrowed
+    pub tax_savings_ratio: f64, //tax savings / interest paid
     pub payoff_month: u32,
-    pub effective_monthly_cost: f64,
+    pub effective_monthly_cost: f64, // total paid / payoff month
 }
 
+// Computes single-scenario analysis metrics
 pub fn analyze_scenario(scenario: &Scenario) -> ScenarioAnalysis {
     let monthly = &scenario.monthly_statement;
     let total = &scenario.total_statement;

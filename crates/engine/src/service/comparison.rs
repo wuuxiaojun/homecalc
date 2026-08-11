@@ -1,6 +1,10 @@
+//! comparison.rs
+//! Scenario comparison
+
 use crate::{config::constant::DEFAULT_DISCOUNT_RATE, domain::scenario::Scenario};
 use serde::{Deserialize, Serialize};
 
+// Scenario comparison metrics
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ScenarioComparison {
     // 1. Timeline
@@ -36,6 +40,7 @@ pub struct ScenarioComparison {
     pub irr: f64,
 }
 
+// Compute scenarios comparison metrics
 pub fn compare_scenarios(baseline: &Scenario, alternative: &Scenario) -> ScenarioComparison {
     // 1. Timeline
     let baseline_payoff_month = baseline.monthly_statement.last().map_or(0, |r| r.month);
@@ -77,7 +82,6 @@ pub fn compare_scenarios(baseline: &Scenario, alternative: &Scenario) -> Scenari
     let baseline_pv = calculate_scenario_pv(baseline);
     let alternative_pv = calculate_scenario_pv(alternative);
     let delta_pv = alternative_pv - baseline_pv;
-
     let irr = calculate_strategy_irr(baseline, alternative).unwrap_or(0.0);
 
     ScenarioComparison {
@@ -106,28 +110,24 @@ pub fn compare_scenarios(baseline: &Scenario, alternative: &Scenario) -> Scenari
     }
 }
 
-pub fn extract_monthly_outflow(scenario: &Scenario, month_idx: usize) -> f64 {
-    let monthly_row = match scenario.monthly_statement.get(month_idx) {
-        Some(row) => row,
-        None => return 0.0,
-    };
+// Calculate the present value (pv)
+fn calculate_scenario_pv(scenario: &Scenario) -> f64 {
+    let monthly_r = DEFAULT_DISCOUNT_RATE / 12.0;
+    let total_months = scenario.monthly_statement.len();
+    let mut total_pv = 0.0;
 
-    let total_paid = monthly_row.total_paid;
-    let current_month = (month_idx + 1) as u32;
+    for month_idx in 0..total_months {
+        let m = (month_idx + 1) as i32;
+        let net_outflow = extract_monthly_outflow(scenario, month_idx);
+        let discounted_outflow = net_outflow / (1.0 + monthly_r).powi(m);
+        total_pv += discounted_outflow;
+    }
 
-    let annual_tax_savings = if current_month % 12 == 0 {
-        let year_idx = ((current_month / 12) - 1) as usize;
-        scenario
-            .yearly_statement
-            .get(year_idx)
-            .map_or(0.0, |y| y.annual_tax_savings)
-    } else {
-        0.0
-    };
-    (total_paid - annual_tax_savings).max(0.0)
+    total_pv
 }
 
-pub fn calculate_strategy_irr(baseline: &Scenario, alternative: &Scenario) -> Option<f64> {
+// Calculates the internal rate of return (irr)
+fn calculate_strategy_irr(baseline: &Scenario, alternative: &Scenario) -> Option<f64> {
     let last_month_a = baseline.monthly_statement.last().map_or(0, |r| r.month) as usize;
     let last_month_b = alternative.monthly_statement.last().map_or(0, |r| r.month) as usize;
 
@@ -149,7 +149,7 @@ pub fn calculate_strategy_irr(baseline: &Scenario, alternative: &Scenario) -> Op
     solve_irr_newton_raphson(&delta_cash_flows)
 }
 
-/// Newton-Raphson solver for finding the monthly root and converting to annualized IRR.
+// Newton-Raphson solver for irr
 fn solve_irr_newton_raphson(cash_flows: &[f64]) -> Option<f64> {
     let mut rate: f64 = 0.005; // Initial guess: 0.5% monthly (~6.0% annual)
     let max_iterations = 100;
@@ -183,28 +183,25 @@ fn solve_irr_newton_raphson(cash_flows: &[f64]) -> Option<f64> {
     None // Failed to converge
 }
 
-/// Calculates the Present Value (PV) of a Scenario's net cash outflows
-/// discounted at a given annual discount rate (e.g., 0.066 for 6.6%).
-pub fn calculate_scenario_pv(scenario: &Scenario) -> f64 {
-    let monthly_r = DEFAULT_DISCOUNT_RATE / 12.0;
+// Extracts monthly outflow
+// Auxiliary function for irr & pv calculation
+fn extract_monthly_outflow(scenario: &Scenario, month_idx: usize) -> f64 {
+    let monthly_row = match scenario.monthly_statement.get(month_idx) {
+        Some(row) => row,
+        None => return 0.0,
+    };
 
-    // Number of active months in the schedule
-    let total_months = scenario.monthly_statement.len();
+    let total_paid = monthly_row.total_paid;
+    let current_month = (month_idx + 1) as u32;
 
-    let mut total_pv = 0.0;
-
-    for month_idx in 0..total_months {
-        // 1-based month index for discounting exponent
-        let m = (month_idx + 1) as i32;
-
-        // Extract net outflow using the same logic as irr.rs (total_paid - cash_yield - annual_tax_shield)
-        let net_outflow = extract_monthly_outflow(scenario, month_idx);
-
-        // Discount formula: Outflow / (1 + r)^m
-        let discounted_outflow = net_outflow / (1.0 + monthly_r).powi(m);
-
-        total_pv += discounted_outflow;
-    }
-
-    total_pv
+    let annual_tax_savings = if current_month % 12 == 0 {
+        let year_idx = ((current_month / 12) - 1) as usize;
+        scenario
+            .yearly_statement
+            .get(year_idx)
+            .map_or(0.0, |y| y.annual_tax_savings)
+    } else {
+        0.0
+    };
+    (total_paid - annual_tax_savings).max(0.0)
 }

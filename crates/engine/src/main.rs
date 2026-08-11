@@ -3,10 +3,13 @@ use engine::domain::purchase::Purchase;
 use engine::domain::scenario::Scenario;
 use engine::domain::tool::{Cash, Loc, Mortgage, Tool};
 use engine::service::analysis::{ScenarioAnalysis, analyze_scenario};
-use engine::service::comparison::{calculate_scenario_pv, calculate_strategy_irr};
+use engine::service::comparison::{
+    calculate_scenario_pv, calculate_strategy_irr, compare_scenarios,
+};
 use engine::service::simulation::{aggregate_yearly, compute_metrics, simulate_monthly};
 use std::collections::BTreeMap;
 
+/// Helper function to construct and evaluate a full `Scenario` from a `Purchase` specification.
 fn create_scenario(purchase: Purchase) -> Scenario {
     let monthly_statement = simulate_monthly(&purchase);
     let yearly_statement = aggregate_yearly(&monthly_statement);
@@ -20,6 +23,7 @@ fn create_scenario(purchase: Purchase) -> Scenario {
     }
 }
 
+/// Helper function to print monthly schedule, yearly summary, and total statement summary.
 fn print_scenario(scenario: &Scenario) {
     println!(
         "\n=================================================================================================================================================="
@@ -151,6 +155,7 @@ fn print_scenario(scenario: &Scenario) {
     println!("Total Net Cash Paid:      ${:<14.2}", t.total_paid);
 }
 
+/// Helper function to format and print single scenario analysis metrics.
 fn print_analysis(name: &str, analysis: &ScenarioAnalysis) {
     println!("\n--------------------------------------------------");
     println!(" SCENARIO ANALYSIS RESULTS: {}", name);
@@ -294,7 +299,7 @@ fn main() {
     }
 
     // Test compare_scenarios
-    let comparison = engine::service::comparison::compare_scenarios(&scenario_a, &scenario_b);
+    let comparison = compare_scenarios(&scenario_a, &scenario_b);
     println!(
         "\n=================================================================================================================================================="
     );
@@ -302,10 +307,25 @@ fn main() {
     println!(
         "=================================================================================================================================================="
     );
-    println!(" Months Saved:                 {} months", comparison.months_saved);
-    println!(" Delta Interest Paid:         ${:.2}", comparison.delta_interest_paid);
-    println!(" Delta Tax Savings:           ${:.2}", comparison.delta_tax_savings);
-    println!(" Delta Gross Paid:            ${:.2}", comparison.delta_gross_paid);
+    println!(
+        " Months Saved:                 {} months",
+        comparison.months_saved
+    );
+    println!(
+        " Delta Interest Paid:         ${:.2}",
+        comparison.delta_interest_paid
+    );
+    println!(
+        " Delta Tax Savings:           ${:.2}",
+        comparison.delta_tax_savings
+    );
+    println!(
+        " Delta Gross Paid:            ${:.2}",
+        comparison.delta_gross_paid
+    );
     println!(" Delta PV:                    ${:.2}", comparison.delta_pv);
-    println!(" Strategy IRR:                 {:.2}%", comparison.irr * 100.0);
+    println!(
+        " Strategy IRR:                 {:.2}%",
+        comparison.irr * 100.0
+    );
 }
