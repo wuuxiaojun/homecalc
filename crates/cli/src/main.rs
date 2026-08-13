@@ -1,6 +1,12 @@
 //! main.rs
 //! Main function for CLI
 
-// Module Declaration
 mod state;
+mod storage;
+
+#[allow(dead_code)]
 use state::AppState;
+
+fn main() {
+    let _state = AppState::new();
+}

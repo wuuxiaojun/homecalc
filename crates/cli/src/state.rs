@@ -1,7 +1,7 @@
 //! state.rs
 //! App State
 
-use homecalc_engine::domain::scenario::Scenario;
+use engine::domain::scenario::Scenario;
 // 2-slot RAM buffer for the CLI session
 #[derive(Debug, Default)]
 pub struct AppState {
