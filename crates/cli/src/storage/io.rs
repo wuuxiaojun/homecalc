@@ -53,7 +53,7 @@ pub fn load_scenario(path_or_filename: &Path, slot: u8, state: &mut AppState) ->
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::state::AppState;
+    use crate::session::state::AppState;
     use engine::domain::house::House;
     use engine::domain::tool::{Cash, Mortgage, Tool};
     use std::collections::BTreeMap;

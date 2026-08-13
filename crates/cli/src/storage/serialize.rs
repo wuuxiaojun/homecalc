@@ -1,5 +1,5 @@
 //! serialize.rs
-//! Auxiliary storage functions (directory resolution, path helpers, JSON save/load from path).
+//! Auxiliary storage functions
 
 use anyhow::{Context, Result};
 use engine::domain::purchase::Purchase;
@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 pub const DEFAULT_SCENARIOS_DIR: &str = "scenarios";
 
 /// Finds the workspace root directory containing `Cargo.toml` with `[workspace]`.
-pub fn get_scenarios_dir_path() -> PathBuf {
+fn get_scenarios_dir_path() -> PathBuf {
     if let Ok(manifest_dir) = std::env::var("CARGO_MANIFEST_DIR") {
         let manifest_path = PathBuf::from(manifest_dir);
         for ancestor in manifest_path.ancestors() {

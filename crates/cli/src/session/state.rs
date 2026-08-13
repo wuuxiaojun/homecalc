@@ -2,7 +2,8 @@
 //! App State
 
 use engine::domain::scenario::Scenario;
-// 2-slot RAM buffer for the CLI session
+
+/// 2-slot RAM buffer for the CLI session
 #[derive(Debug, Default)]
 pub struct AppState {
     slot_1: Option<Scenario>,
