@@ -1,6 +1,7 @@
 //! main.rs
 //! Main function for CLI
 
+mod display;
 mod session;
 mod storage;
 
