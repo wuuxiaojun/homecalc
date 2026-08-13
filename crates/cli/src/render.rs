@@ -1,3 +1,6 @@
+//! render.rs
+//! Display information
+
 pub mod analysis;
 pub mod comparison;
 pub mod format;
