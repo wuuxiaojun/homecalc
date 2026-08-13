@@ -2,10 +2,9 @@
 //! Scenario comparison
 
 use crate::{config::constant::DEFAULT_DISCOUNT_RATE, domain::scenario::Scenario};
-use serde::{Deserialize, Serialize};
 
 // Scenario comparison metrics
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone)]
 pub struct ScenarioComparison {
     // 1. Timeline
     pub baseline_payoff_month: u32,
@@ -211,7 +210,9 @@ mod tests {
     use super::*;
     use crate::domain::house::House;
     use crate::domain::purchase::Purchase;
-    use crate::domain::statement::{HouseStatement, MonthlyStatementRow, TotalStatement, YearlyStatementRow};
+    use crate::domain::statement::{
+        HouseStatement, MonthlyStatementRow, TotalStatement, YearlyStatementRow,
+    };
     use std::collections::BTreeMap;
 
     fn create_mock_scenario(months: u32, monthly_paid: f64, annual_tax_savings: f64) -> Scenario {

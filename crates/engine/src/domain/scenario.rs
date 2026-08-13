@@ -2,10 +2,9 @@
 //! Scenario
 use super::purchase::Purchase;
 use super::statement::{MonthlyStatementRow, TotalStatement, YearlyStatementRow};
-use serde::{Deserialize, Serialize};
 
 // All-in-one purchase scenario
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct Scenario {
     pub purchase: Purchase,
     pub monthly_statement: Vec<MonthlyStatementRow>,
