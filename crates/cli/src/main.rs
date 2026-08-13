@@ -1,5 +1,4 @@
-//! main.rs
-//! Main function for CLI
+#![allow(dead_code)]
 
 mod render;
 mod session;
