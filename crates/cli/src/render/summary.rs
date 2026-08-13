@@ -20,7 +20,7 @@ pub fn render_purchase_summary(scenario: &Scenario) {
     // 1. Property Details Table
     let mut house_table = Table::new();
     house_table
-        .load_preset(UTF8_FULL)
+        .load_style(UTF8_FULL)
         .set_content_arrangement(ContentArrangement::Dynamic)
         .set_header(vec!["Property Parameter", "Value"]);
 
@@ -44,7 +44,7 @@ pub fn render_purchase_summary(scenario: &Scenario) {
     // 2. Financial Tools Table
     let mut tools_table = Table::new();
     tools_table
-        .load_preset(UTF8_FULL)
+        .load_style(UTF8_FULL)
         .set_content_arrangement(ContentArrangement::Dynamic)
         .set_header(vec![
             "Tool Type",
@@ -89,7 +89,7 @@ pub fn render_purchase_summary(scenario: &Scenario) {
     if !purchase.mortgage_repay.is_empty() || !purchase.loc_repay.is_empty() {
         let mut repay_table = Table::new();
         repay_table
-            .load_preset(UTF8_FULL)
+            .load_style(UTF8_FULL)
             .set_content_arrangement(ContentArrangement::Dynamic)
             .set_header(vec!["Target Loan", "Month Number", "Extra Payment Amount"]);
 

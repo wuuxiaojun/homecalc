@@ -23,7 +23,7 @@ pub fn render_statement(scenario: &Scenario) {
 
     let mut monthly_table = Table::new();
     monthly_table
-        .load_preset(UTF8_FULL)
+        .load_style(UTF8_FULL)
         .set_content_arrangement(ContentArrangement::Dynamic)
         .set_header(vec![
             "Month",
@@ -112,7 +112,7 @@ pub fn render_statement(scenario: &Scenario) {
 
     let mut yearly_table = Table::new();
     yearly_table
-        .load_preset(UTF8_FULL)
+        .load_style(UTF8_FULL)
         .set_content_arrangement(ContentArrangement::Dynamic)
         .set_header(vec![
             "Year",
@@ -146,7 +146,7 @@ pub fn render_statement(scenario: &Scenario) {
     println!("\n--- LIFETIME TOTAL STATEMENT SUMMARY ---");
     let mut total_table = Table::new();
     total_table
-        .load_preset(UTF8_FULL)
+        .load_style(UTF8_FULL)
         .set_content_arrangement(ContentArrangement::Dynamic)
         .set_header(vec!["Lifetime Summary Metric", "Total Amount"]);
 
