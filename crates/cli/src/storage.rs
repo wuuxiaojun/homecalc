@@ -3,19 +3,54 @@
 
 use anyhow::{bail, Context, Result};
 use engine::domain::purchase::Purchase;
-use engine::domain::scenario::Scenario;
-use engine::service::simulation::{aggregate_yearly, compute_metrics, simulate_monthly};
+use engine::service::simulation::create_scenario;
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::state::AppState;
 
-/// Default directory for storing scenario JSON files.
-pub const DEFAULT_SCENARIOS_DIR: &str = "./scenarios";
+/// Default relative directory name for storing scenario JSON files.
+pub const DEFAULT_SCENARIOS_DIR: &str = "scenarios";
 
-/// Ensures that the `./scenarios/` directory exists at the workspace root.
+/// Finds the workspace root directory containing `Cargo.toml` with `[workspace]`
+/// and returns the path to `<workspace_root>/scenarios`.
+pub fn get_workspace_scenarios_dir() -> PathBuf {
+    // 1. Check CARGO_MANIFEST_DIR (available during build/test)
+    if let Ok(manifest_dir) = std::env::var("CARGO_MANIFEST_DIR") {
+        let manifest_path = PathBuf::from(manifest_dir);
+        for ancestor in manifest_path.ancestors() {
+            let cargo_toml = ancestor.join("Cargo.toml");
+            if cargo_toml.exists() {
+                if let Ok(content) = fs::read_to_string(&cargo_toml) {
+                    if content.contains("[workspace]") {
+                        return ancestor.join(DEFAULT_SCENARIOS_DIR);
+                    }
+                }
+            }
+        }
+    }
+
+    // 2. Walk up from current working directory
+    if let Ok(cwd) = std::env::current_dir() {
+        for ancestor in cwd.ancestors() {
+            let cargo_toml = ancestor.join("Cargo.toml");
+            if cargo_toml.exists() {
+                if let Ok(content) = fs::read_to_string(&cargo_toml) {
+                    if content.contains("[workspace]") {
+                        return ancestor.join(DEFAULT_SCENARIOS_DIR);
+                    }
+                }
+            }
+        }
+    }
+
+    // Fallback to relative ./scenarios
+    PathBuf::from(DEFAULT_SCENARIOS_DIR)
+}
+
+/// Ensures that the workspace `scenarios/` directory exists (`homecalc/scenarios`).
 pub fn ensure_scenarios_dir() -> Result<PathBuf> {
-    let dir = PathBuf::from(DEFAULT_SCENARIOS_DIR);
+    let dir = get_workspace_scenarios_dir();
     if !dir.exists() {
         fs::create_dir_all(&dir)
             .with_context(|| format!("Failed to create scenarios directory at {:?}", dir))?;
@@ -23,22 +58,8 @@ pub fn ensure_scenarios_dir() -> Result<PathBuf> {
     Ok(dir)
 }
 
-/// Evaluates a `Purchase` struct into a full `Scenario` by running monthly simulation,
-/// yearly aggregation, and total metrics computation.
-pub fn create_scenario(purchase: Purchase) -> Scenario {
-    let monthly_statement = simulate_monthly(&purchase);
-    let yearly_statement = aggregate_yearly(&monthly_statement);
-    let total_statement = compute_metrics(&yearly_statement);
 
-    Scenario {
-        purchase,
-        monthly_statement,
-        yearly_statement,
-        total_statement,
-    }
-}
-
-/// Saves a `Purchase` struct as a formatted `.json` file into `./scenarios/`.
+/// Saves a `Purchase` struct as a formatted `.json` file into workspace `./scenarios/`.
 ///
 /// Automatically appends `.json` extension if not present.
 pub fn save_purchase(purchase: &Purchase, filename: &str) -> Result<PathBuf> {
@@ -83,7 +104,7 @@ pub fn load_purchase_from_path(path: &Path) -> Result<Purchase> {
 
 /// Loads a `Purchase` JSON file, evaluates it into a `Scenario`, and stores it into `AppState` slot 1 or 2.
 ///
-/// `path_or_filename` can be a path or a filename relative to `./scenarios/`.
+/// `path_or_filename` can be a path or a filename relative to workspace `./scenarios/`.
 pub fn load_scenario_into_slot(
     path_or_filename: &Path,
     slot: u8,
@@ -96,7 +117,7 @@ pub fn load_scenario_into_slot(
     let resolved_path = if path_or_filename.exists() {
         path_or_filename.to_path_buf()
     } else {
-        let dir = PathBuf::from(DEFAULT_SCENARIOS_DIR);
+        let dir = ensure_scenarios_dir()?;
         let mut file_name = path_or_filename.to_string_lossy().to_string();
         if !file_name.ends_with(".json") {
             file_name.push_str(".json");
