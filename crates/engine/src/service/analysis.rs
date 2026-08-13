@@ -4,7 +4,7 @@
 use crate::domain::scenario::Scenario;
 use crate::domain::tool::Tool;
 
-// Single scenario metrics
+/// Single scenario metrics
 #[derive(Debug, Clone)]
 pub struct ScenarioAnalysis {
     pub waste_ratio: f64,       // interest paid / principal borrowed
@@ -13,7 +13,7 @@ pub struct ScenarioAnalysis {
     pub effective_monthly_cost: f64, // total paid / payoff month
 }
 
-// Computes single-scenario analysis metrics
+/// Computes single-scenario analysis metrics
 pub fn analyze_scenario(scenario: &Scenario) -> ScenarioAnalysis {
     let monthly = &scenario.monthly_statement;
     let total = &scenario.total_statement;

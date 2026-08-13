@@ -1,14 +1,14 @@
 //! statement.rs
 //! Monthly, yearly and total statement
 
-// Cash-related
+/// Cash-related
 #[derive(Debug, Clone)]
 pub struct CashStatement {
     pub cash_now: f64,      // unused cash current amount
     pub cash_interest: f64, // current - initial
 }
 
-// Mortgage-related
+/// Mortgage-related
 #[derive(Debug, Clone)]
 pub struct MortgageStatement {
     pub monthly_payment: f64, // mortgage pmt
@@ -18,7 +18,7 @@ pub struct MortgageStatement {
     pub remaining_balance: f64,
 }
 
-// Loc-related
+/// Loc-related
 #[derive(Debug, Clone)]
 pub struct LocStatement {
     pub monthly_payment: f64,
@@ -26,7 +26,7 @@ pub struct LocStatement {
     pub remaining_balance: f64,
 }
 
-// House-related
+/// House-related
 #[derive(Debug, Clone)]
 pub struct HouseStatement {
     pub monthly_property_tax: f64,
@@ -34,7 +34,7 @@ pub struct HouseStatement {
     pub monthly_hoa: f64,
 }
 
-// Monthly statement
+/// Monthly statement
 #[derive(Debug, Clone)]
 pub struct MonthlyStatementRow {
     pub month: u32,
@@ -49,7 +49,7 @@ pub struct MonthlyStatementRow {
     pub total_remaining_balance: f64,
 }
 
-// Yearly statement
+/// Yearly statement
 #[derive(Debug, Clone)]
 pub struct YearlyStatementRow {
     pub year: u32,
@@ -63,7 +63,7 @@ pub struct YearlyStatementRow {
     pub ending_remaining_balance: f64,
 }
 
-// Aggregate for all
+/// Aggregate for all
 #[derive(Debug, Clone)]
 pub struct TotalStatement {
     pub total_cash_interest: f64,

@@ -6,7 +6,7 @@ use super::tool::Tool;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-// Purchase information of real estate property
+/// Purchase information of real estate property
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Purchase {
     pub name: String,

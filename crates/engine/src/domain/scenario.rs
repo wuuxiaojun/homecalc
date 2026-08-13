@@ -3,7 +3,7 @@
 use super::purchase::Purchase;
 use super::statement::{MonthlyStatementRow, TotalStatement, YearlyStatementRow};
 
-// All-in-one purchase scenario
+/// All-in-one purchase scenario
 #[derive(Debug, Clone)]
 pub struct Scenario {
     pub purchase: Purchase,

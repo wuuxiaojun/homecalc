@@ -3,7 +3,7 @@
 
 use serde::{Deserialize, Serialize};
 
-// Real estate property
+/// Real estate property
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct House {
     pub purchase_price: f64,

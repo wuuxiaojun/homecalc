@@ -2,14 +2,14 @@
 //! Financial instruments
 use serde::{Deserialize, Serialize};
 
-// Cash
+/// Cash
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Cash {
     pub amount: f64,
     pub rate: f64, // annual cash yield (e.g. 3.9%)
 }
 
-// Mortgage
+/// Mortgage
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Mortgage {
     pub amount: f64,
@@ -17,14 +17,14 @@ pub struct Mortgage {
     pub term: u32, // term in years
 }
 
-// Line of Credit (LOC)
+/// Line of Credit (LOC)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Loc {
     pub amount: f64,
     pub rate: f64, // annual loc interest rate (e.g. 5.5%)
 }
 
-// Enum type for financial tools
+/// Enum type for financial tools
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Tool {
     Mortgage(Mortgage),

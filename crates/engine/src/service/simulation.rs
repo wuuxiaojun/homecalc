@@ -1,6 +1,5 @@
 //! simulation.rs
 //! Monthly yearly and total simulation
-
 use crate::config::constant::*;
 use crate::domain::purchase::*;
 use crate::domain::scenario::*;
@@ -8,7 +7,7 @@ use crate::domain::statement::*;
 use crate::domain::tool::*;
 use crate::service::utility::*;
 
-// Simulate monthly statement
+/// Simulate monthly statement
 pub fn simulate_monthly(purchase: &Purchase) -> Vec<MonthlyStatementRow> {
     let mut statement = Vec::with_capacity(360);
 
@@ -158,7 +157,7 @@ pub fn simulate_monthly(purchase: &Purchase) -> Vec<MonthlyStatementRow> {
     statement
 }
 
-// Aggregate monthly statement into yearly statement
+/// Aggregate monthly statement into yearly statement
 pub fn aggregate_yearly(statement: &[MonthlyStatementRow]) -> Vec<YearlyStatementRow> {
     statement
         .chunks(12)
@@ -229,7 +228,7 @@ pub fn aggregate_yearly(statement: &[MonthlyStatementRow]) -> Vec<YearlyStatemen
         .collect()
 }
 
-// Aggregate yearly into total metrics
+/// Aggregate yearly into total metrics
 pub fn compute_metrics(yearly_statement: &[YearlyStatementRow]) -> TotalStatement {
     let total_cash_interest: f64 = yearly_statement
         .iter()
@@ -251,7 +250,7 @@ pub fn compute_metrics(yearly_statement: &[YearlyStatementRow]) -> TotalStatemen
     }
 }
 
-// Create scenario
+/// Create scenario
 pub fn create_scenario(purchase: Purchase) -> Scenario {
     let monthly_statement = simulate_monthly(&purchase);
     let yearly_statement = aggregate_yearly(&monthly_statement);
@@ -265,7 +264,7 @@ pub fn create_scenario(purchase: Purchase) -> Scenario {
     }
 }
 
-// Calculates mortgage monthly payment (pmt)
+/// Calculates mortgage monthly payment (pmt)
 fn calculate_mortgage_pmt(principal: f64, rate: f64, year: u32) -> f64 {
     if principal <= 0.0 || year == 0 {
         return 0.0;
@@ -282,13 +281,13 @@ fn calculate_mortgage_pmt(principal: f64, rate: f64, year: u32) -> f64 {
     principal * (monthly_rate * factor) / (factor - 1.0)
 }
 
-// Helper struct
+/// Helper struct
 struct Compound {
     pub interest: f64,
     pub total: f64,
 }
 
-// Calculates 1-month interest compounding on a given balance and annual interest rate.
+/// Calculates 1-month interest compounding on a given balance and annual interest rate.
 fn calculate_monthly_compound(amount: f64, annual_rate: f64) -> Compound {
     if amount <= 0.0 || annual_rate <= 0.0 {
         return Compound {

@@ -3,7 +3,7 @@
 
 use crate::{config::constant::DEFAULT_DISCOUNT_RATE, domain::scenario::Scenario};
 
-// Scenario comparison metrics
+/// Scenario comparison metrics
 #[derive(Debug, Clone)]
 pub struct ScenarioComparison {
     // 1. Timeline
@@ -39,7 +39,7 @@ pub struct ScenarioComparison {
     pub irr: f64,
 }
 
-// Compute scenarios comparison metrics
+/// Compute scenarios comparison metrics
 pub fn compare_scenarios(baseline: &Scenario, alternative: &Scenario) -> ScenarioComparison {
     // 1. Timeline
     let baseline_payoff_month = baseline.monthly_statement.last().map_or(0, |r| r.month);
@@ -109,7 +109,7 @@ pub fn compare_scenarios(baseline: &Scenario, alternative: &Scenario) -> Scenari
     }
 }
 
-// Calculate the present value (pv)
+/// Calculate the present value (pv)
 pub fn calculate_scenario_pv(scenario: &Scenario) -> f64 {
     let monthly_r = DEFAULT_DISCOUNT_RATE / 12.0;
     let total_months = scenario.monthly_statement.len();
@@ -125,7 +125,7 @@ pub fn calculate_scenario_pv(scenario: &Scenario) -> f64 {
     total_pv
 }
 
-// Calculates the internal rate of return (irr)
+/// Calculates the internal rate of return (irr)
 pub fn calculate_strategy_irr(baseline: &Scenario, alternative: &Scenario) -> Option<f64> {
     let last_month_a = baseline.monthly_statement.last().map_or(0, |r| r.month) as usize;
     let last_month_b = alternative.monthly_statement.last().map_or(0, |r| r.month) as usize;
@@ -148,7 +148,7 @@ pub fn calculate_strategy_irr(baseline: &Scenario, alternative: &Scenario) -> Op
     solve_irr_newton_raphson(&delta_cash_flows)
 }
 
-// Newton-Raphson solver for irr
+/// Newton-Raphson solver for irr
 pub fn solve_irr_newton_raphson(cash_flows: &[f64]) -> Option<f64> {
     let mut rate: f64 = 0.005; // Initial guess: 0.5% monthly (~6.0% annual)
     let max_iterations = 100;
@@ -182,8 +182,8 @@ pub fn solve_irr_newton_raphson(cash_flows: &[f64]) -> Option<f64> {
     None // Failed to converge
 }
 
-// Extracts monthly outflow
-// Auxiliary function for irr & pv calculation
+/// Extracts monthly outflow
+/// Auxiliary function for irr & pv calculation
 pub fn extract_monthly_outflow(scenario: &Scenario, month_idx: usize) -> f64 {
     let monthly_row = match scenario.monthly_statement.get(month_idx) {
         Some(row) => row,
