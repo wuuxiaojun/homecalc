@@ -14,6 +14,6 @@ use session::state::AppState;
 
 fn main() -> Result<()> {
     let mut state = AppState::new();
-    wizard::run_main_menu(&mut state)?;
+    wizard::menu::run_main_menu(&mut state)?;
     Ok(())
 }

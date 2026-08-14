@@ -7,6 +7,7 @@ use engine::service::comparison::compare_scenarios;
 use engine::service::simulation::create_scenario;
 use inquire::{Select, Text};
 use std::fs;
+use std::io::{stdout, Write};
 use std::path::PathBuf;
 
 use crate::render::analysis::render_analysis;
@@ -16,6 +17,12 @@ use crate::render::summary::render_summary;
 use crate::session::state::AppState;
 use crate::storage::io::{get_scenarios_path, load_scenario, save_purchase};
 use crate::wizard::input::prompt_create_purchase;
+
+/// Clears the terminal screen and resets cursor position to top-left (1,1).
+pub fn clear_screen() {
+    print!("\x1B[2J\x1B[1;1H");
+    let _ = stdout().flush();
+}
 
 /// Helper function to browse and select a `.json` scenario file from `get_scenarios_path()`,
 /// or allow entering a file path manually.
@@ -60,11 +67,12 @@ pub fn prompt_select_scenario_file() -> Result<PathBuf> {
 /// - 3. Compare Scenarios
 /// - 4. Exit
 pub fn run_main_menu(state: &mut AppState) -> Result<()> {
-    println!("\n================================================================================");
-    println!(" WELCOME TO HOMECALC FINANCIAL AMORTIZATION & SCENARIO ENGINE");
-    println!("================================================================================");
-
     loop {
+        clear_screen();
+        println!("================================================================================");
+        println!(" WELCOME TO HOMECALC FINANCIAL AMORTIZATION & SCENARIO ENGINE");
+        println!("================================================================================");
+
         let choices = vec![
             "1. Create Scenario",
             "2. Load Scenario",
@@ -73,6 +81,7 @@ pub fn run_main_menu(state: &mut AppState) -> Result<()> {
         ];
 
         let selection = Select::new("Main Menu Choice:", choices).prompt()?;
+        clear_screen();
 
         match selection {
             c if c.starts_with("1") => {
@@ -80,6 +89,7 @@ pub fn run_main_menu(state: &mut AppState) -> Result<()> {
                 let scenario = create_scenario(purchase);
                 state.set_slot_1(scenario);
 
+                clear_screen();
                 if let Some(s) = state.get_slot_1() {
                     render_summary(s);
                 }
@@ -90,6 +100,7 @@ pub fn run_main_menu(state: &mut AppState) -> Result<()> {
                 let file_path = prompt_select_scenario_file()?;
                 load_scenario(&file_path, 1, state)?;
 
+                clear_screen();
                 if let Some(s) = state.get_slot_1() {
                     render_summary(s);
                 }
@@ -109,6 +120,7 @@ pub fn run_main_menu(state: &mut AppState) -> Result<()> {
                     load_scenario(&file2, 2, state)?;
                 }
 
+                clear_screen();
                 if let (Some(s1), Some(s2)) = (state.get_slot_1(), state.get_slot_2()) {
                     let comparison = compare_scenarios(s1, s2);
                     render_comparison(&comparison);
@@ -120,6 +132,7 @@ pub fn run_main_menu(state: &mut AppState) -> Result<()> {
                 }
             }
             c if c.starts_with("4") => {
+                clear_screen();
                 println!("\nExiting Homecalc. Goodbye!\n");
                 break;
             }
@@ -159,6 +172,7 @@ pub fn run_scenario_menu(slot: u8, state: &mut AppState) -> Result<()> {
         ];
 
         let selection = Select::new("Scenario Menu Choice:", choices).prompt()?;
+        clear_screen();
 
         match selection {
             c if c.starts_with("1") => {
@@ -167,8 +181,10 @@ pub fn run_scenario_menu(slot: u8, state: &mut AppState) -> Result<()> {
                     2 => state.get_slot_2().unwrap(),
                     _ => unreachable!(),
                 };
-                let default_filename =
-                    format!("{}.json", s.purchase.name.to_lowercase().replace(' ', "_"));
+                let default_filename = format!(
+                    "{}.json",
+                    s.purchase.name.to_lowercase().replace(' ', "_")
+                );
                 let filename = Text::new("Enter filename to save (e.g. scenario.json):")
                     .with_default(&default_filename)
                     .prompt()?;
@@ -200,6 +216,7 @@ pub fn run_scenario_menu(slot: u8, state: &mut AppState) -> Result<()> {
                 let file2 = prompt_select_scenario_file()?;
                 load_scenario(&file2, 2, state)?;
 
+                clear_screen();
                 if let (Some(s1), Some(s2)) = (state.get_slot_1(), state.get_slot_2()) {
                     let comparison = compare_scenarios(s1, s2);
                     render_comparison(&comparison);
@@ -223,6 +240,7 @@ pub fn run_scenario_sub_menu() -> Result<()> {
     loop {
         let choices = vec!["1. Back"];
         let selection = Select::new("Sub Menu Choice:", choices).prompt()?;
+        clear_screen();
         if selection.starts_with("1") {
             break;
         }
@@ -237,6 +255,7 @@ pub fn run_comparison_menu() -> Result<()> {
     loop {
         let choices = vec!["1. Back"];
         let selection = Select::new("Comparison Sub-Menu Choice:", choices).prompt()?;
+        clear_screen();
         if selection.starts_with("1") {
             break;
         }
