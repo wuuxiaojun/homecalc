@@ -1,5 +1,5 @@
 //! storage.rs
-//! Storage module
+//! Storage module declarations
 
 pub mod io;
 pub mod serialize;
