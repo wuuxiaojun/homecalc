@@ -1,7 +1,8 @@
 //! comparison.rs
 //! Scenario comparison
 
-use crate::{config::constant::DEFAULT_DISCOUNT_RATE, domain::scenario::Scenario};
+use crate::config::constant::DEFAULT_DISCOUNT_RATE;
+use crate::domain::scenario::Scenario;
 
 /// Scenario comparison metrics
 #[derive(Debug, Clone)]
@@ -110,7 +111,7 @@ pub fn compare_scenarios(baseline: &Scenario, alternative: &Scenario) -> Scenari
 }
 
 /// Calculate the present value (pv)
-pub fn calculate_scenario_pv(scenario: &Scenario) -> f64 {
+fn calculate_scenario_pv(scenario: &Scenario) -> f64 {
     let monthly_r = DEFAULT_DISCOUNT_RATE / 12.0;
     let total_months = scenario.monthly_statement.len();
     let mut total_pv = 0.0;
@@ -126,7 +127,7 @@ pub fn calculate_scenario_pv(scenario: &Scenario) -> f64 {
 }
 
 /// Calculates the internal rate of return (irr)
-pub fn calculate_strategy_irr(baseline: &Scenario, alternative: &Scenario) -> Option<f64> {
+fn calculate_strategy_irr(baseline: &Scenario, alternative: &Scenario) -> Option<f64> {
     let last_month_a = baseline.monthly_statement.last().map_or(0, |r| r.month) as usize;
     let last_month_b = alternative.monthly_statement.last().map_or(0, |r| r.month) as usize;
 
@@ -149,7 +150,7 @@ pub fn calculate_strategy_irr(baseline: &Scenario, alternative: &Scenario) -> Op
 }
 
 /// Newton-Raphson solver for irr
-pub fn solve_irr_newton_raphson(cash_flows: &[f64]) -> Option<f64> {
+fn solve_irr_newton_raphson(cash_flows: &[f64]) -> Option<f64> {
     let mut rate: f64 = 0.005; // Initial guess: 0.5% monthly (~6.0% annual)
     let max_iterations = 100;
     let tolerance = 1e-7;
@@ -184,7 +185,7 @@ pub fn solve_irr_newton_raphson(cash_flows: &[f64]) -> Option<f64> {
 
 /// Extracts monthly outflow
 /// Auxiliary function for irr & pv calculation
-pub fn extract_monthly_outflow(scenario: &Scenario, month_idx: usize) -> f64 {
+fn extract_monthly_outflow(scenario: &Scenario, month_idx: usize) -> f64 {
     let monthly_row = match scenario.monthly_statement.get(month_idx) {
         Some(row) => row,
         None => return 0.0,

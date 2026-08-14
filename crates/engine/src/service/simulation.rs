@@ -72,7 +72,7 @@ pub fn simulate_monthly(purchase: &Purchase) -> Vec<MonthlyStatementRow> {
                 .get(&month)
                 .copied()
                 .unwrap_or(0.0)
-                .min(mortgage_balance - principal_paid);
+                .min((mortgage_balance - principal_paid).max(0.0));
             let total_principal_paid = principal_paid + extra_payment;
             mortgage_balance = clamp_zero(mortgage_balance - total_principal_paid);
 
