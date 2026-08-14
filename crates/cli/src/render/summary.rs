@@ -9,7 +9,7 @@ use engine::domain::tool::Tool;
 use super::format::format_currency;
 
 /// Renders a summary table of basic information stored directly in `Purchase`.
-pub fn render_purchase_summary(scenario: &Scenario) {
+pub fn render_summary(scenario: &Scenario) {
     let purchase = &scenario.purchase;
     let house = &purchase.house;
 
@@ -140,6 +140,6 @@ mod tests {
         };
 
         let scenario = create_scenario(purchase);
-        render_purchase_summary(&scenario);
+        render_summary(&scenario);
     }
 }

@@ -8,7 +8,7 @@ use engine::service::analysis::ScenarioAnalysis;
 use super::format::{format_currency, format_months, format_percent};
 
 /// Formats and displays single-scenario analysis metrics cleanly.
-pub fn render_single_analysis(analysis: &ScenarioAnalysis) {
+pub fn render_analysis(analysis: &ScenarioAnalysis) {
     println!("\n================================================================================");
     println!(" SINGLE SCENARIO ANALYSIS METRICS");
     println!("================================================================================");
@@ -80,6 +80,6 @@ mod tests {
 
         let scenario = create_scenario(purchase);
         let analysis = analyze_scenario(&scenario);
-        render_single_analysis(&analysis);
+        render_analysis(&analysis);
     }
 }

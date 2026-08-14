@@ -1,11 +1,10 @@
 //! comparison.rs
 //! Formats and displays 4-column side-by-side comparison tables (`ScenarioComparison`).
 
+use super::format::{format_currency, format_months, format_percent};
 use comfy_table::presets::UTF8_FULL;
 use comfy_table::{ContentArrangement, Table};
 use engine::service::comparison::ScenarioComparison;
-
-use super::format::{format_currency, format_months, format_percent};
 
 /// Formats and displays scenario comparison metrics in a 4-column side-by-side table:
 /// `[Metric Category / Field | Baseline (A) | Alternative (B) | Delta (B - A)]`.

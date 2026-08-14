@@ -77,10 +77,9 @@ pub fn render_statement(scenario: &Scenario) {
 
         let row = &monthly[idx];
         let cash_bal = row.cash.as_ref().map_or(0.0, |c| c.cash_now);
-        let mortg_pmt = row
-            .mortgage
-            .as_ref()
-            .map_or(0.0, |m| (m.principal_paid + m.interest_paid).min(m.monthly_payment));
+        let mortg_pmt = row.mortgage.as_ref().map_or(0.0, |m| {
+            (m.principal_paid + m.interest_paid).min(m.monthly_payment)
+        });
         let mortg_extra = row.mortgage.as_ref().map_or(0.0, |m| m.extra_payment);
         let mortg_bal = row.mortgage.as_ref().map_or(0.0, |m| m.remaining_balance);
 
@@ -142,8 +141,8 @@ pub fn render_statement(scenario: &Scenario) {
 
     println!("{yearly_table}");
 
-    // 3. Lifetime Total Summary Table
-    println!("\n--- LIFETIME TOTAL STATEMENT SUMMARY ---");
+    // 3.  Total Summary Table
+    println!("\n--- TOTAL STATEMENT SUMMARY ---");
     let mut total_table = Table::new();
     total_table
         .load_style(UTF8_FULL)
