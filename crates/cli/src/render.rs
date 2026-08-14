@@ -1,5 +1,5 @@
 //! render.rs
-//! Display information
+//! Display rendering module declarations and re-exports.
 
 pub mod analysis;
 pub mod comparison;
