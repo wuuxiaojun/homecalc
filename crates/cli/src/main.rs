@@ -1,6 +1,9 @@
 //! main.rs
 //! Main entry point for Homecalc CLI application.
 
+#![allow(dead_code)]
+#![allow(unused_imports)]
+
 mod render;
 mod session;
 mod storage;

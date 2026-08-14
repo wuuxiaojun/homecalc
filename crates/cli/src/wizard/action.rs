@@ -14,7 +14,7 @@ use crate::render::comparison::render_comparison;
 use crate::render::statement::render_statement;
 use crate::render::summary::render_summary;
 use crate::session::state::AppState;
-use crate::storage::{get_scenarios_path, load_scenario, save_purchase};
+use crate::storage::io::{get_scenarios_path, load_scenario, save_purchase};
 
 /// Action handler for loading a scenario JSON file into an AppState slot.
 pub fn handle_load_scenario(state: &mut AppState) -> Result<()> {
@@ -131,17 +131,17 @@ pub fn handle_view_scenario(state: &AppState) -> Result<()> {
     .prompt()?;
 
     match view_choice {
-        c if c.starts_with("1") => render_purchase_summary(scenario),
+        c if c.starts_with("1") => render_summary(scenario),
         c if c.starts_with("2") => render_statement(scenario),
         c if c.starts_with("3") => {
             let analysis = analyze_scenario(scenario);
-            render_single_analysis(&analysis);
+            render_analysis(&analysis);
         }
         _ => {
-            render_purchase_summary(scenario);
+            render_summary(scenario);
             render_statement(scenario);
             let analysis = analyze_scenario(scenario);
-            render_single_analysis(&analysis);
+            render_analysis(&analysis);
         }
     }
 
@@ -195,5 +195,35 @@ pub fn handle_create_scenario(state: &mut AppState) -> Result<()> {
         "\n[✓] New Purchase Scenario successfully evaluated and stored in Slot {}!",
         slot
     );
+    Ok(())
+}
+
+/// Action handler for clearing active scenario slots in AppState.
+pub fn handle_clear_state(state: &mut AppState) -> Result<()> {
+    let options = vec![
+        "1. Clear Slot 1",
+        "2. Clear Slot 2",
+        "3. Clear Both Slots",
+        "4. Cancel",
+    ];
+
+    let choice = Select::new("Select state clear option:", options).prompt()?;
+
+    match choice {
+        c if c.starts_with("1") => {
+            state.clear_slot_1();
+            println!("\n[✓] Cleared Slot 1.");
+        }
+        c if c.starts_with("2") => {
+            state.clear_slot_2();
+            println!("\n[✓] Cleared Slot 2.");
+        }
+        c if c.starts_with("3") => {
+            state.clear_all();
+            println!("\n[✓] Cleared both Slot 1 and Slot 2.");
+        }
+        _ => {}
+    }
+
     Ok(())
 }
