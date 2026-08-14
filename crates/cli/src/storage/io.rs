@@ -1,13 +1,23 @@
 //! io.rs
 //! High-level storage interface
 
-use anyhow::{Result, bail};
+use super::serialize::{get_scenarios_dir_path, load_purchase_from_path, save_purchase_to_path};
+use crate::session::state::AppState;
+use anyhow::{Context, Result, bail};
 use engine::domain::purchase::Purchase;
 use engine::service::simulation::create_scenario;
+use std::fs;
 use std::path::{Path, PathBuf};
 
-use super::serialize::{get_scenarios_path, load_purchase_from_path, save_purchase_to_path};
-use crate::session::state::AppState;
+/// Ensures the workspace scenarios directory exists and returns its `PathBuf`.
+pub fn get_scenarios_path() -> Result<PathBuf> {
+    let dir = get_scenarios_dir_path();
+    if !dir.exists() {
+        fs::create_dir_all(&dir)
+            .with_context(|| format!("Failed to create scenarios directory at {:?}", dir))?;
+    }
+    Ok(dir)
+}
 
 /// Saves a `Purchase` struct as a formatted `.json` file into the workspace scenarios directory.
 pub fn save_purchase(purchase: &Purchase, filename: &str) -> Result<PathBuf> {

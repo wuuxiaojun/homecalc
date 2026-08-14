@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 pub const DEFAULT_SCENARIOS_DIR: &str = "scenarios";
 
 /// Finds the workspace root directory containing `Cargo.toml` with `[workspace]`.
-fn get_scenarios_dir_path() -> PathBuf {
+pub fn get_scenarios_dir_path() -> PathBuf {
     if let Ok(manifest_dir) = std::env::var("CARGO_MANIFEST_DIR") {
         let manifest_path = PathBuf::from(manifest_dir);
         for ancestor in manifest_path.ancestors() {
@@ -38,16 +38,6 @@ fn get_scenarios_dir_path() -> PathBuf {
     }
 
     PathBuf::from(DEFAULT_SCENARIOS_DIR)
-}
-
-/// Ensures the workspace scenarios directory exists and returns its `PathBuf`.
-pub fn get_scenarios_path() -> Result<PathBuf> {
-    let dir = get_scenarios_dir_path();
-    if !dir.exists() {
-        fs::create_dir_all(&dir)
-            .with_context(|| format!("Failed to create scenarios directory at {:?}", dir))?;
-    }
-    Ok(dir)
 }
 
 /// Serializes and writes a `Purchase` struct as pretty-printed JSON to a file path.
@@ -113,13 +103,6 @@ mod tests {
             mortgage_repay: BTreeMap::new(),
             loc_repay: BTreeMap::new(),
         }
-    }
-
-    #[test]
-    fn test_get_scenarios_path() {
-        let dir = get_scenarios_path().unwrap();
-        assert!(dir.exists());
-        assert!(dir.is_dir());
     }
 
     #[test]
