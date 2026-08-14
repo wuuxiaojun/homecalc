@@ -33,4 +33,17 @@ impl AppState {
     pub fn get_slot_2(&self) -> Option<&Scenario> {
         self.slot_2.as_ref()
     }
+
+    pub fn clear_slot_1(&mut self) {
+        self.slot_1 = None;
+    }
+
+    pub fn clear_slot_2(&mut self) {
+        self.slot_2 = None;
+    }
+
+    pub fn clear_all(&mut self) {
+        self.slot_1 = None;
+        self.slot_2 = None;
+    }
 }
