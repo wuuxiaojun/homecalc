@@ -15,10 +15,7 @@ pub fn render_statement(scenario: &Scenario) {
 
     // 1. Monthly Schedule Table
     println!("\n================================================================================");
-    println!(
-        " MONTHLY STATEMENT SCHEDULE (Total Active Months: {})",
-        monthly.len()
-    );
+    println!(" MONTHLY STATEMENT SCHEDULE");
     println!("================================================================================");
 
     let mut monthly_table = Table::new();
@@ -27,16 +24,14 @@ pub fn render_statement(scenario: &Scenario) {
         .set_content_arrangement(ContentArrangement::Dynamic)
         .set_header(vec![
             "Month",
-            "Cash Bal",
-            "Mortg PMT",
-            "Mortg Extra",
-            "Mortg Bal",
+            "Cash Yield",
+            "Mortgage PMT",
+            "Mortgage Extra",
             "LOC PMT",
             "LOC Extra",
-            "LOC Bal",
             "Holding Cost",
             "Total Paid",
-            "Total Rem Bal",
+            "Balance",
         ]);
 
     let total_len = monthly.len();
@@ -57,19 +52,8 @@ pub fn render_statement(scenario: &Scenario) {
     for &idx in &indices_to_print {
         if let Some(prev) = last_printed {
             if idx > prev + 1 {
-                let skipped = idx - prev - 1;
                 monthly_table.add_row(vec![
-                    format!("... [{} mo skipped]", skipped),
-                    "...".into(),
-                    "...".into(),
-                    "...".into(),
-                    "...".into(),
-                    "...".into(),
-                    "...".into(),
-                    "...".into(),
-                    "...".into(),
-                    "...".into(),
-                    "...".into(),
+                    "...", "...", "...", "...", "...", "...", "...", "...", "...",
                 ]);
             }
         }
@@ -81,21 +65,17 @@ pub fn render_statement(scenario: &Scenario) {
             (m.principal_paid + m.interest_paid).min(m.monthly_payment)
         });
         let mortg_extra = row.mortgage.as_ref().map_or(0.0, |m| m.extra_payment);
-        let mortg_bal = row.mortgage.as_ref().map_or(0.0, |m| m.remaining_balance);
 
         let loc_pmt = row.loc.as_ref().map_or(0.0, |l| l.monthly_payment);
         let loc_extra = row.loc.as_ref().map_or(0.0, |l| l.extra_payment);
-        let loc_bal = row.loc.as_ref().map_or(0.0, |l| l.remaining_balance);
 
         monthly_table.add_row(vec![
             row.month.to_string(),
             format_currency(cash_bal),
             format_currency(mortg_pmt),
             format_currency(mortg_extra),
-            format_currency(mortg_bal),
             format_currency(loc_pmt),
             format_currency(loc_extra),
-            format_currency(loc_bal),
             format_currency(row.total_holding_cost),
             format_currency(row.total_paid),
             format_currency(row.total_remaining_balance),
@@ -121,7 +101,7 @@ pub fn render_statement(scenario: &Scenario) {
             "Extra Paid",
             "Holding Cost",
             "Tax Savings",
-            "Net Annual Paid",
+            "Total Paid",
             "Ending Rem Bal",
         ]);
 
@@ -142,12 +122,14 @@ pub fn render_statement(scenario: &Scenario) {
     println!("{yearly_table}");
 
     // 3.  Total Summary Table
-    println!("\n--- TOTAL STATEMENT SUMMARY ---");
+    println!("\n================================================================================");
+    println!(" TOTAL SUMMARY STATEMENT");
+    println!("================================================================================");
     let mut total_table = Table::new();
     total_table
         .load_style(UTF8_FULL)
         .set_content_arrangement(ContentArrangement::Dynamic)
-        .set_header(vec!["Lifetime Summary Metric", "Total Amount"]);
+        .set_header(vec!["Lifetime Summary Metric", "Amount"]);
 
     total_table.add_row(vec![
         "Total Cash Yield Earned",
@@ -165,10 +147,7 @@ pub fn render_statement(scenario: &Scenario) {
         "Total Tax Savings Realized",
         &format_currency(total.total_tax_savings),
     ]);
-    total_table.add_row(vec![
-        "Total Net Cash Paid Out-of-Pocket",
-        &format_currency(total.total_paid),
-    ]);
+    total_table.add_row(vec!["Total Paid", &format_currency(total.total_paid)]);
 
     println!("{total_table}");
 }

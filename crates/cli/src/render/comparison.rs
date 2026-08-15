@@ -10,19 +10,14 @@ use engine::service::comparison::ScenarioComparison;
 /// `[Metric Category / Field | Baseline (A) | Alternative (B) | Delta (B - A)]`.
 pub fn render_comparison(comparison: &ScenarioComparison) {
     println!("\n================================================================================");
-    println!(" SCENARIO COMPARISON (Baseline vs Alternative)");
+    println!(" SCENARIO COMPARISON");
     println!("================================================================================");
 
     let mut table = Table::new();
     table
         .load_style(UTF8_FULL)
         .set_content_arrangement(ContentArrangement::Dynamic)
-        .set_header(vec![
-            "Metric Category / Field",
-            "Baseline (A)",
-            "Alternative (B)",
-            "Delta (B - A)",
-        ]);
+        .set_header(vec!["Metric", "Baseline", "Alternative", "Delta"]);
 
     // 1. Timeline
     table.add_row(vec![
@@ -62,7 +57,7 @@ pub fn render_comparison(comparison: &ScenarioComparison) {
 
     // 4. Aggregate
     table.add_row(vec![
-        "Gross Out-of-Pocket Paid",
+        "Gross Paid",
         &format_currency(comparison.baseline_gross_paid),
         &format_currency(comparison.alternative_gross_paid),
         &format_currency(comparison.delta_gross_paid),
@@ -70,13 +65,13 @@ pub fn render_comparison(comparison: &ScenarioComparison) {
 
     // 5. Analytics
     table.add_row(vec![
-        "Present Value (PV) Outflow",
+        "Present Value Outflow",
         &format_currency(comparison.baseline_pv),
         &format_currency(comparison.alternative_pv),
         &format_currency(comparison.delta_pv),
     ]);
     table.add_row(vec![
-        "Strategy IRR (Annualized)",
+        "Strategy IRR",
         "N/A",
         "N/A",
         &format_percent(comparison.irr * 100.0),
