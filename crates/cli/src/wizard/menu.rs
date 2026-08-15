@@ -18,9 +18,9 @@ use crate::session::state::AppState;
 use crate::storage::io::{get_scenarios_path, load_scenario, save_purchase};
 use crate::wizard::input::prompt_create_purchase;
 
-/// Clears the terminal screen and resets cursor position to top-left (1,1).
+/// Clears the terminal screen, scrollback buffer, and resets cursor position to top-left (1,1).
 pub fn clear_screen() {
-    print!("\x1B[2J\x1B[1;1H");
+    print!("\x1B[3J\x1B[2J\x1B[1;1H");
     let _ = stdout().flush();
 }
 
@@ -137,7 +137,6 @@ pub fn run_main_menu(state: &mut AppState) -> Result<()> {
                 };
                 let scenario = create_scenario(purchase);
                 state.set_slot_1(scenario);
-                clear_screen();
                 run_scenario_menu(state)?;
             }
             c if c.starts_with("2") => {
