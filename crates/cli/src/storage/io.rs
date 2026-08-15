@@ -19,13 +19,29 @@ pub fn get_scenarios_path() -> Result<PathBuf> {
     Ok(dir)
 }
 
+/// Sanitizes a string for safe filesystem usage as a filename.
+pub fn sanitize_filename(name: &str) -> String {
+    let sanitized: String = name
+        .chars()
+        .map(|c| match c {
+            '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|' | '\0' => '_',
+            ' ' => '_',
+            _ => c,
+        })
+        .collect();
+    let trimmed = sanitized.trim_matches('_');
+    if trimmed.is_empty() {
+        "scenario".to_string()
+    } else {
+        trimmed.to_lowercase()
+    }
+}
+
 /// Saves a `Purchase` struct as a formatted `.json` file into the workspace scenarios directory.
 pub fn save_purchase(purchase: &Purchase, filename: &str) -> Result<PathBuf> {
     let dir = get_scenarios_path()?;
-    let mut file_name = filename.to_string();
-    if !file_name.ends_with(".json") {
-        file_name.push_str(".json");
-    }
+    let clean_name = sanitize_filename(filename.trim_end_matches(".json"));
+    let file_name = format!("{clean_name}.json");
     let target_path = dir.join(file_name);
     save_purchase_to_path(purchase, &target_path)?;
     Ok(target_path)
@@ -162,5 +178,13 @@ mod tests {
         assert!(err_msg.contains("Invalid slot number"));
 
         let _ = fs::remove_dir_all(temp_dir);
+    }
+
+    #[test]
+    fn test_sanitize_filename() {
+        assert_eq!(sanitize_filename("Dream House"), "dream_house");
+        assert_eq!(sanitize_filename("House 3/2: Ocean & Lake*"), "house_3_2__ocean_&_lake");
+        assert_eq!(sanitize_filename(""), "scenario");
+        assert_eq!(sanitize_filename("___"), "scenario");
     }
 }
