@@ -14,22 +14,47 @@ pub fn format_currency(val: f64) -> String {
     let dollars = total_cents / 100;
     let cents = total_cents % 100;
 
-    let dollar_str = dollars.to_string();
-    let mut formatted_dollars = String::new();
-    let len = dollar_str.len();
+    let mut buf = [0u8; 32];
+    let mut cursor = buf.len();
 
-    for (i, ch) in dollar_str.chars().enumerate() {
-        if i > 0 && (len - i) % 3 == 0 {
-            formatted_dollars.push(',');
+    // Write cents: .XX
+    cursor -= 1;
+    buf[cursor] = b'0' + (cents % 10) as u8;
+    cursor -= 1;
+    buf[cursor] = b'0' + (cents / 10) as u8;
+    cursor -= 1;
+    buf[cursor] = b'.';
+
+    // Write dollars with thousand separator commas
+    let mut d = dollars;
+    let mut digit_count = 0;
+
+    if d == 0 {
+        cursor -= 1;
+        buf[cursor] = b'0';
+    } else {
+        while d > 0 {
+            if digit_count > 0 && digit_count % 3 == 0 {
+                cursor -= 1;
+                buf[cursor] = b',';
+            }
+            cursor -= 1;
+            buf[cursor] = b'0' + (d % 10) as u8;
+            d /= 10;
+            digit_count += 1;
         }
-        formatted_dollars.push(ch);
     }
+
+    cursor -= 1;
+    buf[cursor] = b'$';
 
     if is_negative {
-        format!("-${}.{:02}", formatted_dollars, cents)
-    } else {
-        format!("${}.{:02}", formatted_dollars, cents)
+        cursor -= 1;
+        buf[cursor] = b'-';
     }
+
+    let s = std::str::from_utf8(&buf[cursor..]).unwrap_or("$0.00");
+    s.to_string()
 }
 
 /// Formats a percentage value into a percent string (e.g., `6.95` -> "6.95%").
