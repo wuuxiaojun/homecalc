@@ -26,9 +26,8 @@ pub fn simulate_monthly(purchase: &Purchase) -> Vec<MonthlyStatementRow> {
         return Vec::new();
     }
 
-    let mut monthly_property_tax =
-        purchase.house.purchase_price * purchase.house.annual_property_tax_rate * 0.01 / 12.0;
-    let mut monthly_insurance = purchase.house.annual_insurance / 12.0;
+    let mut monthly_property_tax = purchase.house.monthly_property_tax();
+    let mut monthly_insurance = purchase.house.monthly_insurance();
     let mut monthly_hoa = purchase.house.monthly_hoa;
 
     // 3. PMT
