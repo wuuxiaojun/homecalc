@@ -48,33 +48,31 @@ pub fn render_summary(scenario: &Scenario) {
         .set_content_arrangement(ContentArrangement::Dynamic)
         .set_header(vec!["Type", "Principal", "Interest", "Term"]);
 
-    for tool in &purchase.tools {
-        match tool {
-            Tool::Cash(c) => {
-                tools_table.add_row(vec![
-                    "💵 Cash",
-                    &format_currency(c.amount),
-                    &format!("{:.2}%", c.rate),
-                    "N/A",
-                ]);
-            }
-            Tool::Mortgage(m) => {
-                tools_table.add_row(vec![
-                    "🏦 Mortgage",
-                    &format_currency(m.amount),
-                    &format!("{:.2}%", m.rate),
-                    &format!("{} Years", m.term),
-                ]);
-            }
-            Tool::Loc(l) => {
-                tools_table.add_row(vec![
-                    "💳 Line of Credit (LOC)",
-                    &format_currency(l.amount),
-                    &format!("{:.2}%", l.rate),
-                    "N/A",
-                ]);
-            }
-        }
+    if let Some(c) = purchase.cash() {
+        tools_table.add_row(vec![
+            "💵 Cash",
+            &format_currency(c.amount),
+            &format!("{:.2}%", c.rate),
+            "N/A",
+        ]);
+    }
+
+    if let Some(m) = purchase.mortgage() {
+        tools_table.add_row(vec![
+            "🏦 Mortgage",
+            &format_currency(m.amount),
+            &format!("{:.2}%", m.rate),
+            &format!("{} Years", m.term),
+        ]);
+    }
+
+    if let Some(l) = purchase.loc() {
+        tools_table.add_row(vec![
+            "💳 Line of Credit (LOC)",
+            &format_currency(l.amount),
+            &format!("{:.2}%", l.rate),
+            "N/A",
+        ]);
     }
 
     println!("\n💳 Financial Tools");
