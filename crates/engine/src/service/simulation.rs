@@ -35,11 +35,15 @@ pub fn simulate_monthly(purchase: &Purchase) -> Vec<MonthlyStatementRow> {
         .as_ref()
         .map_or(0.0, |m| calculate_mortgage_pmt(m.amount, m.rate, m.term));
 
+    let monthly_cash_rate = cash_opt.map_or(0.0, |c| (c.rate * 0.01) / 12.0);
+    let monthly_mortgage_rate = mortgage_opt.map_or(0.0, |m| (m.rate * 0.01) / 12.0);
+    let monthly_loc_rate = loc_opt.map_or(0.0, |l| (l.rate * 0.01) / 12.0);
+
     // 4. Monthly Simulation Loop
     for month in 1..=360 {
         // Cash Statement
-        let cash_statement = cash_opt.as_ref().map(|c| {
-            let cash_compound = calculate_monthly_compound(cash_balance, c.rate);
+        let cash_statement = cash_opt.as_ref().map(|_| {
+            let cash_compound = calculate_monthly_compound(cash_balance, monthly_cash_rate);
             cash_balance = cash_compound.total;
             CashStatement {
                 cash_now: cash_balance,
@@ -48,12 +52,12 @@ pub fn simulate_monthly(purchase: &Purchase) -> Vec<MonthlyStatementRow> {
         });
 
         // Mortgage Statement
-        let mortgage_statement = mortgage_opt.as_ref().and_then(|m| {
+        let mortgage_statement = mortgage_opt.as_ref().and_then(|_| {
             if mortgage_balance <= 0.0 {
                 return None;
             }
 
-            let interest_paid = calculate_monthly_compound(mortgage_balance, m.rate)
+            let interest_paid = calculate_monthly_compound(mortgage_balance, monthly_mortgage_rate)
                 .interest
                 .min(mortgage_pmt);
             let principal_paid = (mortgage_pmt - interest_paid).min(mortgage_balance);
@@ -76,11 +80,12 @@ pub fn simulate_monthly(purchase: &Purchase) -> Vec<MonthlyStatementRow> {
         });
 
         // Loc Statement
-        let loc_statement = loc_opt.as_ref().and_then(|l| {
+        let loc_statement = loc_opt.as_ref().and_then(|_| {
             if loc_balance <= 0.0 {
                 return None;
             }
-            let monthly_payment = calculate_monthly_compound(loc_balance, l.rate).interest;
+            let monthly_payment =
+                calculate_monthly_compound(loc_balance, monthly_loc_rate).interest;
             let extra_payment = purchase
                 .loc_repay
                 .get(&month)
@@ -144,6 +149,7 @@ pub fn simulate_monthly(purchase: &Purchase) -> Vec<MonthlyStatementRow> {
         }
     }
 
+    statement.shrink_to_fit();
     statement
 }
 
@@ -172,7 +178,8 @@ pub fn aggregate_yearly(statement: &[MonthlyStatementRow]) -> Vec<YearlyStatemen
                 }
                 if let Some(m) = &row.mortgage {
                     annual_mortgage_interest += m.interest_paid;
-                    mortgage_balance_sum += m.principal_paid + m.remaining_balance + m.extra_payment;
+                    mortgage_balance_sum +=
+                        m.principal_paid + m.remaining_balance + m.extra_payment;
                     mortgage_balance_count += 1;
                 }
                 if let Some(l) = &row.loc {
@@ -185,8 +192,7 @@ pub fn aggregate_yearly(statement: &[MonthlyStatementRow]) -> Vec<YearlyStatemen
             }
 
             // Annual Tax Savings
-            let annual_tax_savings = if annual_mortgage_interest > 0.0
-                && mortgage_balance_count > 0
+            let annual_tax_savings = if annual_mortgage_interest > 0.0 && mortgage_balance_count > 0
             {
                 let average_mortgage_balance: f64 =
                     mortgage_balance_sum / mortgage_balance_count as f64;
@@ -221,17 +227,20 @@ pub fn aggregate_yearly(statement: &[MonthlyStatementRow]) -> Vec<YearlyStatemen
 
 /// Aggregate yearly into total metrics
 pub fn compute_metrics(yearly_statement: &[YearlyStatementRow]) -> TotalStatement {
-    let total_cash_interest: f64 = yearly_statement
-        .iter()
-        .map(|r| r.annual_cash_interest)
-        .sum();
-    let total_holding_cost: f64 = yearly_statement.iter().map(|r| r.annual_holding_cost).sum();
-    let total_interest_paid: f64 = yearly_statement
-        .iter()
-        .map(|r| r.annual_interest_paid)
-        .sum();
-    let total_tax_savings: f64 = yearly_statement.iter().map(|r| r.annual_tax_savings).sum();
-    let total_paid: f64 = yearly_statement.iter().map(|r| r.annual_paid).sum();
+    let mut total_cash_interest = 0.0;
+    let mut total_holding_cost = 0.0;
+    let mut total_interest_paid = 0.0;
+    let mut total_tax_savings = 0.0;
+    let mut total_paid = 0.0;
+
+    for row in yearly_statement {
+        total_cash_interest += row.annual_cash_interest;
+        total_holding_cost += row.annual_holding_cost;
+        total_interest_paid += row.annual_interest_paid;
+        total_tax_savings += row.annual_tax_savings;
+        total_paid += row.annual_paid;
+    }
+
     TotalStatement {
         total_cash_interest,
         total_holding_cost,
@@ -278,16 +287,15 @@ struct Compound {
     pub total: f64,
 }
 
-/// Calculates 1-month interest compounding on a given balance and annual interest rate.
-fn calculate_monthly_compound(amount: f64, annual_rate: f64) -> Compound {
-    if amount <= 0.0 || annual_rate <= 0.0 {
+/// Calculates 1-month interest compounding on a given balance and pre-computed monthly rate.
+fn calculate_monthly_compound(amount: f64, monthly_rate: f64) -> Compound {
+    if amount <= 0.0 || monthly_rate <= 0.0 {
         return Compound {
             interest: 0.0,
             total: amount.max(0.0),
         };
     }
 
-    let monthly_rate = (annual_rate * 0.01) / 12.0;
     let interest = amount * monthly_rate;
 
     Compound {
@@ -322,7 +330,8 @@ mod tests {
 
     #[test]
     fn test_calculate_monthly_compound() {
-        let c1 = calculate_monthly_compound(100_000.0, 6.0);
+        let monthly_rate = (6.0 * 0.01) / 12.0;
+        let c1 = calculate_monthly_compound(100_000.0, monthly_rate);
         assert_eq!(c1.interest, 500.0);
         assert_eq!(c1.total, 100_500.0);
 
@@ -330,7 +339,7 @@ mod tests {
         assert_eq!(c2.interest, 0.0);
         assert_eq!(c2.total, 100_000.0);
 
-        let c3 = calculate_monthly_compound(-50_000.0, 6.0);
+        let c3 = calculate_monthly_compound(-50_000.0, monthly_rate);
         assert_eq!(c3.interest, 0.0);
         assert_eq!(c3.total, 0.0);
     }

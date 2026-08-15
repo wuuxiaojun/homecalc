@@ -13,17 +13,14 @@ pub struct House {
 }
 
 impl House {
-    /// Returns initial monthly property tax amount.
     pub fn monthly_property_tax(&self) -> f64 {
         self.purchase_price * self.annual_property_tax_rate * 0.01 / 12.0
     }
 
-    /// Returns initial monthly insurance amount.
     pub fn monthly_insurance(&self) -> f64 {
         self.annual_insurance / 12.0
     }
 
-    /// Returns initial total monthly holding cost (tax + insurance + HOA).
     pub fn initial_monthly_holding_cost(&self) -> f64 {
         self.monthly_property_tax() + self.monthly_insurance() + self.monthly_hoa
     }
