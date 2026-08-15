@@ -4,7 +4,6 @@ use crate::config::constant::*;
 use crate::domain::purchase::*;
 use crate::domain::scenario::*;
 use crate::domain::statement::*;
-use crate::domain::tool::*;
 use crate::service::utility::*;
 
 /// Simulate monthly statement
@@ -12,17 +11,9 @@ pub fn simulate_monthly(purchase: &Purchase) -> Vec<MonthlyStatementRow> {
     let mut statement = Vec::with_capacity(360);
 
     // 1. Extract Tool Configuration
-    let mut cash_opt = None;
-    let mut mortgage_opt = None;
-    let mut loc_opt = None;
-
-    for tool in &purchase.tools {
-        match tool {
-            Tool::Cash(c) => cash_opt = Some(c.clone()),
-            Tool::Mortgage(m) => mortgage_opt = Some(m.clone()),
-            Tool::Loc(l) => loc_opt = Some(l.clone()),
-        }
-    }
+    let cash_opt = purchase.cash().copied();
+    let mortgage_opt = purchase.mortgage().copied();
+    let loc_opt = purchase.loc().copied();
 
     // 2. State Tracking Variables
     let mut cash_balance = cash_opt
@@ -173,7 +164,8 @@ pub fn aggregate_yearly(statement: &[MonthlyStatementRow]) -> Vec<YearlyStatemen
             let mut annual_holding_cost = 0.0;
             let mut annual_paid_unadjusted = 0.0;
 
-            let mut monthly_mortgage_balance = Vec::with_capacity(chunk.len());
+            let mut mortgage_balance_sum = 0.0;
+            let mut mortgage_balance_count = 0usize;
 
             for row in chunk {
                 if let Some(c) = &row.cash {
@@ -181,8 +173,8 @@ pub fn aggregate_yearly(statement: &[MonthlyStatementRow]) -> Vec<YearlyStatemen
                 }
                 if let Some(m) = &row.mortgage {
                     annual_mortgage_interest += m.interest_paid;
-                    monthly_mortgage_balance
-                        .push(m.principal_paid + m.remaining_balance + m.extra_payment);
+                    mortgage_balance_sum += m.principal_paid + m.remaining_balance + m.extra_payment;
+                    mortgage_balance_count += 1;
                 }
                 if let Some(l) = &row.loc {
                     annual_loc_interest += l.monthly_payment;
@@ -195,10 +187,10 @@ pub fn aggregate_yearly(statement: &[MonthlyStatementRow]) -> Vec<YearlyStatemen
 
             // Annual Tax Savings
             let annual_tax_savings = if annual_mortgage_interest > 0.0
-                && !monthly_mortgage_balance.is_empty()
+                && mortgage_balance_count > 0
             {
-                let average_mortgage_balance: f64 = monthly_mortgage_balance.iter().sum::<f64>()
-                    / monthly_mortgage_balance.len() as f64;
+                let average_mortgage_balance: f64 =
+                    mortgage_balance_sum / mortgage_balance_count as f64;
                 let eligible_ratio = if average_mortgage_balance > IRS_MORTGAGE_LIMIT {
                     IRS_MORTGAGE_LIMIT / average_mortgage_balance
                 } else {

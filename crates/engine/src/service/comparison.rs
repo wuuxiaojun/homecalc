@@ -115,12 +115,14 @@ fn calculate_scenario_pv(scenario: &Scenario) -> f64 {
     let monthly_r = DEFAULT_DISCOUNT_RATE / 12.0;
     let total_months = scenario.monthly_statement.len();
     let mut total_pv = 0.0;
+    let base = 1.0 + monthly_r;
+    let mut discount_factor = base;
 
     for month_idx in 0..total_months {
-        let m = (month_idx + 1) as i32;
         let net_outflow = extract_monthly_outflow(scenario, month_idx);
-        let discounted_outflow = net_outflow / (1.0 + monthly_r).powi(m);
+        let discounted_outflow = net_outflow / discount_factor;
         total_pv += discounted_outflow;
+        discount_factor *= base;
     }
 
     total_pv
@@ -158,13 +160,15 @@ fn solve_irr_newton_raphson(cash_flows: &[f64]) -> Option<f64> {
     for _ in 0..max_iterations {
         let mut npv = 0.0;
         let mut derivative = 0.0;
+        let base = 1.0 + rate;
+        let mut factor = base;
 
         for (idx, &flow) in cash_flows.iter().enumerate() {
             let m = (idx + 1) as f64;
-            let factor = (1.0 + rate).powf(m);
 
             npv += flow / factor;
-            derivative -= m * flow / (factor * (1.0 + rate));
+            derivative -= m * flow / (factor * base);
+            factor *= base;
         }
 
         if npv.abs() < tolerance {

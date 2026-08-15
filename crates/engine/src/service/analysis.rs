@@ -2,7 +2,6 @@
 //! Single scenario analysis module
 
 use crate::domain::scenario::Scenario;
-use crate::domain::tool::Tool;
 
 /// Single scenario metrics
 #[derive(Debug, Clone)]
@@ -17,15 +16,7 @@ pub struct ScenarioAnalysis {
 pub fn analyze_scenario(scenario: &Scenario) -> ScenarioAnalysis {
     let monthly = &scenario.monthly_statement;
     let total = &scenario.total_statement;
-    let purchase = &scenario.purchase;
-    let mut principal = 0.0;
-    for tool in &purchase.tools {
-        match tool {
-            Tool::Mortgage(mortgage) => principal += mortgage.amount,
-            Tool::Loc(loc) => principal += loc.amount,
-            _ => {}
-        }
-    }
+    let principal = scenario.purchase.total_principal();
 
     let waste_ratio = if principal > 0.0 {
         total.total_interest_paid / principal
@@ -61,7 +52,7 @@ mod tests {
     use crate::domain::house::House;
     use crate::domain::purchase::Purchase;
     use crate::domain::statement::{HouseStatement, MonthlyStatementRow, TotalStatement};
-    use crate::domain::tool::{Cash, Mortgage};
+    use crate::domain::tool::{Cash, Mortgage, Tool};
     use std::collections::BTreeMap;
 
     #[test]
