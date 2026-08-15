@@ -14,7 +14,7 @@ pub fn render_summary(scenario: &Scenario) {
     let house = &purchase.house;
 
     println!("\n================================================================================");
-    println!(" PURCHASE SCENARIO SUMMARY: {}", purchase.name);
+    println!(" SCENARIO SUMMARY: {}", purchase.name);
     println!("================================================================================");
 
     // 1. Property Details Table

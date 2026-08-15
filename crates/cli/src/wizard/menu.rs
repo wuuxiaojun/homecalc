@@ -5,9 +5,9 @@ use anyhow::Result;
 use engine::service::analysis::analyze_scenario;
 use engine::service::comparison::compare_scenarios;
 use engine::service::simulation::create_scenario;
-use inquire::{Select, Text};
+use inquire::{InquireError, Select, Text};
 use std::fs;
-use std::io::{stdout, Write};
+use std::io::{Write, stdout};
 use std::path::PathBuf;
 
 use crate::render::analysis::render_analysis;
@@ -26,7 +26,7 @@ pub fn clear_screen() {
 
 /// Helper function to browse and select a `.json` scenario file from `get_scenarios_path()`,
 /// or allow entering a file path manually.
-pub fn prompt_select_scenario_file() -> Result<PathBuf> {
+pub fn prompt_select_scenario_file() -> Result<Option<PathBuf>> {
     let dir = get_scenarios_path()?;
     let mut json_files = Vec::new();
 
@@ -46,17 +46,38 @@ pub fn prompt_select_scenario_file() -> Result<PathBuf> {
             "\n[!] No `.json` scenario files found in directory {:?}",
             dir
         );
-        let manual = Text::new("Enter scenario file path or filename manually:").prompt()?;
+        let manual_res = Text::new("Enter scenario file path or filename manually:").prompt();
+        let manual = match manual_res {
+            Ok(val) => val,
+            Err(InquireError::OperationCanceled | InquireError::OperationInterrupted) => {
+                return Ok(None);
+            }
+            Err(e) => return Err(e.into()),
+        };
+
         let path = PathBuf::from(&manual);
-        if !path.exists() && !manual.ends_with(".json") {
-            Ok(dir.join(format!("{}.json", manual)))
+        if path.is_absolute() || path.exists() {
+            Ok(Some(path))
         } else {
-            Ok(path)
+            let filename = if manual.ends_with(".json") {
+                manual
+            } else {
+                format!("{}.json", manual)
+            };
+            Ok(Some(dir.join(filename)))
         }
     } else {
         json_files.sort();
-        let choice = Select::new("Select scenario file to load:", json_files).prompt()?;
-        Ok(dir.join(choice))
+        let choice_res = Select::new("Select scenario file to load:", json_files).prompt();
+        let choice = match choice_res {
+            Ok(val) => val,
+            Err(InquireError::OperationCanceled | InquireError::OperationInterrupted) => {
+                return Ok(None);
+            }
+            Err(e) => return Err(e.into()),
+        };
+        let path = dir.join(choice);
+        Ok(Some(path))
     }
 }
 
@@ -69,9 +90,13 @@ pub fn prompt_select_scenario_file() -> Result<PathBuf> {
 pub fn run_main_menu(state: &mut AppState) -> Result<()> {
     loop {
         clear_screen();
-        println!("================================================================================");
-        println!(" WELCOME TO HOMECALC FINANCIAL AMORTIZATION & SCENARIO ENGINE");
-        println!("================================================================================");
+        println!(
+            "================================================================================"
+        );
+        println!(" WELCOME TO HOMECALC SCENARIO ENGINE");
+        println!(
+            "================================================================================"
+        );
 
         let choices = vec![
             "1. Create Scenario",
@@ -80,45 +105,57 @@ pub fn run_main_menu(state: &mut AppState) -> Result<()> {
             "4. Exit",
         ];
 
-        let selection = Select::new("Main Menu Choice:", choices).prompt()?;
+        let selection_res = Select::new("Main Menu Choice:", choices).prompt();
+        let selection = match selection_res {
+            Ok(val) => val,
+            Err(InquireError::OperationCanceled | InquireError::OperationInterrupted) => {
+                println!("\nExiting Homecalc. Goodbye!\n");
+                break;
+            }
+            Err(e) => return Err(e.into()),
+        };
+
         clear_screen();
 
         match selection {
             c if c.starts_with("1") => {
-                let purchase = prompt_create_purchase()?;
+                let purchase_res = prompt_create_purchase();
+                let purchase = match purchase_res {
+                    Ok(p) => p,
+                    Err(e) => {
+                        if let Some(inq_err) = e.downcast_ref::<InquireError>() {
+                            if matches!(
+                                inq_err,
+                                InquireError::OperationCanceled
+                                    | InquireError::OperationInterrupted
+                            ) {
+                                continue;
+                            }
+                        }
+                        return Err(e);
+                    }
+                };
                 let scenario = create_scenario(purchase);
                 state.set_slot_1(scenario);
-
                 clear_screen();
-                if let Some(s) = state.get_slot_1() {
-                    render_summary(s);
-                }
-
-                run_scenario_menu(1, state)?;
+                run_scenario_menu(state)?;
             }
             c if c.starts_with("2") => {
-                let file_path = prompt_select_scenario_file()?;
-                load_scenario(&file_path, 1, state)?;
-
-                clear_screen();
-                if let Some(s) = state.get_slot_1() {
-                    render_summary(s);
+                if let Some(file_path) = prompt_select_scenario_file()? {
+                    load_scenario(&file_path, 1, state)?;
+                    run_scenario_menu(state)?;
                 }
-
-                run_scenario_menu(1, state)?;
             }
             c if c.starts_with("3") => {
-                if state.get_slot_1().is_none() {
-                    println!("\n[!] Slot 1 is empty. Select a scenario file to load into Slot 1:");
-                    let file1 = prompt_select_scenario_file()?;
-                    load_scenario(&file1, 1, state)?;
-                }
+                println!("\n Select the file for baseline scenario: ");
+                let file1_opt = prompt_select_scenario_file()?;
+                let Some(file1) = file1_opt else { continue };
+                load_scenario(&file1, 1, state)?;
 
-                if state.get_slot_2().is_none() {
-                    println!("\n[!] Slot 2 is empty. Select a scenario file to load into Slot 2:");
-                    let file2 = prompt_select_scenario_file()?;
-                    load_scenario(&file2, 2, state)?;
-                }
+                println!("\n Select the file for alternative scenario: ");
+                let file2_opt = prompt_select_scenario_file()?;
+                let Some(file2) = file2_opt else { continue };
+                load_scenario(&file2, 2, state)?;
 
                 clear_screen();
                 if let (Some(s1), Some(s2)) = (state.get_slot_1(), state.get_slot_2()) {
@@ -143,25 +180,22 @@ pub fn run_main_menu(state: &mut AppState) -> Result<()> {
     Ok(())
 }
 
-/// 2. Scenario Menu (`run_scenario_menu(slot: u8, state: &mut AppState)`):
-/// Context of active slot (default 1):
+/// 2. Scenario Menu (`run_scenario_menu(state: &mut AppState)`):
+/// Context of active slot 1:
 /// - 1. Save Scenario
 /// - 2. View Statement
 /// - 3. View Analysis
 /// - 4. Compare Scenario
 /// - 5. Back
-pub fn run_scenario_menu(slot: u8, state: &mut AppState) -> Result<()> {
+pub fn run_scenario_menu(state: &mut AppState) -> Result<()> {
     loop {
-        let scenario = match slot {
-            1 => state.get_slot_1(),
-            2 => state.get_slot_2(),
-            _ => None,
+        clear_screen();
+        let Some(s) = state.get_slot_1() else {
+            println!("\n[!] No active scenario loaded in Slot 1.");
+            break;
         };
 
-        if scenario.is_none() {
-            println!("\n[!] No scenario loaded in Slot {}.", slot);
-            break;
-        }
+        render_summary(s);
 
         let choices = vec![
             "1. Save Scenario",
@@ -171,56 +205,56 @@ pub fn run_scenario_menu(slot: u8, state: &mut AppState) -> Result<()> {
             "5. Back",
         ];
 
-        let selection = Select::new("Scenario Menu Choice:", choices).prompt()?;
-        clear_screen();
+        let selection_res = Select::new("Scenario Menu Choice:", choices).prompt();
+        let selection = match selection_res {
+            Ok(val) => val,
+            Err(InquireError::OperationCanceled | InquireError::OperationInterrupted) => {
+                break;
+            }
+            Err(e) => return Err(e.into()),
+        };
 
         match selection {
             c if c.starts_with("1") => {
-                let s = match slot {
-                    1 => state.get_slot_1().unwrap(),
-                    2 => state.get_slot_2().unwrap(),
-                    _ => unreachable!(),
-                };
-                let default_filename = format!(
-                    "{}.json",
-                    s.purchase.name.to_lowercase().replace(' ', "_")
-                );
-                let filename = Text::new("Enter filename to save (e.g. scenario.json):")
+                let default_filename =
+                    format!("{}.json", s.purchase.name.to_lowercase().replace(' ', "_"));
+                let filename_res = Text::new("Enter filename to save (e.g. scenario.json):")
                     .with_default(&default_filename)
-                    .prompt()?;
+                    .prompt();
+
+                let filename = match filename_res {
+                    Ok(val) => val,
+                    Err(InquireError::OperationCanceled | InquireError::OperationInterrupted) => {
+                        continue;
+                    }
+                    Err(e) => return Err(e.into()),
+                };
 
                 let saved_path = save_purchase(&s.purchase, &filename)?;
                 println!("\n[✓] Scenario successfully saved to {:?}", saved_path);
             }
             c if c.starts_with("2") => {
-                let s = match slot {
-                    1 => state.get_slot_1().unwrap(),
-                    2 => state.get_slot_2().unwrap(),
-                    _ => unreachable!(),
-                };
+                clear_screen();
                 render_statement(s);
                 run_scenario_sub_menu()?;
             }
             c if c.starts_with("3") => {
-                let s = match slot {
-                    1 => state.get_slot_1().unwrap(),
-                    2 => state.get_slot_2().unwrap(),
-                    _ => unreachable!(),
-                };
+                clear_screen();
                 let analysis = analyze_scenario(s);
                 render_analysis(&analysis);
                 run_scenario_sub_menu()?;
             }
             c if c.starts_with("4") => {
                 println!("\n[+] Select second scenario file to load into Slot 2 for comparison:");
-                let file2 = prompt_select_scenario_file()?;
-                load_scenario(&file2, 2, state)?;
+                if let Some(file2) = prompt_select_scenario_file()? {
+                    load_scenario(&file2, 2, state)?;
 
-                clear_screen();
-                if let (Some(s1), Some(s2)) = (state.get_slot_1(), state.get_slot_2()) {
-                    let comparison = compare_scenarios(s1, s2);
-                    render_comparison(&comparison);
-                    run_comparison_menu()?;
+                    clear_screen();
+                    if let (Some(s1), Some(s2)) = (state.get_slot_1(), state.get_slot_2()) {
+                        let comparison = compare_scenarios(s1, s2);
+                        render_comparison(&comparison);
+                        run_comparison_menu()?;
+                    }
                 }
             }
             c if c.starts_with("5") => {
@@ -239,8 +273,12 @@ pub fn run_scenario_menu(slot: u8, state: &mut AppState) -> Result<()> {
 pub fn run_scenario_sub_menu() -> Result<()> {
     loop {
         let choices = vec!["1. Back"];
-        let selection = Select::new("Sub Menu Choice:", choices).prompt()?;
-        clear_screen();
+        let selection_res = Select::new("Sub Menu Choice:", choices).prompt();
+        let selection = match selection_res {
+            Ok(val) => val,
+            Err(InquireError::OperationCanceled | InquireError::OperationInterrupted) => break,
+            Err(e) => return Err(e.into()),
+        };
         if selection.starts_with("1") {
             break;
         }
@@ -254,8 +292,12 @@ pub fn run_scenario_sub_menu() -> Result<()> {
 pub fn run_comparison_menu() -> Result<()> {
     loop {
         let choices = vec!["1. Back"];
-        let selection = Select::new("Comparison Sub-Menu Choice:", choices).prompt()?;
-        clear_screen();
+        let selection_res = Select::new("Comparison Sub-Menu Choice:", choices).prompt();
+        let selection = match selection_res {
+            Ok(val) => val,
+            Err(InquireError::OperationCanceled | InquireError::OperationInterrupted) => break,
+            Err(e) => return Err(e.into()),
+        };
         if selection.starts_with("1") {
             break;
         }
