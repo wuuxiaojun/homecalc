@@ -15,7 +15,7 @@ use crate::render::comparison::render_comparison;
 use crate::render::statement::render_statement;
 use crate::render::summary::render_summary;
 use crate::session::state::AppState;
-use crate::storage::io::{get_scenarios_path, load_scenario, save_purchase};
+use crate::storage::io::{get_scenarios_path, load_scenario, sanitize_filename, save_purchase};
 use crate::wizard::input::prompt_create_purchase;
 
 /// Clears the terminal screen, scrollback buffer, and resets cursor position to top-left (1,1).
@@ -215,8 +215,7 @@ pub fn run_scenario_menu(state: &mut AppState) -> Result<()> {
 
         match selection {
             c if c.starts_with("1") => {
-                let default_filename =
-                    format!("{}.json", s.purchase.name.to_lowercase().replace(' ', "_"));
+                let default_filename = format!("{}.json", sanitize_filename(&s.purchase.name));
                 let filename_res = Text::new("Enter filename to save:")
                     .with_default(&default_filename)
                     .prompt();
