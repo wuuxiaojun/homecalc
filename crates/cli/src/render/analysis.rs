@@ -10,7 +10,7 @@ use super::format::{format_currency, format_months, format_percent};
 /// Formats and displays single-scenario analysis metrics cleanly.
 pub fn render_analysis(analysis: &ScenarioAnalysis) {
     println!("\n================================================================================");
-    println!(" SCENARIO ANALYSIS");
+    println!(" 🔍 SCENARIO ANALYSIS");
     println!("================================================================================");
 
     let mut table = Table::new();
@@ -20,7 +20,7 @@ pub fn render_analysis(analysis: &ScenarioAnalysis) {
         .set_header(vec!["Analysis Metric", "Value"]);
 
     table.add_row(vec![
-        "Payoff Timeline",
+        "⏱️  Payoff Timeline",
         &format!(
             "{} (Month {})",
             format_months(analysis.payoff_month),
@@ -28,15 +28,15 @@ pub fn render_analysis(analysis: &ScenarioAnalysis) {
         ),
     ]);
     table.add_row(vec![
-        "Effective Monthly Outlay",
+        "💳 Effective Monthly Outlay",
         &format_currency(analysis.effective_monthly_cost),
     ]);
     table.add_row(vec![
-        "Waste Ratio",
+        "🗑️  Waste Ratio",
         &format_percent(analysis.waste_ratio * 100.0),
     ]);
     table.add_row(vec![
-        "Tax Savings Ratio",
+        "🧾 Tax Savings Ratio",
         &format_percent(analysis.tax_savings_ratio * 100.0),
     ]);
 

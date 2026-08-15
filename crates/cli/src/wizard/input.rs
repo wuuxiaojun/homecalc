@@ -12,11 +12,11 @@ use std::collections::BTreeMap;
 /// Prompts the user interactively to create a fully configured `Purchase` struct.
 pub fn prompt_create_purchase() -> Result<Purchase> {
     println!("\n================================================================================");
-    println!(" CREATE NEW PURCHASE SCENARIO");
+    println!(" 🏡 CREATE NEW PURCHASE SCENARIO");
     println!("================================================================================");
 
     // 1. Basic Info & House Parameters
-    println!("\n--- Purchase Information ---");
+    println!("\n📝 Purchase Information");
 
     let name = Text::new("Scenario Name:")
         .with_validator(|input: &str| {
@@ -78,7 +78,7 @@ pub fn prompt_create_purchase() -> Result<Purchase> {
     };
 
     // 2. Financial Tool Allocation & Dynamic Cash Balancing
-    println!("\n--- Financial Tools Allocation ---");
+    println!("\n💳 Financial Tools Allocation");
 
     let mut mortgage_amount: f64;
     let mut mortgage_rate: f64 = 0.0;
@@ -154,7 +154,7 @@ pub fn prompt_create_purchase() -> Result<Purchase> {
         }
 
         println!(
-            "\n[!] Error: Total borrowed amount (${:.2}) exceeds Purchase Price (${:.2}). Please re-enter tool amounts.\n",
+            "\n⚠️  Error: Total borrowed amount (${:.2}) exceeds Purchase Price (${:.2}). Please re-enter tool amounts.\n",
             total_borrowed, purchase_price
         );
     }
@@ -164,7 +164,7 @@ pub fn prompt_create_purchase() -> Result<Purchase> {
 
     if cash_amount > 0.0 {
         println!(
-            "\n[+] Calculated required Cash Down Payment: ${:.2}",
+            "\n💡 Calculated required Cash Down Payment: ${:.2}",
             cash_amount
         );
         let cash_rate = CustomType::<f64>::new("Cash Interest / Yield Rate (%):")
@@ -233,14 +233,14 @@ pub fn prompt_create_purchase() -> Result<Purchase> {
                 "Mortgage" => {
                     mortgage_repay.insert(month, amount);
                     println!(
-                        "[+] Added Mortgage extra repayment: ${:.2} at Month {}",
+                        "⚡ Added Mortgage extra repayment: ${:.2} at Month {}",
                         amount, month
                     );
                 }
                 "LOC" => {
                     loc_repay.insert(month, amount);
                     println!(
-                        "[+] Added LOC extra repayment: ${:.2} at Month {}",
+                        "⚡ Added LOC extra repayment: ${:.2} at Month {}",
                         amount, month
                     );
                 }

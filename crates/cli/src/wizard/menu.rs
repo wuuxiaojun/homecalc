@@ -93,23 +93,23 @@ pub fn run_main_menu(state: &mut AppState) -> Result<()> {
         println!(
             "================================================================================"
         );
-        println!(" WELCOME TO HOMECALC SCENARIO ENGINE");
+        println!(" 🏠 WELCOME TO HOMECALC SCENARIO ENGINE 📊");
         println!(
             "================================================================================"
         );
 
         let choices = vec![
-            "1. Create Scenario",
-            "2. Load Scenario",
-            "3. Compare Scenarios",
-            "4. Exit",
+            "1. 📝 Create Scenario",
+            "2. 📂 Load Scenario",
+            "3. ⚖️  Compare Scenarios",
+            "4. 🚪 Exit",
         ];
 
         let selection_res = Select::new("Main Menu Choice:", choices).prompt();
         let selection = match selection_res {
             Ok(val) => val,
             Err(InquireError::OperationCanceled | InquireError::OperationInterrupted) => {
-                println!("\nExiting Homecalc. Goodbye!\n");
+                println!("\n👋 Exiting Homecalc. Goodbye!\n");
                 break;
             }
             Err(e) => return Err(e.into()),
@@ -146,12 +146,12 @@ pub fn run_main_menu(state: &mut AppState) -> Result<()> {
                 }
             }
             c if c.starts_with("3") => {
-                println!("\n Select the file for baseline scenario: ");
+                println!("\n⚖️  Select the file for baseline scenario: ");
                 let file1_opt = prompt_select_scenario_file()?;
                 let Some(file1) = file1_opt else { continue };
                 load_scenario(&file1, 1, state)?;
 
-                println!("\n Select the file for alternative scenario: ");
+                println!("\n⚖️  Select the file for alternative scenario: ");
                 let file2_opt = prompt_select_scenario_file()?;
                 let Some(file2) = file2_opt else { continue };
                 load_scenario(&file2, 2, state)?;
@@ -163,13 +163,13 @@ pub fn run_main_menu(state: &mut AppState) -> Result<()> {
                     run_comparison_menu()?;
                 } else {
                     println!(
-                        "\n[!] Error: Unable to perform comparison because one or both slots are empty."
+                        "\n⚠️  Error: Unable to perform comparison because one or both slots are empty."
                     );
                 }
             }
             c if c.starts_with("4") => {
                 clear_screen();
-                println!("\nExiting Homecalc. Goodbye!\n");
+                println!("\n👋 Exiting Homecalc. Goodbye!\n");
                 break;
             }
             _ => unreachable!(),
@@ -190,18 +190,18 @@ pub fn run_scenario_menu(state: &mut AppState) -> Result<()> {
     loop {
         clear_screen();
         let Some(s) = state.get_slot_1() else {
-            println!("\n No active scenario.");
+            println!("\n⚠️  No active scenario loaded in Slot 1.");
             break;
         };
 
         render_summary(s);
 
         let choices = vec![
-            "1. Save Scenario",
-            "2. View Statement",
-            "3. View Analysis",
-            "4. Compare Scenario",
-            "5. Back",
+            "1. 💾 Save Scenario",
+            "2. 📅 View Statement",
+            "3. 🔍 View Analysis",
+            "4. ⚖️  Compare Scenario",
+            "5. ⬅️  Back",
         ];
 
         let selection_res = Select::new("Scenario Menu Choice:", choices).prompt();
@@ -230,7 +230,7 @@ pub fn run_scenario_menu(state: &mut AppState) -> Result<()> {
                 };
 
                 let saved_path = save_purchase(&s.purchase, &filename)?;
-                println!("\n[✓] Scenario successfully saved to {:?}", saved_path);
+                println!("\n✅ Scenario successfully saved to {:?}", saved_path);
             }
             c if c.starts_with("2") => {
                 clear_screen();
@@ -244,7 +244,7 @@ pub fn run_scenario_menu(state: &mut AppState) -> Result<()> {
                 run_scenario_sub_menu()?;
             }
             c if c.starts_with("4") => {
-                println!("\n[+] Select second scenario file for comparison:");
+                println!("\n📂 Select second scenario file for comparison:");
                 if let Some(file2) = prompt_select_scenario_file()? {
                     load_scenario(&file2, 2, state)?;
 
@@ -271,7 +271,7 @@ pub fn run_scenario_menu(state: &mut AppState) -> Result<()> {
 /// - 1. Back
 pub fn run_scenario_sub_menu() -> Result<()> {
     loop {
-        let choices = vec!["1. Back"];
+        let choices = vec!["1. ⬅️  Back"];
         let selection_res = Select::new("Scenario Sub Menu Choice:", choices).prompt();
         let selection = match selection_res {
             Ok(val) => val,
@@ -290,7 +290,7 @@ pub fn run_scenario_sub_menu() -> Result<()> {
 /// - 1. Back
 pub fn run_comparison_menu() -> Result<()> {
     loop {
-        let choices = vec!["1. Back"];
+        let choices = vec!["1. ⬅️  Back"];
         let selection_res = Select::new("Comparison Menu Choice:", choices).prompt();
         let selection = match selection_res {
             Ok(val) => val,

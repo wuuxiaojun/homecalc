@@ -15,7 +15,7 @@ pub fn render_statement(scenario: &Scenario) {
 
     // 1. Monthly Schedule Table
     println!("\n================================================================================");
-    println!(" MONTHLY STATEMENT SCHEDULE");
+    println!(" 📅 MONTHLY STATEMENT SCHEDULE");
     println!("================================================================================");
 
     let mut monthly_table = Table::new();
@@ -86,7 +86,7 @@ pub fn render_statement(scenario: &Scenario) {
 
     // 2. Yearly Summary Table
     println!("\n================================================================================");
-    println!(" YEARLY SUMMARY STATEMENT");
+    println!(" 📈 YEARLY SUMMARY STATEMENT");
     println!("================================================================================");
 
     let mut yearly_table = Table::new();
@@ -123,7 +123,7 @@ pub fn render_statement(scenario: &Scenario) {
 
     // 3.  Total Summary Table
     println!("\n================================================================================");
-    println!(" TOTAL SUMMARY STATEMENT");
+    println!(" 💰 TOTAL SUMMARY STATEMENT");
     println!("================================================================================");
     let mut total_table = Table::new();
     total_table
@@ -132,22 +132,22 @@ pub fn render_statement(scenario: &Scenario) {
         .set_header(vec!["Lifetime Summary Metric", "Amount"]);
 
     total_table.add_row(vec![
-        "Total Cash Yield Earned",
+        "💵 Total Cash Yield Earned",
         &format_currency(total.total_cash_interest),
     ]);
     total_table.add_row(vec![
-        "Total Interest Paid",
+        "📉 Total Interest Paid",
         &format_currency(total.total_interest_paid),
     ]);
     total_table.add_row(vec![
-        "Total Holding Cost Paid",
+        "🏚️  Total Holding Cost Paid",
         &format_currency(total.total_holding_cost),
     ]);
     total_table.add_row(vec![
-        "Total Tax Savings Realized",
+        "🧾 Total Tax Savings Realized",
         &format_currency(total.total_tax_savings),
     ]);
-    total_table.add_row(vec!["Total Paid", &format_currency(total.total_paid)]);
+    total_table.add_row(vec!["💸 Total Paid", &format_currency(total.total_paid)]);
 
     println!("{total_table}");
 }

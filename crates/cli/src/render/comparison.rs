@@ -10,7 +10,7 @@ use engine::service::comparison::ScenarioComparison;
 /// `[Metric Category / Field | Baseline (A) | Alternative (B) | Delta (B - A)]`.
 pub fn render_comparison(comparison: &ScenarioComparison) {
     println!("\n================================================================================");
-    println!(" SCENARIO COMPARISON");
+    println!(" ⚖️  SCENARIO COMPARISON");
     println!("================================================================================");
 
     let mut table = Table::new();
@@ -21,7 +21,7 @@ pub fn render_comparison(comparison: &ScenarioComparison) {
 
     // 1. Timeline
     table.add_row(vec![
-        "Payoff Timeline",
+        "⏱️  Payoff Timeline",
         &format_months(comparison.baseline_payoff_month),
         &format_months(comparison.alternative_payoff_month),
         &format!("{} Months Saved", comparison.months_saved),
@@ -29,13 +29,13 @@ pub fn render_comparison(comparison: &ScenarioComparison) {
 
     // 2. Outflows
     table.add_row(vec![
-        "Extra Principal Paid",
+        "⚡ Extra Principal Paid",
         &format_currency(comparison.baseline_extra_payment),
         &format_currency(comparison.alternative_extra_payment),
         &format_currency(comparison.delta_extra_payment),
     ]);
     table.add_row(vec![
-        "Total Interest Paid",
+        "📉 Total Interest Paid",
         &format_currency(comparison.baseline_interest_paid),
         &format_currency(comparison.alternative_interest_paid),
         &format_currency(comparison.delta_interest_paid),
@@ -43,13 +43,13 @@ pub fn render_comparison(comparison: &ScenarioComparison) {
 
     // 3. Inflows
     table.add_row(vec![
-        "Total Cash Yield Earned",
+        "💵 Total Cash Yield Earned",
         &format_currency(comparison.baseline_cash_interest),
         &format_currency(comparison.alternative_cash_interest),
         &format_currency(comparison.delta_cash_interest),
     ]);
     table.add_row(vec![
-        "Total Tax Savings",
+        "🧾 Total Tax Savings",
         &format_currency(comparison.baseline_tax_savings),
         &format_currency(comparison.alternative_tax_savings),
         &format_currency(comparison.delta_tax_savings),
@@ -57,7 +57,7 @@ pub fn render_comparison(comparison: &ScenarioComparison) {
 
     // 4. Aggregate
     table.add_row(vec![
-        "Gross Paid",
+        "💳 Gross Paid",
         &format_currency(comparison.baseline_gross_paid),
         &format_currency(comparison.alternative_gross_paid),
         &format_currency(comparison.delta_gross_paid),
@@ -65,13 +65,13 @@ pub fn render_comparison(comparison: &ScenarioComparison) {
 
     // 5. Analytics
     table.add_row(vec![
-        "Present Value Outflow",
+        "📊 Present Value Outflow",
         &format_currency(comparison.baseline_pv),
         &format_currency(comparison.alternative_pv),
         &format_currency(comparison.delta_pv),
     ]);
     table.add_row(vec![
-        "Strategy IRR",
+        "📈 Strategy IRR",
         "N/A",
         "N/A",
         &format_percent(comparison.irr * 100.0),

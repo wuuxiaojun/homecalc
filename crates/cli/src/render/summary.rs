@@ -14,7 +14,7 @@ pub fn render_summary(scenario: &Scenario) {
     let house = &purchase.house;
 
     println!("\n================================================================================");
-    println!(" SCENARIO SUMMARY: {}", purchase.name);
+    println!(" 📋 SCENARIO SUMMARY: {}", purchase.name);
     println!("================================================================================");
 
     // 1. Property Details Table
@@ -25,20 +25,20 @@ pub fn render_summary(scenario: &Scenario) {
         .set_header(vec!["Property Parameter", "Value"]);
 
     house_table.add_row(vec![
-        "Purchase Price",
+        "🏡 Purchase Price",
         &format_currency(house.purchase_price),
     ]);
     house_table.add_row(vec![
-        "Annual Property Tax Rate",
+        "🏛️  Annual Property Tax Rate",
         &format!("{:.2}%", house.annual_property_tax_rate),
     ]);
     house_table.add_row(vec![
-        "Annual Insurance",
+        "🛡️  Annual Insurance",
         &format_currency(house.annual_insurance),
     ]);
-    house_table.add_row(vec!["Monthly HOA", &format_currency(house.monthly_hoa)]);
+    house_table.add_row(vec!["🏢 Monthly HOA", &format_currency(house.monthly_hoa)]);
 
-    println!("\n--- Property Details ---");
+    println!("\n🏡 Property Details");
     println!("{house_table}");
 
     // 2. Financial Tools Table
@@ -52,7 +52,7 @@ pub fn render_summary(scenario: &Scenario) {
         match tool {
             Tool::Cash(c) => {
                 tools_table.add_row(vec![
-                    "Cash",
+                    "💵 Cash",
                     &format_currency(c.amount),
                     &format!("{:.2}%", c.rate),
                     "N/A",
@@ -60,7 +60,7 @@ pub fn render_summary(scenario: &Scenario) {
             }
             Tool::Mortgage(m) => {
                 tools_table.add_row(vec![
-                    "Mortgage",
+                    "🏦 Mortgage",
                     &format_currency(m.amount),
                     &format!("{:.2}%", m.rate),
                     &format!("{} Years", m.term),
@@ -68,7 +68,7 @@ pub fn render_summary(scenario: &Scenario) {
             }
             Tool::Loc(l) => {
                 tools_table.add_row(vec![
-                    "Line of Credit (LOC)",
+                    "💳 Line of Credit (LOC)",
                     &format_currency(l.amount),
                     &format!("{:.2}%", l.rate),
                     "N/A",
@@ -77,7 +77,7 @@ pub fn render_summary(scenario: &Scenario) {
         }
     }
 
-    println!("\n--- Financial Tools ---");
+    println!("\n💳 Financial Tools");
     println!("{tools_table}");
 
     // 3. Extra Repayments Table
@@ -89,13 +89,13 @@ pub fn render_summary(scenario: &Scenario) {
             .set_header(vec!["Loan Type", "Month Number", "Extra Payment Amount"]);
 
         for (month, amt) in &purchase.mortgage_repay {
-            repay_table.add_row(vec!["Mortgage", &month.to_string(), &format_currency(*amt)]);
+            repay_table.add_row(vec!["🏦 Mortgage", &month.to_string(), &format_currency(*amt)]);
         }
         for (month, amt) in &purchase.loc_repay {
-            repay_table.add_row(vec!["LOC", &month.to_string(), &format_currency(*amt)]);
+            repay_table.add_row(vec!["💳 LOC", &month.to_string(), &format_currency(*amt)]);
         }
 
-        println!("\n--- Scheduled Extra Principal Repayments ---");
+        println!("\n⚡ Scheduled Extra Principal Repayments");
         println!("{repay_table}");
     }
 }
