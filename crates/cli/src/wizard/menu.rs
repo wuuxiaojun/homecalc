@@ -190,7 +190,7 @@ pub fn run_scenario_menu(state: &mut AppState) -> Result<()> {
     loop {
         clear_screen();
         let Some(s) = state.get_slot_1() else {
-            println!("\n[!] No active scenario loaded in Slot 1.");
+            println!("\n No active scenario.");
             break;
         };
 
@@ -217,7 +217,7 @@ pub fn run_scenario_menu(state: &mut AppState) -> Result<()> {
             c if c.starts_with("1") => {
                 let default_filename =
                     format!("{}.json", s.purchase.name.to_lowercase().replace(' ', "_"));
-                let filename_res = Text::new("Enter filename to save (e.g. scenario.json):")
+                let filename_res = Text::new("Enter filename to save:")
                     .with_default(&default_filename)
                     .prompt();
 
@@ -244,7 +244,7 @@ pub fn run_scenario_menu(state: &mut AppState) -> Result<()> {
                 run_scenario_sub_menu()?;
             }
             c if c.starts_with("4") => {
-                println!("\n[+] Select second scenario file to load into Slot 2 for comparison:");
+                println!("\n[+] Select second scenario file for comparison:");
                 if let Some(file2) = prompt_select_scenario_file()? {
                     load_scenario(&file2, 2, state)?;
 
