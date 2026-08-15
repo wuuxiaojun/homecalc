@@ -272,7 +272,7 @@ pub fn run_scenario_menu(state: &mut AppState) -> Result<()> {
 pub fn run_scenario_sub_menu() -> Result<()> {
     loop {
         let choices = vec!["1. Back"];
-        let selection_res = Select::new("Sub Menu Choice:", choices).prompt();
+        let selection_res = Select::new("Scenario Sub Menu Choice:", choices).prompt();
         let selection = match selection_res {
             Ok(val) => val,
             Err(InquireError::OperationCanceled | InquireError::OperationInterrupted) => break,
@@ -291,7 +291,7 @@ pub fn run_scenario_sub_menu() -> Result<()> {
 pub fn run_comparison_menu() -> Result<()> {
     loop {
         let choices = vec!["1. Back"];
-        let selection_res = Select::new("Comparison Sub-Menu Choice:", choices).prompt();
+        let selection_res = Select::new("Comparison Menu Choice:", choices).prompt();
         let selection = match selection_res {
             Ok(val) => val,
             Err(InquireError::OperationCanceled | InquireError::OperationInterrupted) => break,

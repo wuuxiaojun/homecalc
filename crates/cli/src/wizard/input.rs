@@ -16,8 +16,9 @@ pub fn prompt_create_purchase() -> Result<Purchase> {
     println!("================================================================================");
 
     // 1. Basic Info & House Parameters
+    println!("\n--- Purchase Information ---");
+
     let name = Text::new("Scenario Name:")
-        .with_placeholder("e.g. Dream House Purchase")
         .with_validator(|input: &str| {
             if input.trim().is_empty() {
                 Ok(Validation::Invalid("Scenario name cannot be empty.".into()))
@@ -28,7 +29,6 @@ pub fn prompt_create_purchase() -> Result<Purchase> {
         .prompt()?;
 
     let purchase_price = CustomType::<f64>::new("Purchase Price ($):")
-        .with_default(1_000_000.0)
         .with_validator(|val: &f64| {
             if *val > 0.0 {
                 Ok(Validation::Valid)
@@ -39,7 +39,6 @@ pub fn prompt_create_purchase() -> Result<Purchase> {
         .prompt()?;
 
     let annual_property_tax_rate = CustomType::<f64>::new("Annual Property Tax Rate (%):")
-        .with_default(1.2)
         .with_validator(|val: &f64| {
             if (0.0..=20.0).contains(val) {
                 Ok(Validation::Valid)
@@ -52,7 +51,6 @@ pub fn prompt_create_purchase() -> Result<Purchase> {
         .prompt()?;
 
     let annual_insurance = CustomType::<f64>::new("Annual Insurance ($):")
-        .with_default(2_400.0)
         .with_validator(|val: &f64| {
             if *val >= 0.0 {
                 Ok(Validation::Valid)
@@ -63,7 +61,6 @@ pub fn prompt_create_purchase() -> Result<Purchase> {
         .prompt()?;
 
     let monthly_hoa = CustomType::<f64>::new("Monthly HOA ($):")
-        .with_default(100.0)
         .with_validator(|val: &f64| {
             if *val >= 0.0 {
                 Ok(Validation::Valid)
@@ -92,7 +89,6 @@ pub fn prompt_create_purchase() -> Result<Purchase> {
 
     loop {
         mortgage_amount = CustomType::<f64>::new("Mortgage Loan Principal Amount ($):")
-            .with_default(800_000.0)
             .with_validator(|val: &f64| {
                 if *val >= 0.0 {
                     Ok(Validation::Valid)
@@ -104,26 +100,24 @@ pub fn prompt_create_purchase() -> Result<Purchase> {
 
         if mortgage_amount > 0.0 {
             mortgage_rate = CustomType::<f64>::new("Mortgage Interest Rate (%):")
-                .with_default(6.5)
                 .with_validator(|val: &f64| {
-                    if (0.0..=30.0).contains(val) {
+                    if (0.0..=20.0).contains(val) {
                         Ok(Validation::Valid)
                     } else {
                         Ok(Validation::Invalid(
-                            "Mortgage rate must be between 0.0% and 30.0%".into(),
+                            "Mortgage rate must be between 0.0% and 20.0%".into(),
                         ))
                     }
                 })
                 .prompt()?;
 
             mortgage_term = CustomType::<u32>::new("Mortgage Term (Years):")
-                .with_default(30)
                 .with_validator(|val: &u32| {
-                    if (1..=50).contains(val) {
+                    if (1..=30).contains(val) {
                         Ok(Validation::Valid)
                     } else {
                         Ok(Validation::Invalid(
-                            "Term must be between 1 and 50 years".into(),
+                            "Term must be between 1 and 30 years".into(),
                         ))
                     }
                 })
@@ -131,7 +125,6 @@ pub fn prompt_create_purchase() -> Result<Purchase> {
         }
 
         loc_amount = CustomType::<f64>::new("Line of Credit (LOC) Amount ($):")
-            .with_default(0.0)
             .with_validator(|val: &f64| {
                 if *val >= 0.0 {
                     Ok(Validation::Valid)
@@ -143,13 +136,12 @@ pub fn prompt_create_purchase() -> Result<Purchase> {
 
         if loc_amount > 0.0 {
             loc_rate = CustomType::<f64>::new("LOC Interest Rate (%):")
-                .with_default(8.0)
                 .with_validator(|val: &f64| {
-                    if (0.0..=30.0).contains(val) {
+                    if (0.0..=20.0).contains(val) {
                         Ok(Validation::Valid)
                     } else {
                         Ok(Validation::Invalid(
-                            "LOC rate must be between 0.0% and 30.0%".into(),
+                            "LOC rate must be between 0.0% and 20.0%".into(),
                         ))
                     }
                 })
@@ -176,13 +168,12 @@ pub fn prompt_create_purchase() -> Result<Purchase> {
             cash_amount
         );
         let cash_rate = CustomType::<f64>::new("Cash Interest / Yield Rate (%):")
-            .with_default(4.0)
             .with_validator(|val: &f64| {
-                if (0.0..=30.0).contains(val) {
+                if (0.0..=20.0).contains(val) {
                     Ok(Validation::Valid)
                 } else {
                     Ok(Validation::Invalid(
-                        "Cash rate must be between 0.0% and 30.0%".into(),
+                        "Cash rate must be between 0.0% and 20.0%".into(),
                     ))
                 }
             })
@@ -213,9 +204,7 @@ pub fn prompt_create_purchase() -> Result<Purchase> {
     let mut mortgage_repay = BTreeMap::new();
     let mut loc_repay = BTreeMap::new();
 
-    let add_extra = Confirm::new("Do you want to add extra principal repayments?")
-        .with_default(false)
-        .prompt()?;
+    let add_extra = Confirm::new("Do you want to add extra principal repayments?").prompt()?;
 
     if add_extra {
         loop {
@@ -258,9 +247,7 @@ pub fn prompt_create_purchase() -> Result<Purchase> {
                 _ => unreachable!(),
             }
 
-            let continue_adding = Confirm::new("Add another extra repayment rule?")
-                .with_default(false)
-                .prompt()?;
+            let continue_adding = Confirm::new("Add another extra repayment rule?").prompt()?;
 
             if !continue_adding {
                 break;
