@@ -2,6 +2,10 @@
 //! Multi-tier interactive menu flow for Homecalc CLI.
 
 use anyhow::Result;
+use crossterm::cursor::{Hide, Show};
+use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
+use crossterm::style::{Color, ResetColor, SetForegroundColor};
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use engine::service::analysis::analyze_scenario;
 use engine::service::comparison::compare_scenarios;
 use engine::service::simulation::create_scenario;
@@ -22,6 +26,98 @@ use crate::wizard::input::prompt_create_purchase;
 pub fn clear_screen() {
     print!("\x1B[3J\x1B[2J\x1B[1;1H");
     let _ = stdout().flush();
+}
+
+/// Custom interactive menu selector with:
+/// - Instant number key selection (typing '1' immediately selects option 1)
+/// - Ignores invalid numbers (e.g. if 4 options, pressing '5' does nothing)
+/// - Up / Down / 'k' / 'j' arrow navigation
+/// - Enter / Space to confirm highlighted option
+/// - Esc / 'q' / Ctrl+C to cancel / go back
+/// - Zero search / filter prompt or text box
+pub fn select_menu_option(choices: &[&str]) -> Result<Option<usize>> {
+    if choices.is_empty() {
+        return Ok(None);
+    }
+
+    let mut selected: usize = 0;
+    let total = choices.len();
+
+    enable_raw_mode()?;
+    print!("{}", Hide);
+    let _ = stdout().flush();
+
+    let result = (|| -> Result<Option<usize>> {
+        loop {
+            // Render options
+            for (i, choice) in choices.iter().enumerate() {
+                if i == selected {
+                    print!("\r\x1B[2K");
+                    print!(
+                        "{}> {}{}\r\n",
+                        SetForegroundColor(Color::Cyan),
+                        choice,
+                        ResetColor
+                    );
+                } else {
+                    print!("\r\x1B[2K");
+                    print!("  {}\r\n", choice);
+                }
+            }
+            let _ = stdout().flush();
+
+            // Wait for key event
+            if let Event::Key(KeyEvent {
+                code, modifiers, ..
+            }) = event::read()?
+            {
+                if modifiers.contains(KeyModifiers::CONTROL) && code == KeyCode::Char('c') {
+                    return Ok(None);
+                }
+
+                match code {
+                    KeyCode::Up | KeyCode::Char('k') | KeyCode::Char('K') => {
+                        selected = if selected == 0 {
+                            total - 1
+                        } else {
+                            selected - 1
+                        };
+                        print!("\x1B[{}A", total);
+                    }
+                    KeyCode::Down | KeyCode::Char('j') | KeyCode::Char('J') => {
+                        selected = if selected + 1 >= total {
+                            0
+                        } else {
+                            selected + 1
+                        };
+                        print!("\x1B[{}A", total);
+                    }
+                    KeyCode::Enter | KeyCode::Char(' ') => {
+                        return Ok(Some(selected));
+                    }
+                    KeyCode::Esc | KeyCode::Char('q') | KeyCode::Char('Q') => {
+                        return Ok(None);
+                    }
+                    KeyCode::Char(c) if c.is_ascii_digit() => {
+                        let digit = c.to_digit(10).unwrap_or(0) as usize;
+                        if digit >= 1 && digit <= total {
+                            return Ok(Some(digit - 1));
+                        }
+                        print!("\x1B[{}A", total);
+                    }
+                    _ => {
+                        print!("\x1B[{}A", total);
+                    }
+                }
+            }
+        }
+    })();
+
+    print!("{}", Show);
+    let _ = stdout().flush();
+    let _ = disable_raw_mode();
+
+    result
 }
 
 /// Helper function to browse and select a `.json` scenario file from `get_scenarios_path()`,
@@ -68,15 +164,19 @@ pub fn prompt_select_scenario_file() -> Result<Option<PathBuf>> {
         }
     } else {
         json_files.sort();
-        let choice_res = Select::new("Select scenario file to load:", json_files).prompt();
-        let choice = match choice_res {
-            Ok(val) => val,
-            Err(InquireError::OperationCanceled | InquireError::OperationInterrupted) => {
-                return Ok(None);
-            }
-            Err(e) => return Err(e.into()),
+        let choice_items: Vec<String> = json_files
+            .iter()
+            .enumerate()
+            .map(|(i, f)| format!("{}. 📄 {}", i + 1, f))
+            .collect();
+        let choice_strs: Vec<&str> = choice_items.iter().map(|s| s.as_str()).collect();
+
+        println!("\n📂 Select scenario file to load:");
+        let selected_idx = match select_menu_option(&choice_strs)? {
+            Some(idx) => idx,
+            None => return Ok(None),
         };
-        let path = dir.join(choice);
+        let path = dir.join(&json_files[selected_idx]);
         Ok(Some(path))
     }
 }
@@ -93,32 +193,30 @@ pub fn run_main_menu(state: &mut AppState) -> Result<()> {
         println!(
             "================================================================================"
         );
-        println!(" 🏠 WELCOME TO HOMECALC SCENARIO ENGINE 📊");
+        println!(" 🏠 WELCOME TO HOMECALC SCENARIO ENGINE");
         println!(
             "================================================================================"
         );
 
-        let choices = vec![
+        let choices = [
             "1. 📝 Create Scenario",
             "2. 📂 Load Scenario",
-            "3. ⚖️  Compare Scenarios",
+            "3. 📊 Compare Scenarios",
             "4. 🚪 Exit",
         ];
 
-        let selection_res = Select::new("Main Menu Choice:", choices).prompt();
-        let selection = match selection_res {
-            Ok(val) => val,
-            Err(InquireError::OperationCanceled | InquireError::OperationInterrupted) => {
+        let selection = match select_menu_option(&choices)? {
+            Some(idx) => idx + 1,
+            None => {
+                clear_screen();
                 println!("\n👋 Exiting Homecalc. Goodbye!\n");
                 break;
             }
-            Err(e) => return Err(e.into()),
         };
 
-        clear_screen();
-
         match selection {
-            c if c.starts_with("1") => {
+            1 => {
+                clear_screen();
                 let purchase_res = prompt_create_purchase();
                 let purchase = match purchase_res {
                     Ok(p) => p,
@@ -139,19 +237,21 @@ pub fn run_main_menu(state: &mut AppState) -> Result<()> {
                 state.set_slot_1(scenario);
                 run_scenario_menu(state)?;
             }
-            c if c.starts_with("2") => {
+            2 => {
+                clear_screen();
                 if let Some(file_path) = prompt_select_scenario_file()? {
                     load_scenario(&file_path, 1, state)?;
                     run_scenario_menu(state)?;
                 }
             }
-            c if c.starts_with("3") => {
-                println!("\n⚖️  Select the file for baseline scenario: ");
+            3 => {
+                clear_screen();
+                println!("\n📊 Select the file for baseline scenario: ");
                 let file1_opt = prompt_select_scenario_file()?;
                 let Some(file1) = file1_opt else { continue };
                 load_scenario(&file1, 1, state)?;
 
-                println!("\n⚖️  Select the file for alternative scenario: ");
+                println!("\n📊 Select the file for alternative scenario: ");
                 let file2_opt = prompt_select_scenario_file()?;
                 let Some(file2) = file2_opt else { continue };
                 load_scenario(&file2, 2, state)?;
@@ -167,7 +267,7 @@ pub fn run_main_menu(state: &mut AppState) -> Result<()> {
                     );
                 }
             }
-            c if c.starts_with("4") => {
+            4 => {
                 clear_screen();
                 println!("\n👋 Exiting Homecalc. Goodbye!\n");
                 break;
@@ -196,25 +296,22 @@ pub fn run_scenario_menu(state: &mut AppState) -> Result<()> {
 
         render_summary(s);
 
-        let choices = vec![
+        let choices = [
             "1. 💾 Save Scenario",
             "2. 📅 View Statement",
             "3. 🔍 View Analysis",
-            "4. ⚖️  Compare Scenario",
-            "5. ⬅️  Back",
+            "4. 📊 Compare Scenario",
+            "5. 🔙 Back",
         ];
 
-        let selection_res = Select::new("Scenario Menu Choice:", choices).prompt();
-        let selection = match selection_res {
-            Ok(val) => val,
-            Err(InquireError::OperationCanceled | InquireError::OperationInterrupted) => {
-                break;
-            }
-            Err(e) => return Err(e.into()),
+        let selection = match select_menu_option(&choices)? {
+            Some(idx) => idx + 1,
+            None => break,
         };
 
         match selection {
-            c if c.starts_with("1") => {
+            1 => {
+                clear_screen();
                 let default_filename = format!("{}.json", sanitize_filename(&s.purchase.name));
                 let filename_res = Text::new("Enter filename to save:")
                     .with_default(&default_filename)
@@ -231,18 +328,19 @@ pub fn run_scenario_menu(state: &mut AppState) -> Result<()> {
                 let saved_path = save_purchase(&s.purchase, &filename)?;
                 println!("\n✅ Scenario successfully saved to {:?}", saved_path);
             }
-            c if c.starts_with("2") => {
+            2 => {
                 clear_screen();
                 render_statement(s);
                 run_scenario_sub_menu()?;
             }
-            c if c.starts_with("3") => {
+            3 => {
                 clear_screen();
                 let analysis = analyze_scenario(s);
                 render_analysis(&analysis);
                 run_scenario_sub_menu()?;
             }
-            c if c.starts_with("4") => {
+            4 => {
+                clear_screen();
                 println!("\n📂 Select second scenario file for comparison:");
                 if let Some(file2) = prompt_select_scenario_file()? {
                     load_scenario(&file2, 2, state)?;
@@ -255,7 +353,7 @@ pub fn run_scenario_menu(state: &mut AppState) -> Result<()> {
                     }
                 }
             }
-            c if c.starts_with("5") => {
+            5 => {
                 break;
             }
             _ => unreachable!(),
@@ -270,14 +368,12 @@ pub fn run_scenario_menu(state: &mut AppState) -> Result<()> {
 /// - 1. Back
 pub fn run_scenario_sub_menu() -> Result<()> {
     loop {
-        let choices = vec!["1. ⬅️  Back"];
-        let selection_res = Select::new("Scenario Sub Menu Choice:", choices).prompt();
-        let selection = match selection_res {
-            Ok(val) => val,
-            Err(InquireError::OperationCanceled | InquireError::OperationInterrupted) => break,
-            Err(e) => return Err(e.into()),
-        };
-        if selection.starts_with("1") {
+        let choices = ["1. 🔙 Back"];
+        if let Some(idx) = select_menu_option(&choices)? {
+            if idx == 0 {
+                break;
+            }
+        } else {
             break;
         }
     }
@@ -289,14 +385,12 @@ pub fn run_scenario_sub_menu() -> Result<()> {
 /// - 1. Back
 pub fn run_comparison_menu() -> Result<()> {
     loop {
-        let choices = vec!["1. ⬅️  Back"];
-        let selection_res = Select::new("Comparison Menu Choice:", choices).prompt();
-        let selection = match selection_res {
-            Ok(val) => val,
-            Err(InquireError::OperationCanceled | InquireError::OperationInterrupted) => break,
-            Err(e) => return Err(e.into()),
-        };
-        if selection.starts_with("1") {
+        let choices = ["1. 🔙 Back"];
+        if let Some(idx) = select_menu_option(&choices)? {
+            if idx == 0 {
+                break;
+            }
+        } else {
             break;
         }
     }

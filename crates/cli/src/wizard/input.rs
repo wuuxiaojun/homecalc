@@ -6,7 +6,7 @@ use engine::domain::house::House;
 use engine::domain::purchase::Purchase;
 use engine::domain::tool::{Cash, Loc, Mortgage, Tool};
 use inquire::validator::Validation;
-use inquire::{Confirm, CustomType, Select, Text};
+use inquire::{Confirm, CustomType, Text};
 use std::collections::BTreeMap;
 
 /// Prompts the user interactively to create a fully configured `Purchase` struct.
@@ -208,7 +208,15 @@ pub fn prompt_create_purchase() -> Result<Purchase> {
 
     if add_extra {
         loop {
-            let tool_choice = Select::new("Target Tool:", vec!["Mortgage", "LOC"]).prompt()?;
+            println!("\n💳 Select target loan tool for extra repayment:");
+            let tool_choice = match crate::wizard::menu::select_menu_option(&[
+                "1. 🏦 Mortgage",
+                "2. 💳 Line of Credit (LOC)",
+            ])? {
+                Some(0) => "Mortgage",
+                Some(1) => "LOC",
+                _ => break,
+            };
             let month = CustomType::<u32>::new("Month Number (1 - 360):")
                 .with_validator(|val: &u32| {
                     if (1..=360).contains(val) {

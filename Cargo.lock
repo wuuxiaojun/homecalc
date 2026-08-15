@@ -26,6 +26,7 @@ version = "1.0.0"
 dependencies = [
  "anyhow",
  "comfy-table",
+ "crossterm",
  "engine",
  "inquire",
  "serde",
