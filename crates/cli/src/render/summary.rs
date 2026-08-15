@@ -46,18 +46,13 @@ pub fn render_summary(scenario: &Scenario) {
     tools_table
         .load_style(UTF8_FULL)
         .set_content_arrangement(ContentArrangement::Dynamic)
-        .set_header(vec![
-            "Tool Type",
-            "Initial Amount / Principal",
-            "Interest / Yield Rate",
-            "Term",
-        ]);
+        .set_header(vec!["Type", "Principal", "Interest", "Term"]);
 
     for tool in &purchase.tools {
         match tool {
             Tool::Cash(c) => {
                 tools_table.add_row(vec![
-                    "Cash Down Payment",
+                    "Cash",
                     &format_currency(c.amount),
                     &format!("{:.2}%", c.rate),
                     "N/A",
@@ -65,7 +60,7 @@ pub fn render_summary(scenario: &Scenario) {
             }
             Tool::Mortgage(m) => {
                 tools_table.add_row(vec![
-                    "Mortgage Loan",
+                    "Mortgage",
                     &format_currency(m.amount),
                     &format!("{:.2}%", m.rate),
                     &format!("{} Years", m.term),
@@ -76,7 +71,7 @@ pub fn render_summary(scenario: &Scenario) {
                     "Line of Credit (LOC)",
                     &format_currency(l.amount),
                     &format!("{:.2}%", l.rate),
-                    "Flexible",
+                    "N/A",
                 ]);
             }
         }
@@ -91,7 +86,7 @@ pub fn render_summary(scenario: &Scenario) {
         repay_table
             .load_style(UTF8_FULL)
             .set_content_arrangement(ContentArrangement::Dynamic)
-            .set_header(vec!["Target Loan", "Month Number", "Extra Payment Amount"]);
+            .set_header(vec!["Loan Type", "Month Number", "Extra Payment Amount"]);
 
         for (month, amt) in &purchase.mortgage_repay {
             repay_table.add_row(vec!["Mortgage", &month.to_string(), &format_currency(*amt)]);
