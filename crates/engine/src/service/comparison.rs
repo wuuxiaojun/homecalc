@@ -37,7 +37,7 @@ pub struct ScenarioComparison {
     pub baseline_pv: f64,
     pub alternative_pv: f64,
     pub delta_pv: f64,
-    pub irr: f64,
+    pub irr: Option<f64>,
 }
 
 /// Compute scenarios comparison metrics
@@ -82,7 +82,7 @@ pub fn compare_scenarios(baseline: &Scenario, alternative: &Scenario) -> Scenari
     let baseline_pv = calculate_scenario_pv(baseline);
     let alternative_pv = calculate_scenario_pv(alternative);
     let delta_pv = alternative_pv - baseline_pv;
-    let irr = calculate_strategy_irr(baseline, alternative).unwrap_or(0.0);
+    let irr = calculate_strategy_irr(baseline, alternative);
 
     ScenarioComparison {
         baseline_payoff_month,
@@ -150,41 +150,106 @@ fn calculate_strategy_irr(baseline: &Scenario, alternative: &Scenario) -> Option
     solve_irr_newton_raphson(&delta_cash_flows)
 }
 
-/// Newton-Raphson solver for irr
+/// Robust multi-start Newton-Raphson solver with bisection fallback for IRR
 fn solve_irr_newton_raphson(cash_flows: &[f64]) -> Option<f64> {
-    let mut rate: f64 = 0.005; // Initial guess: 0.5% monthly (~6.0% annual)
-    let max_iterations = 100;
-    let tolerance = 1e-7;
-
-    for _ in 0..max_iterations {
-        let mut npv = 0.0;
-        let mut derivative = 0.0;
-        let base = 1.0 + rate;
-
-        for (m, &flow) in cash_flows.iter().enumerate() {
-            if m == 0 {
-                npv += flow;
-            } else {
-                let factor = base.powi(m as i32);
-                npv += flow / factor;
-                derivative -= (m as f64) * flow / (factor * base);
-            }
-        }
-
-        if npv.abs() < tolerance {
-            // Convert monthly compounding rate to effective annualized IRR
-            let annual_irr = (1.0 + rate).powi(12) - 1.0;
-            return Some(annual_irr);
-        }
-
-        if derivative.abs() < 1e-10 {
-            return None; // Avoid division by zero
-        }
-
-        rate -= npv / derivative;
+    // Check if there is at least one positive and one negative cash flow
+    let has_positive = cash_flows.iter().any(|&f| f > 1e-4);
+    let has_negative = cash_flows.iter().any(|&f| f < -1e-4);
+    if !has_positive || !has_negative {
+        return None;
     }
 
-    None // Failed to converge
+    // Try multi-start Newton-Raphson across a grid of initial guesses
+    let initial_guesses: [f64; 8] = [0.005, 0.01, 0.02, 0.05, 0.10, -0.005, -0.01, 0.001];
+
+    for &initial_rate in &initial_guesses {
+        let mut rate: f64 = initial_rate;
+        let max_iterations = 100;
+        let tolerance = 1e-7;
+
+        for _ in 0..max_iterations {
+            if rate <= -0.99 {
+                rate = -0.90;
+            }
+
+            let mut npv = 0.0;
+            let mut derivative = 0.0;
+            let base: f64 = 1.0 + rate;
+
+            for (m, &flow) in cash_flows.iter().enumerate() {
+                if m == 0 {
+                    npv += flow;
+                } else {
+                    let factor = base.powi(m as i32);
+                    npv += flow / factor;
+                    derivative -= (m as f64) * flow / (factor * base);
+                }
+            }
+
+            if npv.abs() < tolerance {
+                let annual_irr = (1.0 + rate).powi(12) - 1.0;
+                if annual_irr.is_finite() {
+                    return Some(annual_irr);
+                }
+            }
+
+            if derivative.abs() < 1e-10 || derivative.is_nan() {
+                break;
+            }
+
+            let step = npv / derivative;
+            rate -= step;
+
+            if rate.is_nan() || rate.is_infinite() {
+                break;
+            }
+        }
+    }
+
+    // Fallback: Bisection search across standard financial rate interval [-0.5, 2.0]
+    let npv_at = |r: f64| -> f64 {
+        let base = 1.0 + r;
+        cash_flows.iter().enumerate().fold(0.0, |acc, (m, &flow)| {
+            if m == 0 {
+                acc + flow
+            } else {
+                acc + flow / base.powi(m as i32)
+            }
+        })
+    };
+
+    let grid = [
+        -0.5, -0.3, -0.1, -0.05, -0.01, 0.0, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0,
+    ];
+    for w in grid.windows(2) {
+        let r_low = w[0];
+        let r_high = w[1];
+        let npv_low = npv_at(r_low);
+        let npv_high = npv_at(r_high);
+
+        if npv_low * npv_high <= 0.0 {
+            let mut a = r_low;
+            let mut b = r_high;
+            for _ in 0..60 {
+                let mid = (a + b) * 0.5;
+                let npv_mid = npv_at(mid);
+                if npv_mid.abs() < 1e-7 {
+                    let annual_irr = (1.0 + mid).powi(12) - 1.0;
+                    return Some(annual_irr);
+                }
+                if npv_at(a) * npv_mid <= 0.0 {
+                    b = mid;
+                } else {
+                    a = mid;
+                }
+            }
+            let root = (a + b) * 0.5;
+            let annual_irr = (1.0 + root).powi(12) - 1.0;
+            return Some(annual_irr);
+        }
+    }
+
+    None
 }
 
 /// Extracts monthly outflow
@@ -341,5 +406,66 @@ mod tests {
         let pv = calculate_scenario_pv(&scenario);
         assert!(pv > 0.0);
         assert!(pv < 112_000.0); // Discounted total must be strictly less than nominal sum of 112,000 (100k + 12k)
+    }
+
+    #[test]
+    fn test_irr_user_scenario() {
+        use crate::domain::tool::{Cash, Mortgage, Loc, Tool};
+        use crate::service::simulation::create_scenario;
+
+        // Baseline: 1M cash down, 700k mortgage (30 yr @ 6%)
+        let purchase_a = Purchase {
+            name: "Baseline Mortgage".to_string(),
+            house: House {
+                purchase_price: 1_700_000.0,
+                annual_property_tax_rate: 1.2,
+                annual_insurance: 3_000.0,
+                monthly_hoa: 100.0,
+            },
+            tools: vec![
+                Tool::Cash(Cash {
+                    amount: 1_000_000.0,
+                    rate: 4.0,
+                }),
+                Tool::Mortgage(Mortgage {
+                    amount: 700_000.0,
+                    rate: 6.0,
+                    term: 30,
+                }),
+            ],
+            mortgage_repay: BTreeMap::new(),
+            loc_repay: BTreeMap::new(),
+        };
+
+        // Alternative: 1.7M LOC, 5-year payoff ($28,333.33/mo extra)
+        let mut loc_repay = BTreeMap::new();
+        for m in 1..=60 {
+            loc_repay.insert(m, 1_700_000.0 / 60.0);
+        }
+
+        let purchase_b = Purchase {
+            name: "Alternative LOC 5yr".to_string(),
+            house: House {
+                purchase_price: 1_700_000.0,
+                annual_property_tax_rate: 1.2,
+                annual_insurance: 3_000.0,
+                monthly_hoa: 100.0,
+            },
+            tools: vec![Tool::Loc(Loc {
+                amount: 1_700_000.0,
+                rate: 6.0,
+            })],
+            mortgage_repay: BTreeMap::new(),
+            loc_repay,
+        };
+
+        let scenario_a = create_scenario(purchase_a);
+        let scenario_b = create_scenario(purchase_b);
+
+        let comparison = compare_scenarios(&scenario_a, &scenario_b);
+        assert!(comparison.irr.is_some());
+        println!("comparison.irr = {:?}", comparison.irr);
+        println!("scenario_a.pv = {}", comparison.baseline_pv);
+        println!("scenario_b.pv = {}", comparison.alternative_pv);
     }
 }

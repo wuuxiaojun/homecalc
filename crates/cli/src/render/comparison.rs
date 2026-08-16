@@ -70,12 +70,12 @@ pub fn render_comparison(comparison: &ScenarioComparison) {
         &format_currency(comparison.alternative_pv),
         &format_currency(comparison.delta_pv),
     ]);
-    table.add_row(vec![
-        "📈 Strategy IRR",
-        "N/A",
-        "N/A",
-        &format_percent(comparison.irr * 100.0),
-    ]);
+
+    let irr_str = comparison
+        .irr
+        .map_or("N/A".to_string(), |r| format_percent(r * 100.0));
+
+    table.add_row(vec!["📈 Strategy IRR", "N/A", "N/A", &irr_str]);
 
     println!("{table}");
 }
