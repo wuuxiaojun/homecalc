@@ -2,6 +2,7 @@
 //! Interactive Purchase creation form with strict validation and tool balancing.
 
 use anyhow::Result;
+use engine::config::constant::DEFAULT_STARTING_CASH;
 use engine::domain::house::House;
 use engine::domain::purchase::Purchase;
 use engine::domain::tool::{Cash, Loc, Mortgage, Tool};
@@ -162,7 +163,7 @@ pub fn prompt_create_purchase() -> Result<Purchase> {
     let cash_amount = purchase_price - (mortgage_amount + loc_amount);
     let mut tools = Vec::new();
 
-    if cash_amount > 0.0 {
+    if cash_amount < DEFAULT_STARTING_CASH {
         println!(
             "\n💡 Calculated required Cash Down Payment: ${:.2}",
             cash_amount
@@ -222,7 +223,9 @@ pub fn prompt_create_purchase() -> Result<Purchase> {
                     if (1..=360).contains(val) {
                         Ok(Validation::Valid)
                     } else {
-                        Ok(Validation::Invalid("Month must be between 1 and 360".into()))
+                        Ok(Validation::Invalid(
+                            "Month must be between 1 and 360".into(),
+                        ))
                     }
                 })
                 .prompt()?;

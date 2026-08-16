@@ -29,11 +29,11 @@ pub fn render_summary(scenario: &Scenario) {
         &format_currency(house.purchase_price),
     ]);
     house_table.add_row(vec![
-        "🏛️  Annual Property Tax Rate",
+        "🏛️ Annual Property Tax Rate",
         &format!("{:.2}%", house.annual_property_tax_rate),
     ]);
     house_table.add_row(vec![
-        "🛡️  Annual Insurance",
+        "🛡️ Annual Insurance",
         &format_currency(house.annual_insurance),
     ]);
     house_table.add_row(vec!["🏢 Monthly HOA", &format_currency(house.monthly_hoa)]);
@@ -87,7 +87,11 @@ pub fn render_summary(scenario: &Scenario) {
             .set_header(vec!["Loan Type", "Month Number", "Extra Payment Amount"]);
 
         for (month, amt) in &purchase.mortgage_repay {
-            repay_table.add_row(vec!["🏦 Mortgage", &month.to_string(), &format_currency(*amt)]);
+            repay_table.add_row(vec![
+                "🏦 Mortgage",
+                &month.to_string(),
+                &format_currency(*amt),
+            ]);
         }
         for (month, amt) in &purchase.loc_repay {
             repay_table.add_row(vec!["💳 LOC", &month.to_string(), &format_currency(*amt)]);

@@ -20,7 +20,7 @@ pub fn render_analysis(analysis: &ScenarioAnalysis) {
         .set_header(vec!["Analysis Metric", "Value"]);
 
     table.add_row(vec![
-        "⏱️  Payoff Timeline",
+        "⏱️ Payoff Timeline",
         &format!(
             "{} (Month {})",
             format_months(analysis.payoff_month),
@@ -32,7 +32,7 @@ pub fn render_analysis(analysis: &ScenarioAnalysis) {
         &format_currency(analysis.effective_monthly_cost),
     ]);
     table.add_row(vec![
-        "🗑️  Waste Ratio",
+        "🗑️ Waste Ratio",
         &format_percent(analysis.waste_ratio * 100.0),
     ]);
     table.add_row(vec![

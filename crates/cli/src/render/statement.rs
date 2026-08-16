@@ -60,7 +60,7 @@ pub fn render_statement(scenario: &Scenario) {
         last_printed = Some(idx);
 
         let row = &monthly[idx];
-        let cash_bal = row.cash.as_ref().map_or(0.0, |c| c.cash_now);
+        let cash_int = row.cash.as_ref().map_or(0.0, |c| c.cash_interest);
         let mortg_pmt = row.mortgage.as_ref().map_or(0.0, |m| {
             (m.principal_paid + m.interest_paid).min(m.monthly_payment)
         });
@@ -71,7 +71,7 @@ pub fn render_statement(scenario: &Scenario) {
 
         monthly_table.add_row(vec![
             row.month.to_string(),
-            format_currency(cash_bal),
+            format_currency(cash_int),
             format_currency(mortg_pmt),
             format_currency(mortg_extra),
             format_currency(loc_pmt),
@@ -140,7 +140,7 @@ pub fn render_statement(scenario: &Scenario) {
         &format_currency(total.total_interest_paid),
     ]);
     total_table.add_row(vec![
-        "🏚️  Total Holding Cost Paid",
+        "🏚️ Total Holding Cost Paid",
         &format_currency(total.total_holding_cost),
     ]);
     total_table.add_row(vec![
