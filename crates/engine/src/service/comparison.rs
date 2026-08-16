@@ -113,16 +113,15 @@ pub fn compare_scenarios(baseline: &Scenario, alternative: &Scenario) -> Scenari
 /// Calculate the present value (pv)
 fn calculate_scenario_pv(scenario: &Scenario) -> f64 {
     let monthly_r = DEFAULT_DISCOUNT_RATE / 12.0;
-    let total_months = scenario.monthly_statement.len();
     let mut total_pv = 0.0;
     let base = 1.0 + monthly_r;
-    let mut discount_factor = base;
 
-    for month_idx in 0..total_months {
+    for (month_idx, row) in scenario.monthly_statement.iter().enumerate() {
         let net_outflow = extract_monthly_outflow(scenario, month_idx);
+        let m = row.month as i32;
+        let discount_factor = base.powi(m);
         let discounted_outflow = net_outflow / discount_factor;
         total_pv += discounted_outflow;
-        discount_factor *= base;
     }
 
     total_pv
@@ -130,17 +129,17 @@ fn calculate_scenario_pv(scenario: &Scenario) -> f64 {
 
 /// Calculates the internal rate of return (irr)
 fn calculate_strategy_irr(baseline: &Scenario, alternative: &Scenario) -> Option<f64> {
-    let last_month_a = baseline.monthly_statement.last().map_or(0, |r| r.month) as usize;
-    let last_month_b = alternative.monthly_statement.last().map_or(0, |r| r.month) as usize;
-
-    let max_months = last_month_a.max(last_month_b);
-    if max_months == 0 {
+    let max_len = baseline
+        .monthly_statement
+        .len()
+        .max(alternative.monthly_statement.len());
+    if max_len == 0 {
         return None;
     }
 
-    let mut delta_cash_flows = Vec::with_capacity(max_months);
+    let mut delta_cash_flows = Vec::with_capacity(max_len);
 
-    for month_idx in 0..max_months {
+    for month_idx in 0..max_len {
         let outflow_a = extract_monthly_outflow(baseline, month_idx);
         let outflow_b = extract_monthly_outflow(alternative, month_idx);
 
@@ -161,14 +160,15 @@ fn solve_irr_newton_raphson(cash_flows: &[f64]) -> Option<f64> {
         let mut npv = 0.0;
         let mut derivative = 0.0;
         let base = 1.0 + rate;
-        let mut factor = base;
 
-        for (idx, &flow) in cash_flows.iter().enumerate() {
-            let m = (idx + 1) as f64;
-
-            npv += flow / factor;
-            derivative -= m * flow / (factor * base);
-            factor *= base;
+        for (m, &flow) in cash_flows.iter().enumerate() {
+            if m == 0 {
+                npv += flow;
+            } else {
+                let factor = base.powi(m as i32);
+                npv += flow / factor;
+                derivative -= (m as f64) * flow / (factor * base);
+            }
         }
 
         if npv.abs() < tolerance {
@@ -196,9 +196,9 @@ fn extract_monthly_outflow(scenario: &Scenario, month_idx: usize) -> f64 {
     };
 
     let total_paid = monthly_row.total_paid;
-    let current_month = (month_idx + 1) as u32;
+    let current_month = monthly_row.month;
 
-    let annual_tax_savings = if current_month % 12 == 0 {
+    let annual_tax_savings = if current_month > 0 && current_month % 12 == 0 {
         let year_idx = ((current_month / 12) - 1) as usize;
         scenario
             .yearly_statement
@@ -222,6 +222,23 @@ mod tests {
 
     fn create_mock_scenario(months: u32, monthly_paid: f64, annual_tax_savings: f64) -> Scenario {
         let mut monthly_statement = Vec::new();
+        monthly_statement.push(MonthlyStatementRow {
+            month: 0,
+            cash: None,
+            mortgage: None,
+            loc: None,
+            house: HouseStatement {
+                monthly_property_tax: 0.0,
+                monthly_insurance: 0.0,
+                monthly_hoa: 0.0,
+            },
+            total_debt_paid: 0.0,
+            total_extra_payment: 0.0,
+            total_holding_cost: 0.0,
+            total_paid: 100_000.0,
+            total_remaining_balance: 200_000.0,
+        });
+
         for m in 1..=months {
             monthly_statement.push(MonthlyStatementRow {
                 month: m,
@@ -285,21 +302,22 @@ mod tests {
     #[test]
     fn test_extract_monthly_outflow_bounds() {
         let scenario = create_mock_scenario(12, 1000.0, 0.0);
-        assert_eq!(extract_monthly_outflow(&scenario, 0), 1000.0);
-        assert_eq!(extract_monthly_outflow(&scenario, 5), 1000.0);
-        assert_eq!(extract_monthly_outflow(&scenario, 11), 1000.0);
+        assert_eq!(extract_monthly_outflow(&scenario, 0), 100_000.0); // Month 0
+        assert_eq!(extract_monthly_outflow(&scenario, 1), 1000.0); // Month 1
+        assert_eq!(extract_monthly_outflow(&scenario, 6), 1000.0); // Month 6
+        assert_eq!(extract_monthly_outflow(&scenario, 12), 1000.0); // Month 12
         assert_eq!(extract_monthly_outflow(&scenario, 99), 0.0);
     }
 
     #[test]
     fn test_extract_monthly_outflow_annual_tax() {
         let scenario = create_mock_scenario(24, 1000.0, 200.0);
-        // Month 1 (index 0) - tax savings should NOT apply
-        assert_eq!(extract_monthly_outflow(&scenario, 0), 1000.0);
-        // Month 12 (index 11) - tax savings (200.0) SHOULD apply
-        assert_eq!(extract_monthly_outflow(&scenario, 11), 800.0);
-        // Month 24 (index 23) - tax savings SHOULD apply
-        assert_eq!(extract_monthly_outflow(&scenario, 23), 800.0);
+        // Month 1 (index 1) - tax savings should NOT apply
+        assert_eq!(extract_monthly_outflow(&scenario, 1), 1000.0);
+        // Month 12 (index 12) - tax savings (200.0) SHOULD apply
+        assert_eq!(extract_monthly_outflow(&scenario, 12), 800.0);
+        // Month 24 (index 24) - tax savings SHOULD apply
+        assert_eq!(extract_monthly_outflow(&scenario, 24), 800.0);
     }
 
     #[test]
@@ -322,6 +340,6 @@ mod tests {
         let scenario = create_mock_scenario(12, 1000.0, 0.0);
         let pv = calculate_scenario_pv(&scenario);
         assert!(pv > 0.0);
-        assert!(pv < 12_000.0); // Discounted total must be strictly less than nominal sum of 12,000
+        assert!(pv < 112_000.0); // Discounted total must be strictly less than nominal sum of 112,000 (100k + 12k)
     }
 }

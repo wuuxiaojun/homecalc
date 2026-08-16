@@ -131,7 +131,7 @@ mod tests {
         load_scenario(&test_path, 1, &mut state).unwrap();
         let scenario1 = state.get_slot_1().unwrap();
         assert_eq!(scenario1.purchase.name, "Test Purchase IO");
-        assert_eq!(scenario1.monthly_statement.len(), 360);
+        assert_eq!(scenario1.monthly_statement.len(), 361);
 
         // Load into AppState slot 2
         load_scenario(&test_path, 2, &mut state).unwrap();
