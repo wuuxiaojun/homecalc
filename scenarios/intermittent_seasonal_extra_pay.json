@@ -1,0 +1,32 @@
+{
+  "name": "Intermittent Seasonal Extra Pay",
+  "house": {
+    "purchase_price": 850000.0,
+    "annual_property_tax_rate": 1.2,
+    "annual_insurance": 2000.0,
+    "monthly_hoa": 75.0
+  },
+  "tools": [
+    {
+      "Cash": {
+        "amount": 170000.0,
+        "rate": 4.0
+      }
+    },
+    {
+      "Mortgage": {
+        "amount": 680000.0,
+        "rate": 6.25,
+        "term": 30
+      }
+    }
+  ],
+  "mortgage_repay": {
+    "12": 30000.0,
+    "24": 30000.0,
+    "36": 30000.0,
+    "48": 30000.0,
+    "60": 30000.0
+  },
+  "loc_repay": {}
+}

@@ -1,0 +1,40 @@
+{
+  "name": "Hybrid Mortgage LOC Split",
+  "house": {
+    "purchase_price": 1500000.0,
+    "annual_property_tax_rate": 1.2,
+    "annual_insurance": 3000.0,
+    "monthly_hoa": 150.0
+  },
+  "tools": [
+    {
+      "Cash": {
+        "amount": 300000.0,
+        "rate": 4.0
+      }
+    },
+    {
+      "Mortgage": {
+        "amount": 900000.0,
+        "rate": 6.0,
+        "term": 30
+      }
+    },
+    {
+      "Loc": {
+        "amount": 300000.0,
+        "rate": 6.5
+      }
+    }
+  ],
+  "mortgage_repay": {
+    "24": 50000.0,
+    "36": 50000.0
+  },
+  "loc_repay": {
+    "6": 50000.0,
+    "12": 50000.0,
+    "18": 100000.0,
+    "24": 100000.0
+  }
+}

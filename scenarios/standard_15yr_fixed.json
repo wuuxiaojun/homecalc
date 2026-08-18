@@ -1,0 +1,26 @@
+{
+  "name": "Standard 15yr Fixed",
+  "house": {
+    "purchase_price": 800000.0,
+    "annual_property_tax_rate": 1.2,
+    "annual_insurance": 2000.0,
+    "monthly_hoa": 80.0
+  },
+  "tools": [
+    {
+      "Cash": {
+        "amount": 200000.0,
+        "rate": 4.0
+      }
+    },
+    {
+      "Mortgage": {
+        "amount": 600000.0,
+        "rate": 5.75,
+        "term": 15
+      }
+    }
+  ],
+  "mortgage_repay": {},
+  "loc_repay": {}
+}
