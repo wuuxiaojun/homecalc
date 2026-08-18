@@ -17,3 +17,7 @@ crossterm = "0.29.0"
 [[test]]
 name = "scenario_loading_and_math_test"
 path = "../../tests/scenario_loading_and_math_test.rs"
+
+[[test]]
+name = "scenario_comparison_differential_test"
+path = "../../tests/scenario_comparison_differential_test.rs"
