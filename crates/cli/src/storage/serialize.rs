@@ -5,7 +5,6 @@ use anyhow::{Context, Result};
 use engine::domain::purchase::Purchase;
 use std::fs;
 use std::path::{Path, PathBuf};
-
 use std::sync::OnceLock;
 
 pub const DEFAULT_SCENARIOS_DIR: &str = "scenarios";
@@ -19,12 +18,11 @@ pub fn get_scenarios_dir_path() -> PathBuf {
                 let manifest_path = PathBuf::from(manifest_dir);
                 for ancestor in manifest_path.ancestors() {
                     let cargo_toml = ancestor.join("Cargo.toml");
-                    if cargo_toml.exists() {
-                        if let Ok(content) = fs::read_to_string(&cargo_toml) {
-                            if content.contains("[workspace]") {
-                                return ancestor.join(DEFAULT_SCENARIOS_DIR);
-                            }
-                        }
+                    if cargo_toml.exists()
+                        && let Ok(content) = fs::read_to_string(&cargo_toml)
+                        && content.contains("[workspace]")
+                    {
+                        return ancestor.join(DEFAULT_SCENARIOS_DIR);
                     }
                 }
             }
@@ -32,12 +30,11 @@ pub fn get_scenarios_dir_path() -> PathBuf {
             if let Ok(cwd) = std::env::current_dir() {
                 for ancestor in cwd.ancestors() {
                     let cargo_toml = ancestor.join("Cargo.toml");
-                    if cargo_toml.exists() {
-                        if let Ok(content) = fs::read_to_string(&cargo_toml) {
-                            if content.contains("[workspace]") {
-                                return ancestor.join(DEFAULT_SCENARIOS_DIR);
-                            }
-                        }
+                    if cargo_toml.exists()
+                        && let Ok(content) = fs::read_to_string(&cargo_toml)
+                        && content.contains("[workspace]")
+                    {
+                        return ancestor.join(DEFAULT_SCENARIOS_DIR);
                     }
                 }
             }
@@ -49,11 +46,11 @@ pub fn get_scenarios_dir_path() -> PathBuf {
 
 /// Serializes and writes a `Purchase` struct as pretty-printed JSON to a file path.
 pub fn save_purchase_to_path(purchase: &Purchase, path: &Path) -> Result<()> {
-    if let Some(parent) = path.parent() {
-        if !parent.exists() {
-            fs::create_dir_all(parent)
-                .with_context(|| format!("Failed to create parent directory at {:?}", parent))?;
-        }
+    if let Some(parent) = path.parent()
+        && !parent.exists()
+    {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("Failed to create parent directory at {:?}", parent))?;
     }
 
     let json_str = serde_json::to_string_pretty(purchase)
@@ -132,6 +129,32 @@ mod tests {
         assert_eq!(loaded.house.purchase_price, 1_000_000.0);
 
         // Clean up
+        let _ = fs::remove_dir_all(temp_dir);
+    }
+
+    #[test]
+    fn test_get_scenarios_dir_path() {
+        let dir = get_scenarios_dir_path();
+        assert!(dir.to_string_lossy().contains("scenarios"));
+    }
+
+    #[test]
+    fn test_load_non_existent_file() {
+        let bad_path = Path::new("/non/existent/path/for/homecalc/scenario.json");
+        let res = load_purchase_from_path(bad_path);
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_load_corrupted_json() {
+        let temp_dir = std::env::temp_dir().join("homecalc_test_corrupted");
+        let test_path = temp_dir.join("corrupted.json");
+        fs::create_dir_all(&temp_dir).unwrap();
+        fs::write(&test_path, "not a valid json").unwrap();
+
+        let res = load_purchase_from_path(&test_path);
+        assert!(res.is_err());
+
         let _ = fs::remove_dir_all(temp_dir);
     }
 }

@@ -183,7 +183,10 @@ mod tests {
     #[test]
     fn test_sanitize_filename() {
         assert_eq!(sanitize_filename("Dream House"), "dream_house");
-        assert_eq!(sanitize_filename("House 3/2: Ocean & Lake*"), "house_3_2__ocean_&_lake");
+        assert_eq!(
+            sanitize_filename("House 3/2: Ocean & Lake*"),
+            "house_3_2__ocean_&_lake"
+        );
         assert_eq!(sanitize_filename(""), "scenario");
         assert_eq!(sanitize_filename("___"), "scenario");
     }

@@ -9,7 +9,7 @@ use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use engine::service::analysis::analyze_scenario;
 use engine::service::comparison::compare_scenarios;
 use engine::service::simulation::create_scenario;
-use inquire::{InquireError, Select, Text};
+use inquire::{InquireError, Text};
 use std::fs;
 use std::io::{Write, stdout};
 use std::path::PathBuf;
@@ -100,7 +100,7 @@ pub fn select_menu_option(choices: &[&str]) -> Result<Option<usize>> {
                     }
                     KeyCode::Char(c) if c.is_ascii_digit() => {
                         let digit = c.to_digit(10).unwrap_or(0) as usize;
-                        if digit >= 1 && digit <= total {
+                        if (1..=total).contains(&digit) {
                             return Ok(Some(digit - 1));
                         }
                         print!("\x1B[{}A", total);
@@ -129,10 +129,11 @@ pub fn prompt_select_scenario_file() -> Result<Option<PathBuf>> {
     if let Ok(entries) = fs::read_dir(&dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.is_file() && path.extension().map_or(false, |ext| ext == "json") {
-                if let Some(name) = path.file_name() {
-                    json_files.push(name.to_string_lossy().to_string());
-                }
+            if path.is_file()
+                && path.extension().is_some_and(|ext| ext == "json")
+                && let Some(name) = path.file_name()
+            {
+                json_files.push(name.to_string_lossy().to_string());
             }
         }
     }
@@ -182,6 +183,7 @@ pub fn prompt_select_scenario_file() -> Result<Option<PathBuf>> {
 }
 
 /// 1. Main Menu (`run_main_menu(state: &mut AppState)`):
+///
 /// Options:
 /// - 1. Create Scenario
 /// - 2. Load Scenario
@@ -221,14 +223,14 @@ pub fn run_main_menu(state: &mut AppState) -> Result<()> {
                 let purchase = match purchase_res {
                     Ok(p) => p,
                     Err(e) => {
-                        if let Some(inq_err) = e.downcast_ref::<InquireError>() {
-                            if matches!(
+                        if let Some(inq_err) = e.downcast_ref::<InquireError>()
+                            && matches!(
                                 inq_err,
                                 InquireError::OperationCanceled
                                     | InquireError::OperationInterrupted
-                            ) {
-                                continue;
-                            }
+                            )
+                        {
+                            continue;
                         }
                         return Err(e);
                     }
@@ -280,6 +282,7 @@ pub fn run_main_menu(state: &mut AppState) -> Result<()> {
 }
 
 /// 2. Scenario Menu (`run_scenario_menu(state: &mut AppState)`):
+///
 /// Context of active slot 1:
 /// - 1. Save Scenario
 /// - 2. View Statement
@@ -364,6 +367,7 @@ pub fn run_scenario_menu(state: &mut AppState) -> Result<()> {
 }
 
 /// 3. Scenario Sub Menu (`run_scenario_sub_menu()`):
+///
 /// Options:
 /// - 1. Back
 pub fn run_scenario_sub_menu() -> Result<()> {
@@ -381,6 +385,7 @@ pub fn run_scenario_sub_menu() -> Result<()> {
 }
 
 /// 4. Comparison Sub-Menu (`run_comparison_menu()`):
+///
 /// Options:
 /// - 1. Back
 pub fn run_comparison_menu() -> Result<()> {
@@ -395,4 +400,16 @@ pub fn run_comparison_menu() -> Result<()> {
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_select_menu_option_empty() {
+        let choices: Vec<&str> = vec![];
+        let res = select_menu_option(&choices).unwrap();
+        assert_eq!(res, None);
+    }
 }
