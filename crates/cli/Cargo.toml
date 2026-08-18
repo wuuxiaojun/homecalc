@@ -21,3 +21,7 @@ path = "../../tests/scenario_loading_and_math_test.rs"
 [[test]]
 name = "scenario_comparison_differential_test"
 path = "../../tests/scenario_comparison_differential_test.rs"
+
+[[test]]
+name = "cli_workflow_integration_test"
+path = "../../tests/cli_workflow_integration_test.rs"
