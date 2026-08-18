@@ -263,7 +263,7 @@ pub fn aggregate_yearly(statement: &[MonthlyStatementRow]) -> Vec<YearlyStatemen
                     1.0
                 };
                 let deductible_interest = annual_mortgage_interest * eligible_ratio;
-                deductible_interest * DEFAULT_MARGINAL_TAX_RATE
+                clamp_zero(deductible_interest * DEFAULT_MARGINAL_TAX_RATE)
             } else {
                 0.0
             };
@@ -273,14 +273,14 @@ pub fn aggregate_yearly(statement: &[MonthlyStatementRow]) -> Vec<YearlyStatemen
 
             YearlyStatementRow {
                 year,
-                annual_cash_interest,
-                annual_interest_paid: annual_mortgage_interest + annual_loc_interest,
-                annual_debt_paid,
+                annual_cash_interest: clamp_zero(annual_cash_interest),
+                annual_interest_paid: clamp_zero(annual_mortgage_interest + annual_loc_interest),
+                annual_debt_paid: clamp_zero(annual_debt_paid),
                 annual_tax_savings,
-                annual_extra_payment,
-                annual_holding_cost,
-                annual_paid: annual_paid_unadjusted - annual_tax_savings,
-                ending_remaining_balance: last_row.total_remaining_balance,
+                annual_extra_payment: clamp_zero(annual_extra_payment),
+                annual_holding_cost: clamp_zero(annual_holding_cost),
+                annual_paid: clamp_zero(annual_paid_unadjusted - annual_tax_savings),
+                ending_remaining_balance: clamp_zero(last_row.total_remaining_balance),
             }
         })
         .collect()
@@ -303,11 +303,11 @@ pub fn compute_metrics(yearly_statement: &[YearlyStatementRow]) -> TotalStatemen
     }
 
     TotalStatement {
-        total_cash_interest,
-        total_holding_cost,
-        total_interest_paid,
-        total_tax_savings,
-        total_paid,
+        total_cash_interest: clamp_zero(total_cash_interest),
+        total_holding_cost: clamp_zero(total_holding_cost),
+        total_interest_paid: clamp_zero(total_interest_paid),
+        total_tax_savings: clamp_zero(total_tax_savings),
+        total_paid: clamp_zero(total_paid),
     }
 }
 
@@ -369,6 +369,7 @@ fn calculate_monthly_compound(amount: f64, monthly_rate: f64) -> Compound {
 mod tests {
     use super::*;
     use crate::domain::house::House;
+    use crate::domain::tool::{Cash, Loc, Mortgage, Tool};
     use std::collections::BTreeMap;
 
     #[test]
@@ -418,7 +419,7 @@ mod tests {
             tools: vec![],
             mortgage_repay: BTreeMap::new(),
             loc_repay: BTreeMap::new(),
-            };
+        };
 
         let result = simulate_monthly(&purchase);
         assert!(result.is_empty());
@@ -435,11 +436,11 @@ mod tests {
                 monthly_hoa: 100.0,
             },
             tools: vec![
-                crate::domain::tool::Tool::Cash(crate::domain::tool::Cash {
+                Tool::Cash(Cash {
                     amount: 200_000.0,
                     rate: 4.0,
                 }),
-                crate::domain::tool::Tool::Mortgage(crate::domain::tool::Mortgage {
+                Tool::Mortgage(Mortgage {
                     amount: 800_000.0,
                     rate: 6.0,
                     term: 30,
@@ -461,5 +462,154 @@ mod tests {
         assert_eq!(yearly[0].year, 1);
         // Year 1 includes month 0 down payment (200_000)
         assert!(yearly[0].annual_paid > 200_000.0);
+
+        let total = compute_metrics(&yearly);
+        assert!(total.total_paid > 0.0);
+        assert!(total.total_interest_paid > 0.0);
+        assert!(total.total_holding_cost > 0.0);
+    }
+
+    #[test]
+    fn test_simulate_early_payoff_mid_year() {
+        // Loan pays off in 15 months with large monthly extra payments
+        let mut mortgage_repay = BTreeMap::new();
+        for m in 1..=15 {
+            mortgage_repay.insert(m, 50_000.0);
+        }
+
+        let purchase = Purchase {
+            name: "Rapid Payoff".to_string(),
+            house: House {
+                purchase_price: 1_000_000.0,
+                annual_property_tax_rate: 1.0,
+                annual_insurance: 1_200.0,
+                monthly_hoa: 0.0,
+            },
+            tools: vec![
+                Tool::Cash(Cash {
+                    amount: 300_000.0,
+                    rate: 4.0,
+                }),
+                Tool::Mortgage(Mortgage {
+                    amount: 700_000.0,
+                    rate: 6.0,
+                    term: 30,
+                }),
+            ],
+            mortgage_repay,
+            loc_repay: BTreeMap::new(),
+        };
+
+        let scenario = create_scenario(purchase);
+        assert!(scenario.monthly_statement.len() <= 16);
+        assert_eq!(
+            scenario
+                .monthly_statement
+                .last()
+                .unwrap()
+                .total_remaining_balance,
+            0.0
+        );
+        assert_eq!(scenario.yearly_statement.len(), 2);
+        assert_eq!(scenario.yearly_statement[1].year, 2);
+        assert_eq!(scenario.yearly_statement[1].ending_remaining_balance, 0.0);
+    }
+
+    #[test]
+    fn test_all_cash_scenario() {
+        let purchase = Purchase {
+            name: "All Cash".to_string(),
+            house: House {
+                purchase_price: 500_000.0,
+                annual_property_tax_rate: 1.2,
+                annual_insurance: 1_200.0,
+                monthly_hoa: 50.0,
+            },
+            tools: vec![Tool::Cash(Cash {
+                amount: 500_000.0,
+                rate: 4.0,
+            })],
+            mortgage_repay: BTreeMap::new(),
+            loc_repay: BTreeMap::new(),
+        };
+
+        let scenario = create_scenario(purchase);
+        assert_eq!(scenario.monthly_statement.len(), 1);
+        assert_eq!(scenario.monthly_statement[0].month, 0);
+        assert_eq!(scenario.monthly_statement[0].total_paid, 500_000.0);
+        assert_eq!(scenario.monthly_statement[0].total_remaining_balance, 0.0);
+        assert_eq!(scenario.yearly_statement.len(), 1);
+        assert_eq!(scenario.total_statement.total_paid, 500_000.0);
+        assert_eq!(scenario.total_statement.total_interest_paid, 0.0);
+    }
+
+    #[test]
+    fn test_tax_savings_irs_limit_scaling() {
+        // High balance ($1.5M mortgage) subject to $750k IRS limit
+        let purchase_high = Purchase {
+            name: "High Loan".to_string(),
+            house: House {
+                purchase_price: 2_000_000.0,
+                annual_property_tax_rate: 1.2,
+                annual_insurance: 2_400.0,
+                monthly_hoa: 100.0,
+            },
+            tools: vec![Tool::Mortgage(Mortgage {
+                amount: 1_500_000.0,
+                rate: 6.0,
+                term: 30,
+            })],
+            mortgage_repay: BTreeMap::new(),
+            loc_repay: BTreeMap::new(),
+        };
+
+        let scenario = create_scenario(purchase_high);
+        let year1 = &scenario.yearly_statement[0];
+        // Average balance is ~1.5M, so eligible ratio should be ~750k/1.5M = ~0.5
+        // Tax savings should be roughly 0.5 * interest * 0.24
+        let expected_ratio = IRS_MORTGAGE_LIMIT / 1_500_000.0;
+        let expected_savings_approx =
+            year1.annual_interest_paid * expected_ratio * DEFAULT_MARGINAL_TAX_RATE;
+        assert!((year1.annual_tax_savings - expected_savings_approx).abs() < 1000.0);
+    }
+
+    #[test]
+    fn test_loc_simulation() {
+        let mut loc_repay = BTreeMap::new();
+        loc_repay.insert(6, 50_000.0);
+        loc_repay.insert(12, 50_000.0);
+
+        let purchase = Purchase {
+            name: "LOC Scenario".to_string(),
+            house: House {
+                purchase_price: 500_000.0,
+                annual_property_tax_rate: 1.0,
+                annual_insurance: 1_000.0,
+                monthly_hoa: 0.0,
+            },
+            tools: vec![
+                Tool::Cash(Cash {
+                    amount: 400_000.0,
+                    rate: 4.0,
+                }),
+                Tool::Loc(Loc {
+                    amount: 100_000.0,
+                    rate: 6.0,
+                }),
+            ],
+            mortgage_repay: BTreeMap::new(),
+            loc_repay,
+        };
+
+        let scenario = create_scenario(purchase);
+        assert_eq!(scenario.monthly_statement.last().unwrap().month, 12);
+        assert_eq!(
+            scenario
+                .monthly_statement
+                .last()
+                .unwrap()
+                .total_remaining_balance,
+            0.0
+        );
     }
 }

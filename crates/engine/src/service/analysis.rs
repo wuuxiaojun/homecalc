@@ -2,12 +2,13 @@
 //! Single scenario analysis module
 
 use crate::domain::scenario::Scenario;
+use crate::service::utility::clamp_zero;
 
 /// Single scenario metrics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ScenarioAnalysis {
     pub waste_ratio: f64,       // interest paid / principal borrowed
-    pub tax_savings_ratio: f64, //tax savings / interest paid
+    pub tax_savings_ratio: f64, // tax savings / interest paid
     pub payoff_month: u32,
     pub effective_monthly_cost: f64, // total paid / payoff month
 }
@@ -19,13 +20,13 @@ pub fn analyze_scenario(scenario: &Scenario) -> ScenarioAnalysis {
     let principal = scenario.purchase.total_principal();
 
     let waste_ratio = if principal > 0.0 {
-        total.total_interest_paid / principal
+        clamp_zero(total.total_interest_paid / principal)
     } else {
         0.0
     };
 
     let tax_savings_ratio = if total.total_interest_paid > 0.0 {
-        total.total_tax_savings / total.total_interest_paid
+        clamp_zero(total.total_tax_savings / total.total_interest_paid)
     } else {
         0.0
     };
@@ -33,7 +34,7 @@ pub fn analyze_scenario(scenario: &Scenario) -> ScenarioAnalysis {
     let payoff_month = monthly.last().map_or(0, |r| r.month);
 
     let effective_monthly_cost = if payoff_month > 0 {
-        total.total_paid / payoff_month as f64
+        clamp_zero(total.total_paid / payoff_month as f64)
     } else {
         0.0
     };
@@ -143,5 +144,36 @@ mod tests {
         assert_eq!(analysis.tax_savings_ratio, 20_000.0 / 100_000.0); // 0.2
         assert_eq!(analysis.payoff_month, 120);
         assert_eq!(analysis.effective_monthly_cost, 600_000.0 / 120.0); // 5000.0
+    }
+
+    #[test]
+    fn test_analyze_scenario_empty_monthly() {
+        let scenario = Scenario {
+            purchase: Purchase {
+                name: "Empty Scenario".to_string(),
+                house: House {
+                    purchase_price: 400_000.0,
+                    annual_property_tax_rate: 1.0,
+                    annual_insurance: 1_000.0,
+                    monthly_hoa: 0.0,
+                },
+                tools: vec![],
+                mortgage_repay: BTreeMap::new(),
+                loc_repay: BTreeMap::new(),
+            },
+            monthly_statement: vec![],
+            yearly_statement: vec![],
+            total_statement: TotalStatement {
+                total_cash_interest: 0.0,
+                total_holding_cost: 0.0,
+                total_interest_paid: 0.0,
+                total_tax_savings: 0.0,
+                total_paid: 0.0,
+            },
+        };
+
+        let analysis = analyze_scenario(&scenario);
+        assert_eq!(analysis.payoff_month, 0);
+        assert_eq!(analysis.effective_monthly_cost, 0.0);
     }
 }

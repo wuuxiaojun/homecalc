@@ -3,9 +3,10 @@
 
 use crate::config::constant::DEFAULT_DISCOUNT_RATE;
 use crate::domain::scenario::Scenario;
+use crate::service::utility::clamp_zero;
 
 /// Scenario comparison metrics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ScenarioComparison {
     // 1. Timeline
     pub baseline_payoff_month: u32,
@@ -58,30 +59,30 @@ pub fn compare_scenarios(baseline: &Scenario, alternative: &Scenario) -> Scenari
         .iter()
         .map(|y| y.annual_extra_payment)
         .sum();
-    let delta_extra_payment = alternative_extra_payment - baseline_extra_payment;
+    let delta_extra_payment = clamp_zero(alternative_extra_payment - baseline_extra_payment);
 
     let baseline_interest_paid = baseline.total_statement.total_interest_paid;
     let alternative_interest_paid = alternative.total_statement.total_interest_paid;
-    let delta_interest_paid = alternative_interest_paid - baseline_interest_paid;
+    let delta_interest_paid = clamp_zero(alternative_interest_paid - baseline_interest_paid);
 
     // 3. Inflows
     let baseline_cash_interest = baseline.total_statement.total_cash_interest;
     let alternative_cash_interest = alternative.total_statement.total_cash_interest;
-    let delta_cash_interest = alternative_cash_interest - baseline_cash_interest;
+    let delta_cash_interest = clamp_zero(alternative_cash_interest - baseline_cash_interest);
 
     let baseline_tax_savings = baseline.total_statement.total_tax_savings;
     let alternative_tax_savings = alternative.total_statement.total_tax_savings;
-    let delta_tax_savings = alternative_tax_savings - baseline_tax_savings;
+    let delta_tax_savings = clamp_zero(alternative_tax_savings - baseline_tax_savings);
 
     // 4. Aggregate
     let baseline_gross_paid = baseline.total_statement.total_paid;
     let alternative_gross_paid = alternative.total_statement.total_paid;
-    let delta_gross_paid = alternative_gross_paid - baseline_gross_paid;
+    let delta_gross_paid = clamp_zero(alternative_gross_paid - baseline_gross_paid);
 
     // 5. Analytics
     let baseline_pv = calculate_scenario_pv(baseline);
     let alternative_pv = calculate_scenario_pv(alternative);
-    let delta_pv = alternative_pv - baseline_pv;
+    let delta_pv = clamp_zero(alternative_pv - baseline_pv);
     let irr = calculate_strategy_irr(baseline, alternative);
 
     ScenarioComparison {
@@ -111,7 +112,7 @@ pub fn compare_scenarios(baseline: &Scenario, alternative: &Scenario) -> Scenari
 }
 
 /// Calculate the present value (pv)
-fn calculate_scenario_pv(scenario: &Scenario) -> f64 {
+pub fn calculate_scenario_pv(scenario: &Scenario) -> f64 {
     let monthly_r = DEFAULT_DISCOUNT_RATE / 12.0;
     let mut total_pv = 0.0;
     let base = 1.0 + monthly_r;
@@ -124,11 +125,11 @@ fn calculate_scenario_pv(scenario: &Scenario) -> f64 {
         total_pv += discounted_outflow;
     }
 
-    total_pv
+    clamp_zero(total_pv)
 }
 
 /// Calculates the internal rate of return (irr)
-fn calculate_strategy_irr(baseline: &Scenario, alternative: &Scenario) -> Option<f64> {
+pub fn calculate_strategy_irr(baseline: &Scenario, alternative: &Scenario) -> Option<f64> {
     let max_len = baseline
         .monthly_statement
         .len()
@@ -151,7 +152,7 @@ fn calculate_strategy_irr(baseline: &Scenario, alternative: &Scenario) -> Option
 }
 
 /// Robust multi-start Newton-Raphson solver with bisection fallback for IRR
-fn solve_irr_newton_raphson(cash_flows: &[f64]) -> Option<f64> {
+pub fn solve_irr_newton_raphson(cash_flows: &[f64]) -> Option<f64> {
     // Check if there is at least one positive and one negative cash flow
     let has_positive = cash_flows.iter().any(|&f| f > 1e-4);
     let has_negative = cash_flows.iter().any(|&f| f < -1e-4);
@@ -254,7 +255,7 @@ fn solve_irr_newton_raphson(cash_flows: &[f64]) -> Option<f64> {
 
 /// Extracts monthly outflow
 /// Auxiliary function for irr & pv calculation
-fn extract_monthly_outflow(scenario: &Scenario, month_idx: usize) -> f64 {
+pub fn extract_monthly_outflow(scenario: &Scenario, month_idx: usize) -> f64 {
     let monthly_row = match scenario.monthly_statement.get(month_idx) {
         Some(row) => row,
         None => return 0.0,
@@ -263,8 +264,11 @@ fn extract_monthly_outflow(scenario: &Scenario, month_idx: usize) -> f64 {
     let total_paid = monthly_row.total_paid;
     let current_month = monthly_row.month;
 
-    let annual_tax_savings = if current_month > 0 && current_month % 12 == 0 {
-        let year_idx = ((current_month / 12) - 1) as usize;
+    // Tax savings applied on annual boundary (month % 12 == 0) or on the final payoff month
+    let annual_tax_savings = if current_month > 0
+        && (current_month % 12 == 0 || month_idx == scenario.monthly_statement.len() - 1)
+    {
+        let year_idx = ((current_month - 1) / 12) as usize;
         scenario
             .yearly_statement
             .get(year_idx)
@@ -283,6 +287,8 @@ mod tests {
     use crate::domain::statement::{
         HouseStatement, MonthlyStatementRow, TotalStatement, YearlyStatementRow,
     };
+    use crate::domain::tool::{Cash, Loc, Mortgage, Tool};
+    use crate::service::simulation::create_scenario;
     use std::collections::BTreeMap;
 
     fn create_mock_scenario(months: u32, monthly_paid: f64, annual_tax_savings: f64) -> Scenario {
@@ -323,7 +329,7 @@ mod tests {
             });
         }
 
-        let num_years = (months + 11) / 12;
+        let num_years = months.div_ceil(12);
         let mut yearly_statement = Vec::new();
         for y in 1..=num_years {
             yearly_statement.push(YearlyStatementRow {
@@ -386,6 +392,18 @@ mod tests {
     }
 
     #[test]
+    fn test_extract_monthly_outflow_non_annual_payoff_boundary() {
+        // 15-month scenario: tax savings should apply at Month 12 AND Month 15 (final month)
+        let scenario = create_mock_scenario(15, 1000.0, 300.0);
+        // Month 12: Year 1 tax savings applied
+        assert_eq!(extract_monthly_outflow(&scenario, 12), 700.0);
+        // Month 14: Mid-year month, no tax savings applied
+        assert_eq!(extract_monthly_outflow(&scenario, 14), 1000.0);
+        // Month 15: Final month of 15-month scenario, Year 2 tax savings applied
+        assert_eq!(extract_monthly_outflow(&scenario, 15), 700.0);
+    }
+
+    #[test]
     fn test_solve_irr_newton_raphson() {
         // Known stream: -100 upfront, +110 in month 1 -> monthly rate r = 10%
         let cash_flows = vec![-100.0, 110.0];
@@ -410,9 +428,6 @@ mod tests {
 
     #[test]
     fn test_irr_user_scenario() {
-        use crate::domain::tool::{Cash, Mortgage, Loc, Tool};
-        use crate::service::simulation::create_scenario;
-
         // Baseline: 1M cash down, 700k mortgage (30 yr @ 6%)
         let purchase_a = Purchase {
             name: "Baseline Mortgage".to_string(),
@@ -464,8 +479,8 @@ mod tests {
 
         let comparison = compare_scenarios(&scenario_a, &scenario_b);
         assert!(comparison.irr.is_some());
-        println!("comparison.irr = {:?}", comparison.irr);
-        println!("scenario_a.pv = {}", comparison.baseline_pv);
-        println!("scenario_b.pv = {}", comparison.alternative_pv);
+        assert!(comparison.months_saved > 0);
+        assert!(comparison.baseline_pv > 0.0);
+        assert!(comparison.alternative_pv > 0.0);
     }
 }
