@@ -2,4 +2,4 @@
 //! Storage module declarations
 
 pub mod io;
-mod serialize;
+pub mod serialize;
