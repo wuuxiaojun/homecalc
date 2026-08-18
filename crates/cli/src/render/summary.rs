@@ -4,7 +4,6 @@
 use comfy_table::presets::UTF8_FULL;
 use comfy_table::{ContentArrangement, Table};
 use engine::domain::scenario::Scenario;
-use engine::domain::tool::Tool;
 
 use super::format::format_currency;
 
@@ -107,12 +106,12 @@ mod tests {
     use super::*;
     use engine::domain::house::House;
     use engine::domain::purchase::Purchase;
-    use engine::domain::tool::{Cash, Mortgage, Tool};
+    use engine::domain::tool::{Cash, Loc, Mortgage, Tool};
     use engine::service::simulation::create_scenario;
     use std::collections::BTreeMap;
 
     #[test]
-    fn test_render_purchase_summary() {
+    fn test_render_purchase_summary_all_tools() {
         let purchase = Purchase {
             name: "Test Info Scenario".to_string(),
             house: House {
@@ -127,12 +126,38 @@ mod tests {
                     rate: 4.0,
                 }),
                 Tool::Mortgage(Mortgage {
-                    amount: 1_000_000.0,
+                    amount: 800_000.0,
                     rate: 6.0,
                     term: 30,
                 }),
+                Tool::Loc(Loc {
+                    amount: 200_000.0,
+                    rate: 6.5,
+                }),
             ],
             mortgage_repay: BTreeMap::from([(12, 50_000.0)]),
+            loc_repay: BTreeMap::from([(6, 20_000.0)]),
+        };
+
+        let scenario = create_scenario(purchase);
+        render_summary(&scenario);
+    }
+
+    #[test]
+    fn test_render_purchase_summary_cash_only() {
+        let purchase = Purchase {
+            name: "Cash Only Summary".to_string(),
+            house: House {
+                purchase_price: 500_000.0,
+                annual_property_tax_rate: 1.0,
+                annual_insurance: 1_000.0,
+                monthly_hoa: 0.0,
+            },
+            tools: vec![Tool::Cash(Cash {
+                amount: 500_000.0,
+                rate: 4.0,
+            })],
+            mortgage_repay: BTreeMap::new(),
             loc_repay: BTreeMap::new(),
         };
 

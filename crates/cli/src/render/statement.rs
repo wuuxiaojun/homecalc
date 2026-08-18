@@ -50,12 +50,12 @@ pub fn render_statement(scenario: &Scenario) {
     let mut last_printed: Option<usize> = None;
 
     for &idx in &indices_to_print {
-        if let Some(prev) = last_printed {
-            if idx > prev + 1 {
-                monthly_table.add_row(vec![
-                    "...", "...", "...", "...", "...", "...", "...", "...", "...",
-                ]);
-            }
+        if let Some(prev) = last_printed
+            && idx > prev + 1
+        {
+            monthly_table.add_row(vec![
+                "...", "...", "...", "...", "...", "...", "...", "...", "...",
+            ]);
         }
         last_printed = Some(idx);
 
@@ -157,12 +157,12 @@ mod tests {
     use super::*;
     use engine::domain::house::House;
     use engine::domain::purchase::Purchase;
-    use engine::domain::tool::{Cash, Mortgage, Tool};
+    use engine::domain::tool::{Cash, Loc, Mortgage, Tool};
     use engine::service::simulation::create_scenario;
     use std::collections::BTreeMap;
 
     #[test]
-    fn test_render_statement() {
+    fn test_render_statement_mortgage() {
         let purchase = Purchase {
             name: "Test Statement Scenario".to_string(),
             house: House {
@@ -182,8 +182,55 @@ mod tests {
                     term: 30,
                 }),
             ],
+            mortgage_repay: BTreeMap::from([(12, 10_000.0)]),
+            loc_repay: BTreeMap::new(),
+        };
+
+        let scenario = create_scenario(purchase);
+        render_statement(&scenario);
+    }
+
+    #[test]
+    fn test_render_statement_all_cash() {
+        let purchase = Purchase {
+            name: "All Cash Statement".to_string(),
+            house: House {
+                purchase_price: 600_000.0,
+                annual_property_tax_rate: 1.0,
+                annual_insurance: 1_200.0,
+                monthly_hoa: 50.0,
+            },
+            tools: vec![Tool::Cash(Cash {
+                amount: 600_000.0,
+                rate: 4.0,
+            })],
             mortgage_repay: BTreeMap::new(),
             loc_repay: BTreeMap::new(),
+        };
+
+        let scenario = create_scenario(purchase);
+        render_statement(&scenario);
+    }
+
+    #[test]
+    fn test_render_statement_loc() {
+        let mut loc_repay = BTreeMap::new();
+        loc_repay.insert(3, 20_000.0);
+
+        let purchase = Purchase {
+            name: "LOC Statement".to_string(),
+            house: House {
+                purchase_price: 400_000.0,
+                annual_property_tax_rate: 1.0,
+                annual_insurance: 800.0,
+                monthly_hoa: 0.0,
+            },
+            tools: vec![Tool::Loc(Loc {
+                amount: 400_000.0,
+                rate: 6.0,
+            })],
+            mortgage_repay: BTreeMap::new(),
+            loc_repay,
         };
 
         let scenario = create_scenario(purchase);

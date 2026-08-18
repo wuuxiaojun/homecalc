@@ -82,4 +82,27 @@ mod tests {
         let analysis = analyze_scenario(&scenario);
         render_analysis(&analysis);
     }
+
+    #[test]
+    fn test_render_analysis_all_cash() {
+        let purchase = Purchase {
+            name: "All Cash".to_string(),
+            house: House {
+                purchase_price: 500_000.0,
+                annual_property_tax_rate: 1.0,
+                annual_insurance: 1_200.0,
+                monthly_hoa: 50.0,
+            },
+            tools: vec![Tool::Cash(Cash {
+                amount: 500_000.0,
+                rate: 4.0,
+            })],
+            mortgage_repay: BTreeMap::new(),
+            loc_repay: BTreeMap::new(),
+        };
+
+        let scenario = create_scenario(purchase);
+        let analysis = analyze_scenario(&scenario);
+        render_analysis(&analysis);
+    }
 }

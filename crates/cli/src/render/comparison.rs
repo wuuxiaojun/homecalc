@@ -85,7 +85,7 @@ mod tests {
     use super::*;
     use engine::domain::house::House;
     use engine::domain::purchase::Purchase;
-    use engine::domain::tool::{Cash, Mortgage, Tool};
+    use engine::domain::tool::{Cash, Loc, Mortgage, Tool};
     use engine::service::comparison::compare_scenarios;
     use engine::service::simulation::create_scenario;
     use std::collections::BTreeMap;
@@ -118,6 +118,47 @@ mod tests {
         let mut purchase_b = purchase_a.clone();
         purchase_b.name = "Scenario B".to_string();
         purchase_b.mortgage_repay.insert(12, 100_000.0);
+
+        let scenario_a = create_scenario(purchase_a);
+        let scenario_b = create_scenario(purchase_b);
+
+        let comparison = compare_scenarios(&scenario_a, &scenario_b);
+        render_comparison(&comparison);
+    }
+
+    #[test]
+    fn test_render_comparison_no_irr() {
+        let purchase_a = Purchase {
+            name: "Scenario A".to_string(),
+            house: House {
+                purchase_price: 500_000.0,
+                annual_property_tax_rate: 1.0,
+                annual_insurance: 1_200.0,
+                monthly_hoa: 0.0,
+            },
+            tools: vec![Tool::Cash(Cash {
+                amount: 500_000.0,
+                rate: 4.0,
+            })],
+            mortgage_repay: BTreeMap::new(),
+            loc_repay: BTreeMap::new(),
+        };
+
+        let purchase_b = Purchase {
+            name: "Scenario B".to_string(),
+            house: House {
+                purchase_price: 500_000.0,
+                annual_property_tax_rate: 1.0,
+                annual_insurance: 1_200.0,
+                monthly_hoa: 0.0,
+            },
+            tools: vec![Tool::Loc(Loc {
+                amount: 500_000.0,
+                rate: 5.0,
+            })],
+            mortgage_repay: BTreeMap::new(),
+            loc_repay: BTreeMap::new(),
+        };
 
         let scenario_a = create_scenario(purchase_a);
         let scenario_b = create_scenario(purchase_b);
