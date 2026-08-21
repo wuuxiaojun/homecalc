@@ -172,11 +172,43 @@ fn test_pairwise_comparison_wasm_parity() {
     let wasm_comp_json = wasm_compare_scenarios_from_json(&wasm_scen_a, &wasm_scen_b).unwrap();
     let wasm_comp: ScenarioComparison = serde_json::from_str(&wasm_comp_json).unwrap();
 
+    let pv_a_wasm = wasm_calculate_scenario_pv_from_json(&wasm_scen_a).unwrap();
+    let pv_b_wasm = wasm_calculate_scenario_pv_from_json(&wasm_scen_b).unwrap();
+    assert!((native_comp.baseline_pv - pv_a_wasm).abs() < 1e-6);
+    assert!((native_comp.alternative_pv - pv_b_wasm).abs() < 1e-6);
+
     assert_eq!(native_comp.months_saved, wasm_comp.months_saved);
     assert!((native_comp.delta_interest_paid - wasm_comp.delta_interest_paid).abs() < 1e-6);
     assert!((native_comp.delta_gross_paid - wasm_comp.delta_gross_paid).abs() < 1e-6);
     assert!((native_comp.delta_pv - wasm_comp.delta_pv).abs() < 1e-6);
     assert_eq!(native_comp.irr.is_some(), wasm_comp.irr.is_some());
+}
+
+#[test]
+fn test_loc_tool_parity() {
+    let purchase = Purchase {
+        name: "LOC Parity".to_string(),
+        house: House {
+            purchase_price: 500_000.0,
+            annual_property_tax_rate: 1.0,
+            annual_insurance: 1_200.0,
+            monthly_hoa: 0.0,
+        },
+        tools: vec![Tool::Loc(Loc {
+            amount: 500_000.0,
+            rate: 6.0,
+        })],
+        mortgage_repay: BTreeMap::new(),
+        loc_repay: BTreeMap::new(),
+    };
+
+    let native = create_scenario(purchase.clone());
+    let json_str = serde_json::to_string(&purchase).unwrap();
+    let wasm_json = wasm_create_scenario_from_json(&json_str).unwrap();
+    let wasm: Scenario = serde_json::from_str(&wasm_json).unwrap();
+
+    assert_eq!(native.monthly_statement.len(), wasm.monthly_statement.len());
+    assert!((native.total_statement.total_paid - wasm.total_statement.total_paid).abs() < 1e-6);
 }
 
 #[test]
