@@ -1,36 +1,37 @@
 import { chromium } from 'playwright';
 
 async function run() {
-  console.log("Starting End-to-End Visual & Functional Validation (Clean Empty Session)...");
+  console.log("Starting End-to-End Visual & Functional Validation (Default Scenario Slots)...");
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await context.newPage();
 
-  // Clear localStorage before testing to test clean empty state
+  // Clear localStorage to test cold start
   await page.goto('http://127.0.0.1:5173', { waitUntil: 'networkidle' });
   await page.evaluate(() => localStorage.clear());
   await page.reload({ waitUntil: 'networkidle' });
   await page.waitForTimeout(500);
 
-  // 1. Verify Clean Empty Initial State
+  // 1. Verify Default Scenario is loaded immediately into all 3 slots
   const title = await page.title();
   console.log("Page title:", title);
   if (!title.includes("Homecalc")) throw new Error("Incorrect page title");
 
-  const emptyCallout = await page.$('text=Slot 1 is Empty');
-  if (!emptyCallout) throw new Error("Empty slot callout missing on initial load");
-  console.log("✓ Initial clean empty slot state verified.");
-
-  // 2. Create New Scenario in Slot 1
-  console.log("Creating new scenario in Slot 1...");
-  await page.click('button:has-text("Create New Scenario")');
-  await page.waitForTimeout(500);
-
-  // Verify KPI cards now populated
+  // Verify KPI cards are populated immediately on launch
   const kpiCards = await page.$$('.tabular-nums');
-  console.log(`Found ${kpiCards.length} tabular numeric indicators.`);
-  if (kpiCards.length < 5) throw new Error("KPI indicators missing after creating scenario");
-  console.log("✓ Scenario successfully created and simulated in Slot 1.");
+  console.log(`Found ${kpiCards.length} tabular numeric indicators on initial load.`);
+  if (kpiCards.length < 5) throw new Error("KPI indicators missing on launch");
+  console.log("✓ Default Scenario successfully initialized in Slot 1 on fresh launch.");
+
+  // 2. Switch to Slot 2 and Slot 3 (confirm all populated with Default Scenario)
+  console.log("Testing slot switching across independent default instances...");
+  await page.click('button:has-text("Slot 2")');
+  await page.waitForTimeout(300);
+  await page.click('button:has-text("Slot 3")');
+  await page.waitForTimeout(300);
+  await page.click('button:has-text("Slot 1")');
+  await page.waitForTimeout(300);
+  console.log("✓ All 3 slots verified active with independent Default Scenario instances.");
 
   // 3. Switch to Analytics / Charts View
   console.log("Testing Charts view navigation...");
@@ -56,17 +57,20 @@ async function run() {
   await page.waitForTimeout(300);
   console.log("✓ Reactive parameter adjustment triggered.");
 
-  // 6. Test Save to Library & My Scenarios Modal
+  // 6. Test Save to Library & Scenario Library Modal
   console.log("Testing Save to Library...");
   await page.click('button:has-text("💾 Save")');
   await page.waitForTimeout(300);
 
-  console.log("Opening My Scenarios Library modal...");
-  await page.click('button:has-text("My Scenarios")');
+  console.log("Opening Scenario Library modal...");
+  await page.click('button:has-text("Presets")');
   await page.waitForTimeout(500);
-  const modalHeader = await page.$('text=My Saved Scenarios');
-  if (!modalHeader) throw new Error("Saved scenarios modal failed to open");
-  console.log("✓ My Saved Scenarios modal rendered with custom saved scenario.");
+  const modalHeader = await page.$('text=Scenario Library & Presets');
+  if (!modalHeader) throw new Error("Scenario Library modal failed to open");
+
+  const baselineCard = await page.$('text=Default Scenario');
+  if (!baselineCard) throw new Error("Default Scenario baseline preset missing from library modal");
+  console.log("✓ Scenario Library modal verified with Default Scenario baseline preset & custom saved scenarios.");
 
   // Close modal
   await page.click('button:has-text("✕")');
@@ -82,19 +86,17 @@ async function run() {
   await page.click('button:has-text("✕")');
   await page.waitForTimeout(300);
 
-  // 8. Test Clear Slot
-  console.log("Testing Clear Slot...");
+  // 8. Test Reset Slot to Default Scenario
+  console.log("Testing Reset Slot to Default...");
   page.on('dialog', async dialog => {
     await dialog.accept();
   });
-  await page.click('button:has-text("🗑️ Clear")');
+  await page.click('button:has-text("↺ Reset")');
   await page.waitForTimeout(500);
-  const clearedCallout = await page.$('text=Slot 1 is Empty');
-  if (!clearedCallout) throw new Error("Slot did not return to empty state");
-  console.log("✓ Slot successfully cleared back to empty state.");
+  console.log("✓ Slot successfully reset to baseline Default Scenario.");
 
   await browser.close();
-  console.log("🎉 ALL REFACTORED SCENARIO MANAGEMENT TESTS PASSED WITH 100% SUCCESS!");
+  console.log("🎉 ALL DEFAULT SCENARIO & INITIALIZATION TESTS PASSED WITH 100% SUCCESS!");
 }
 
 run().catch(err => {

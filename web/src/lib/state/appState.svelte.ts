@@ -8,14 +8,14 @@ import {
 } from '../engine/engineBridge';
 import { loadSlotsFromStorage, saveSlotsToStorage } from '../services/persistence';
 
-export function createBlankPurchase(name = 'New Scenario'): Purchase {
+export function createDefaultScenario(name = 'Default Scenario'): Purchase {
   return {
     name,
     house: {
       purchase_price: 1_000_000,
       annual_property_tax_rate: 1.25,
       annual_insurance: 2_400,
-      monthly_hoa: 100
+      monthly_hoa: 120
     },
     tools: [
       { Cash: { amount: 200_000, rate: 4.0 } },
@@ -37,11 +37,11 @@ export class AppState {
   activeParamTab = $state<'property' | 'tools' | 'repayments'>('property');
   selectedMonth = $state<number | null>(null);
 
-  // Scenario slots storage (All 3 start completely empty by default)
+  // Scenario slots storage (All 3 initialized with independent Default Scenario instances)
   slot1 = $state<ScenarioSlot>({
     id: 1,
-    name: 'Slot 1 (Empty)',
-    purchase: null,
+    name: 'Slot 1',
+    purchase: createDefaultScenario('Default Scenario (Slot 1)'),
     scenario: null,
     analysis: null,
     error: null
@@ -49,8 +49,8 @@ export class AppState {
 
   slot2 = $state<ScenarioSlot>({
     id: 2,
-    name: 'Slot 2 (Empty)',
-    purchase: null,
+    name: 'Slot 2',
+    purchase: createDefaultScenario('Default Scenario (Slot 2)'),
     scenario: null,
     analysis: null,
     error: null
@@ -58,8 +58,8 @@ export class AppState {
 
   slot3 = $state<ScenarioSlot>({
     id: 3,
-    name: 'Slot 3 (Empty)',
-    purchase: null,
+    name: 'Slot 3',
+    purchase: createDefaultScenario('Default Scenario (Slot 3)'),
     scenario: null,
     analysis: null,
     error: null
@@ -79,6 +79,8 @@ export class AppState {
       if (saved.slot1) this.loadPurchaseIntoSlot(1, saved.slot1, false);
       if (saved.slot2) this.loadPurchaseIntoSlot(2, saved.slot2, false);
       if (saved.slot3) this.loadPurchaseIntoSlot(3, saved.slot3, false);
+    } else {
+      this.persistSlots();
     }
 
     this.recalculateAll();
@@ -101,20 +103,6 @@ export class AppState {
     return this.getSlot(this.activeSlotId);
   }
 
-  // Helper: check if slot is empty
-  isSlotEmpty(id: SlotId): boolean {
-    return this.getSlot(id).purchase === null;
-  }
-
-  // Helper: count populated slots
-  get populatedSlotsCount(): number {
-    let count = 0;
-    if (this.slot1.purchase) count++;
-    if (this.slot2.purchase) count++;
-    if (this.slot3.purchase) count++;
-    return count;
-  }
-
   // Comparison result getter
   get comparison(): ScenarioComparison | null {
     if (!this.isInitialized) return null;
@@ -133,12 +121,6 @@ export class AppState {
   recalculateSlot(slotId: SlotId) {
     if (!isWasmReady()) return;
     const slot = this.getSlot(slotId);
-    if (!slot.purchase) {
-      slot.scenario = null;
-      slot.analysis = null;
-      slot.error = null;
-      return;
-    }
     try {
       const scenario = computeScenarioSync(slot.purchase);
       const analysis = computeAnalysisSync(scenario);
@@ -161,7 +143,6 @@ export class AppState {
   // Update active purchase object
   updateActivePurchase(updater: (purchase: Purchase) => void) {
     const slot = this.activeSlot;
-    if (!slot.purchase) return;
     updater(slot.purchase);
     this.recalculateSlot(this.activeSlotId);
     this.persistSlots();
@@ -175,12 +156,6 @@ export class AppState {
     }
   }
 
-  // Create a fresh new scenario in a slot
-  createScenarioInSlot(slotId: SlotId, customPurchase?: Purchase) {
-    const p = customPurchase ? JSON.parse(JSON.stringify(customPurchase)) : createBlankPurchase(`Scenario in Slot ${slotId}`);
-    this.loadPurchaseIntoSlot(slotId, p);
-  }
-
   // Load a purchase into a specific slot
   loadPurchaseIntoSlot(slotId: SlotId, purchase: Purchase, persist = true) {
     const slot = this.getSlot(slotId);
@@ -192,21 +167,14 @@ export class AppState {
     }
   }
 
-  // Clear / remove scenario from a slot
-  clearSlot(slotId: SlotId) {
-    const slot = this.getSlot(slotId);
-    slot.purchase = null;
-    slot.scenario = null;
-    slot.analysis = null;
-    slot.name = `Slot ${slotId} (Empty)`;
-    slot.error = null;
-    this.persistSlots();
+  // Reset a slot back to the baseline Default Scenario
+  resetSlot(slotId: SlotId) {
+    this.loadPurchaseIntoSlot(slotId, createDefaultScenario(`Default Scenario (Slot ${slotId})`));
   }
 
   // Duplicate one slot to another
   duplicateSlot(sourceId: SlotId, targetId: SlotId) {
     const src = this.getSlot(sourceId);
-    if (!src.purchase) return;
     const target = this.getSlot(targetId);
     target.purchase = JSON.parse(JSON.stringify(src.purchase));
     target.name = `${src.purchase.name} (Copy)`;
