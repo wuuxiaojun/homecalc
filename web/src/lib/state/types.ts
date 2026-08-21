@@ -136,7 +136,7 @@ export type SlotId = 1 | 2 | 3;
 export interface ScenarioSlot {
   id: SlotId;
   name: string;
-  purchase: Purchase;
+  purchase: Purchase | null;
   scenario: Scenario | null;
   analysis: ScenarioAnalysis | null;
   error?: string | null;

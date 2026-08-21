@@ -49,9 +49,9 @@
           value={appState.comparisonBaselineId}
           onchange={(e) => setBaseline(parseInt(e.currentTarget.value, 10) as SlotId)}
         >
-          <option value={1}>Slot 1: {appState.slot1.purchase.name}</option>
-          <option value={2}>Slot 2: {appState.slot2.purchase.name}</option>
-          <option value={3}>Slot 3: {appState.slot3.purchase.name}</option>
+          <option value={1}>Slot 1: {appState.slot1.purchase?.name || 'Empty'}</option>
+          <option value={2}>Slot 2: {appState.slot2.purchase?.name || 'Empty'}</option>
+          <option value={3}>Slot 3: {appState.slot3.purchase?.name || 'Empty'}</option>
         </select>
       </div>
 
@@ -65,15 +65,41 @@
           value={appState.comparisonAlternativeId}
           onchange={(e) => setAlternative(parseInt(e.currentTarget.value, 10) as SlotId)}
         >
-          <option value={1}>Slot 1: {appState.slot1.purchase.name}</option>
-          <option value={2}>Slot 2: {appState.slot2.purchase.name}</option>
-          <option value={3}>Slot 3: {appState.slot3.purchase.name}</option>
+          <option value={1}>Slot 1: {appState.slot1.purchase?.name || 'Empty'}</option>
+          <option value={2}>Slot 2: {appState.slot2.purchase?.name || 'Empty'}</option>
+          <option value={3}>Slot 3: {appState.slot3.purchase?.name || 'Empty'}</option>
         </select>
       </div>
     </div>
   </div>
 
-  {#if comparison}
+  {#if !baselineSlot.purchase || !alternativeSlot.purchase}
+    <div class="p-12 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 text-center space-y-3">
+      <div class="text-3xl">⚖️</div>
+      <h3 class="text-sm font-bold text-white">Select Two Populated Scenarios to Compare</h3>
+      <p class="text-xs text-zinc-400 max-w-md mx-auto">
+        Differential analysis requires both Baseline (Slot {baselineSlot.id}) and Alternative (Slot {alternativeSlot.id}) to have active scenarios loaded.
+      </p>
+      <div class="flex items-center justify-center gap-2 pt-2">
+        {#if !baselineSlot.purchase}
+          <button
+            class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-mono transition-colors"
+            onclick={() => { appState.setActiveSlot(baselineSlot.id); appState.createScenarioInSlot(baselineSlot.id); }}
+          >
+            + Create Scenario in Slot {baselineSlot.id}
+          </button>
+        {/if}
+        {#if !alternativeSlot.purchase}
+          <button
+            class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-mono transition-colors"
+            onclick={() => { appState.setActiveSlot(alternativeSlot.id); appState.createScenarioInSlot(alternativeSlot.id); }}
+          >
+            + Create Scenario in Slot {alternativeSlot.id}
+          </button>
+        {/if}
+      </div>
+    </div>
+  {:else if comparison}
     <!-- Top Comparison Highlight KPI Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <!-- Months Saved -->

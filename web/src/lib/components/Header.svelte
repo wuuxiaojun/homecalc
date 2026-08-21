@@ -106,9 +106,9 @@
           <button
             class="px-3 py-1 text-xs font-mono font-medium rounded-lg transition-all flex items-center gap-1.5 {appState.activeSlotId === s.id ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}"
             onclick={() => handleSlotSelect(s.id)}
-            title={currentSlot.purchase.name}
+            title={currentSlot.purchase?.name || `Slot ${s.id} (Empty)`}
           >
-            <span class="w-1.5 h-1.5 rounded-full {appState.activeSlotId === s.id ? 'bg-emerald-400' : 'bg-zinc-600'}"></span>
+            <span class="w-1.5 h-1.5 rounded-full {appState.activeSlotId === s.id ? 'bg-emerald-400' : currentSlot.purchase ? 'bg-emerald-600' : 'bg-zinc-700'}"></span>
             <span>{s.label}</span>
           </button>
         {/each}
@@ -119,10 +119,10 @@
         <button
           class="px-3 py-1.5 text-xs font-medium rounded-lg bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 transition-colors flex items-center gap-1.5 shadow-sm"
           onclick={onOpenLibrary}
-          title="Open Scenario Library"
+          title="Open My Saved Scenarios Library"
         >
-          <span>📚</span>
-          <span class="hidden sm:inline">Presets</span>
+          <span>📁</span>
+          <span class="hidden sm:inline">My Scenarios</span>
         </button>
 
         <button

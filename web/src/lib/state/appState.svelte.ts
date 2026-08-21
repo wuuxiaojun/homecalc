@@ -6,55 +6,25 @@ import {
   computeAnalysisSync,
   computeComparisonSync
 } from '../engine/engineBridge';
+import { loadSlotsFromStorage, saveSlotsToStorage } from '../services/persistence';
 
-export const DEFAULT_SLOT_1_PURCHASE: Purchase = {
-  name: 'Standard 30yr Conventional',
-  house: {
-    purchase_price: 1_000_000,
-    annual_property_tax_rate: 1.25,
-    annual_insurance: 2_400,
-    monthly_hoa: 120
-  },
-  tools: [
-    { Cash: { amount: 200_000, rate: 4.0 } },
-    { Mortgage: { amount: 800_000, rate: 6.5, term: 30 } }
-  ],
-  mortgage_repay: {},
-  loc_repay: {}
-};
-
-export const DEFAULT_SLOT_2_PURCHASE: Purchase = {
-  name: 'Accelerated 15yr Fixed',
-  house: {
-    purchase_price: 1_000_000,
-    annual_property_tax_rate: 1.25,
-    annual_insurance: 2_400,
-    monthly_hoa: 120
-  },
-  tools: [
-    { Cash: { amount: 200_000, rate: 4.0 } },
-    { Mortgage: { amount: 800_000, rate: 5.75, term: 15 } }
-  ],
-  mortgage_repay: {},
-  loc_repay: {}
-};
-
-export const DEFAULT_SLOT_3_PURCHASE: Purchase = {
-  name: 'Hybrid Mortgage + LOC Split',
-  house: {
-    purchase_price: 1_200_000,
-    annual_property_tax_rate: 1.20,
-    annual_insurance: 2_400,
-    monthly_hoa: 150
-  },
-  tools: [
-    { Cash: { amount: 240_000, rate: 4.0 } },
-    { Mortgage: { amount: 720_000, rate: 6.25, term: 30 } },
-    { Loc: { amount: 240_000, rate: 6.75 } }
-  ],
-  mortgage_repay: { 12: 50_000 },
-  loc_repay: { 6: 20_000 }
-};
+export function createBlankPurchase(name = 'New Scenario'): Purchase {
+  return {
+    name,
+    house: {
+      purchase_price: 1_000_000,
+      annual_property_tax_rate: 1.25,
+      annual_insurance: 2_400,
+      monthly_hoa: 100
+    },
+    tools: [
+      { Cash: { amount: 200_000, rate: 4.0 } },
+      { Mortgage: { amount: 800_000, rate: 6.5, term: 30 } }
+    ],
+    mortgage_repay: {},
+    loc_repay: {}
+  };
+}
 
 export class AppState {
   // Reactive Svelte 5 state variables
@@ -64,14 +34,14 @@ export class AppState {
   comparisonBaselineId = $state<SlotId>(1);
   comparisonAlternativeId = $state<SlotId>(2);
   activeView = $state<'overview' | 'charts' | 'statements' | 'comparison'>('overview');
-  activeParamTab = $state<'property' | 'tools' | 'repayments' | 'library'>('property');
+  activeParamTab = $state<'property' | 'tools' | 'repayments'>('property');
   selectedMonth = $state<number | null>(null);
 
-  // Scenario slots storage
+  // Scenario slots storage (All 3 start completely empty by default)
   slot1 = $state<ScenarioSlot>({
     id: 1,
-    name: 'Slot 1',
-    purchase: $state.snapshot(DEFAULT_SLOT_1_PURCHASE),
+    name: 'Slot 1 (Empty)',
+    purchase: null,
     scenario: null,
     analysis: null,
     error: null
@@ -79,8 +49,8 @@ export class AppState {
 
   slot2 = $state<ScenarioSlot>({
     id: 2,
-    name: 'Slot 2',
-    purchase: $state.snapshot(DEFAULT_SLOT_2_PURCHASE),
+    name: 'Slot 2 (Empty)',
+    purchase: null,
     scenario: null,
     analysis: null,
     error: null
@@ -88,8 +58,8 @@ export class AppState {
 
   slot3 = $state<ScenarioSlot>({
     id: 3,
-    name: 'Slot 3',
-    purchase: $state.snapshot(DEFAULT_SLOT_3_PURCHASE),
+    name: 'Slot 3 (Empty)',
+    purchase: null,
     scenario: null,
     analysis: null,
     error: null
@@ -102,6 +72,15 @@ export class AppState {
   async init() {
     await ensureWasmInitialized();
     this.isInitialized = true;
+
+    // Restore from localStorage if user had previous sessions
+    const saved = loadSlotsFromStorage();
+    if (saved) {
+      if (saved.slot1) this.loadPurchaseIntoSlot(1, saved.slot1, false);
+      if (saved.slot2) this.loadPurchaseIntoSlot(2, saved.slot2, false);
+      if (saved.slot3) this.loadPurchaseIntoSlot(3, saved.slot3, false);
+    }
+
     this.recalculateAll();
   }
 
@@ -122,14 +101,28 @@ export class AppState {
     return this.getSlot(this.activeSlotId);
   }
 
+  // Helper: check if slot is empty
+  isSlotEmpty(id: SlotId): boolean {
+    return this.getSlot(id).purchase === null;
+  }
+
+  // Helper: count populated slots
+  get populatedSlotsCount(): number {
+    let count = 0;
+    if (this.slot1.purchase) count++;
+    if (this.slot2.purchase) count++;
+    if (this.slot3.purchase) count++;
+    return count;
+  }
+
   // Comparison result getter
   get comparison(): ScenarioComparison | null {
     if (!this.isInitialized) return null;
-    const baseline = this.getSlot(this.comparisonBaselineId).scenario;
-    const alternative = this.getSlot(this.comparisonAlternativeId).scenario;
-    if (!baseline || !alternative) return null;
+    const baselineSlot = this.getSlot(this.comparisonBaselineId);
+    const alternativeSlot = this.getSlot(this.comparisonAlternativeId);
+    if (!baselineSlot.scenario || !alternativeSlot.scenario) return null;
     try {
-      return computeComparisonSync(baseline, alternative);
+      return computeComparisonSync(baselineSlot.scenario, alternativeSlot.scenario);
     } catch (err) {
       console.error('Comparison calculation failed:', err);
       return null;
@@ -140,6 +133,12 @@ export class AppState {
   recalculateSlot(slotId: SlotId) {
     if (!isWasmReady()) return;
     const slot = this.getSlot(slotId);
+    if (!slot.purchase) {
+      slot.scenario = null;
+      slot.analysis = null;
+      slot.error = null;
+      return;
+    }
     try {
       const scenario = computeScenarioSync(slot.purchase);
       const analysis = computeAnalysisSync(scenario);
@@ -162,8 +161,10 @@ export class AppState {
   // Update active purchase object
   updateActivePurchase(updater: (purchase: Purchase) => void) {
     const slot = this.activeSlot;
+    if (!slot.purchase) return;
     updater(slot.purchase);
     this.recalculateSlot(this.activeSlotId);
+    this.persistSlots();
   }
 
   // Set active slot
@@ -174,33 +175,49 @@ export class AppState {
     }
   }
 
+  // Create a fresh new scenario in a slot
+  createScenarioInSlot(slotId: SlotId, customPurchase?: Purchase) {
+    const p = customPurchase ? JSON.parse(JSON.stringify(customPurchase)) : createBlankPurchase(`Scenario in Slot ${slotId}`);
+    this.loadPurchaseIntoSlot(slotId, p);
+  }
+
   // Load a purchase into a specific slot
-  loadPurchaseIntoSlot(slotId: SlotId, purchase: Purchase) {
+  loadPurchaseIntoSlot(slotId: SlotId, purchase: Purchase, persist = true) {
     const slot = this.getSlot(slotId);
     slot.purchase = JSON.parse(JSON.stringify(purchase));
     slot.name = purchase.name || `Slot ${slotId}`;
     this.recalculateSlot(slotId);
+    if (persist) {
+      this.persistSlots();
+    }
+  }
+
+  // Clear / remove scenario from a slot
+  clearSlot(slotId: SlotId) {
+    const slot = this.getSlot(slotId);
+    slot.purchase = null;
+    slot.scenario = null;
+    slot.analysis = null;
+    slot.name = `Slot ${slotId} (Empty)`;
+    slot.error = null;
+    this.persistSlots();
   }
 
   // Duplicate one slot to another
   duplicateSlot(sourceId: SlotId, targetId: SlotId) {
     const src = this.getSlot(sourceId);
+    if (!src.purchase) return;
     const target = this.getSlot(targetId);
     target.purchase = JSON.parse(JSON.stringify(src.purchase));
     target.name = `${src.purchase.name} (Copy)`;
     target.purchase.name = target.name;
     this.recalculateSlot(targetId);
+    this.persistSlots();
   }
 
-  // Reset a slot to default
-  resetSlot(slotId: SlotId) {
-    const defaultPurchase =
-      slotId === 1
-        ? DEFAULT_SLOT_1_PURCHASE
-        : slotId === 2
-        ? DEFAULT_SLOT_2_PURCHASE
-        : DEFAULT_SLOT_3_PURCHASE;
-    this.loadPurchaseIntoSlot(slotId, defaultPurchase);
+  // Save current slots to LocalStorage
+  persistSlots() {
+    saveSlotsToStorage(this.slot1.purchase, this.slot2.purchase, this.slot3.purchase);
   }
 
   // Prepayment management

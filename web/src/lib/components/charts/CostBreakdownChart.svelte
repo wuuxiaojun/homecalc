@@ -5,9 +5,9 @@
   const scenario = $derived(slot.scenario);
   const total = $derived(scenario?.total_statement);
 
-  const purchasePrice = $derived(slot.purchase.house.purchase_price);
-  const cashDown = $derived(slot.purchase.tools.find(t => 'Cash' in t)?.Cash?.amount || 0);
-  const principalBorrowed = $derived(purchasePrice - cashDown);
+  const purchasePrice = $derived(slot.purchase?.house.purchase_price || 0);
+  const cashDown = $derived(slot.purchase?.tools.find(t => 'Cash' in t)?.Cash?.amount || 0);
+  const principalBorrowed = $derived(Math.max(0, purchasePrice - cashDown));
   const totalInterest = $derived(total?.total_interest_paid || 0);
   const totalHolding = $derived(total?.total_holding_cost || 0);
   const totalTaxSavings = $derived(total?.total_tax_savings || 0);

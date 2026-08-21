@@ -10,7 +10,7 @@ export interface SavedUserScenario {
   purchase: Purchase;
 }
 
-export function saveSlotsToStorage(slot1: Purchase, slot2: Purchase, slot3: Purchase): void {
+export function saveSlotsToStorage(slot1: Purchase | null, slot2: Purchase | null, slot3: Purchase | null): void {
   try {
     const data = { slot1, slot2, slot3 };
     localStorage.setItem(STORAGE_KEY_SLOTS, JSON.stringify(data));
