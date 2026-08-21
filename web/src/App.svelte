@@ -5,7 +5,12 @@
   import SplitPane from './lib/components/SplitPane.svelte';
   import ParameterPane from './lib/components/parameters/ParameterPane.svelte';
   import ScenarioSummaryView from './lib/components/analytics/ScenarioSummaryView.svelte';
+  import AnalyticsWorkspace from './lib/components/charts/AnalyticsWorkspace.svelte';
+  import StatementWorkspace from './lib/components/statements/StatementWorkspace.svelte';
   import ComparisonView from './lib/components/analytics/ComparisonView.svelte';
+  import ScenarioLibraryModal from './lib/components/modals/ScenarioLibraryModal.svelte';
+  import ExportModal from './lib/components/modals/ExportModal.svelte';
+  import ImportModal from './lib/components/modals/ImportModal.svelte';
 
   let isLibraryOpen = $state(false);
   let isExportOpen = $state(false);
@@ -79,12 +84,27 @@
         <!-- Render Current Active View -->
         {#if appState.activeView === 'overview'}
           <ScenarioSummaryView />
+        {:else if appState.activeView === 'charts'}
+          <AnalyticsWorkspace />
+        {:else if appState.activeView === 'statements'}
+          <StatementWorkspace />
         {:else if appState.activeView === 'comparison'}
           <ComparisonView />
-        {:else}
-          <ScenarioSummaryView />
         {/if}
       </div>
     {/snippet}
   </SplitPane>
+
+  <!-- Modals (Milestone 5) -->
+  {#if isLibraryOpen}
+    <ScenarioLibraryModal onClose={() => isLibraryOpen = false} />
+  {/if}
+
+  {#if isExportOpen}
+    <ExportModal onClose={() => isExportOpen = false} />
+  {/if}
+
+  {#if isImportOpen}
+    <ImportModal onClose={() => isImportOpen = false} />
+  {/if}
 </div>
