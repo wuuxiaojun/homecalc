@@ -3,9 +3,10 @@
 
 use crate::domain::scenario::Scenario;
 use crate::service::utility::clamp_zero;
+use serde::{Deserialize, Serialize};
 
 /// Single scenario metrics
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ScenarioAnalysis {
     pub waste_ratio: f64,       // interest paid / principal borrowed
     pub tax_savings_ratio: f64, // tax savings / interest paid

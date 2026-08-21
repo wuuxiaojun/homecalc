@@ -4,9 +4,10 @@
 use crate::config::constant::DEFAULT_DISCOUNT_RATE;
 use crate::domain::scenario::Scenario;
 use crate::service::utility::clamp_zero;
+use serde::{Deserialize, Serialize};
 
 /// Scenario comparison metrics
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ScenarioComparison {
     // 1. Timeline
     pub baseline_payoff_month: u32,

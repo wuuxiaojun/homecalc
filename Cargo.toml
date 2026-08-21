@@ -2,6 +2,7 @@
 members = [
     "crates/cli",
     "crates/engine",
+    "crates/engine-wasm",
 ]
 resolver = "2"
 

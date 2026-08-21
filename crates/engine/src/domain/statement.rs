@@ -1,15 +1,17 @@
 //! statement.rs
 //! Monthly, yearly and total statement
 
+use serde::{Deserialize, Serialize};
+
 /// Cash-related
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct CashStatement {
     pub cash_now: f64,      // unused cash current amount
     pub cash_interest: f64, // current - initial
 }
 
 /// Mortgage-related
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct MortgageStatement {
     pub monthly_payment: f64, // mortgage pmt
     pub principal_paid: f64,  // principal amount in pmt
@@ -19,7 +21,7 @@ pub struct MortgageStatement {
 }
 
 /// Loc-related
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct LocStatement {
     pub monthly_payment: f64,
     pub extra_payment: f64,
@@ -27,7 +29,7 @@ pub struct LocStatement {
 }
 
 /// House-related
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct HouseStatement {
     pub monthly_property_tax: f64,
     pub monthly_insurance: f64,
@@ -35,7 +37,7 @@ pub struct HouseStatement {
 }
 
 /// Monthly statement
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct MonthlyStatementRow {
     pub month: u32,
     pub cash: Option<CashStatement>,
@@ -50,7 +52,7 @@ pub struct MonthlyStatementRow {
 }
 
 /// Yearly statement
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct YearlyStatementRow {
     pub year: u32,
     pub annual_cash_interest: f64,
@@ -64,7 +66,7 @@ pub struct YearlyStatementRow {
 }
 
 /// Aggregate for all
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct TotalStatement {
     pub total_cash_interest: f64,
     pub total_holding_cost: f64,
