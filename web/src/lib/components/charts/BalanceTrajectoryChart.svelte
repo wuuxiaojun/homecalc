@@ -165,6 +165,8 @@
   <!-- Interactive SVG Canvas -->
   <div class="relative w-full overflow-hidden">
     <svg
+      role="img"
+      aria-label="Amortization trajectory chart"
       viewBox="0 0 {width} {height}"
       class="w-full h-auto max-h-[340px] select-none cursor-crosshair"
       onmousemove={handleMouseMove}

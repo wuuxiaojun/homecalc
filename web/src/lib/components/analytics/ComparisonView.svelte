@@ -94,23 +94,21 @@
       </div>
 
       <!-- Interest Delta -->
-      {@const intDelta = formatDeltaCurrency(comparison.delta_interest_paid)}
       <div class="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80">
         <div class="text-xs font-semibold text-zinc-400">📉 Interest Variance</div>
-        <div class="mt-2 text-2xl font-bold font-mono tracking-tight tabular-nums {intDelta.isPositive ? 'text-emerald-400' : intDelta.isNeutral ? 'text-zinc-300' : 'text-rose-400'}">
-          {intDelta.text}
+        <div class="mt-2 text-2xl font-bold font-mono tracking-tight tabular-nums {formatDeltaCurrency(comparison.delta_interest_paid).isPositive ? 'text-emerald-400' : formatDeltaCurrency(comparison.delta_interest_paid).isNeutral ? 'text-zinc-300' : 'text-rose-400'}">
+          {formatDeltaCurrency(comparison.delta_interest_paid).text}
         </div>
         <div class="mt-1 text-[11px] font-mono text-zinc-500">
-          {intDelta.isPositive ? 'Lifetime interest saved' : 'Additional interest cost'}
+          {formatDeltaCurrency(comparison.delta_interest_paid).isPositive ? 'Lifetime interest saved' : 'Additional interest cost'}
         </div>
       </div>
 
       <!-- Gross Outlay Delta -->
-      {@const grossDelta = formatDeltaCurrency(comparison.delta_gross_paid)}
       <div class="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80">
         <div class="text-xs font-semibold text-zinc-400">💳 Net Cash Outlay Delta</div>
-        <div class="mt-2 text-2xl font-bold font-mono tracking-tight tabular-nums {grossDelta.isPositive ? 'text-emerald-400' : grossDelta.isNeutral ? 'text-zinc-300' : 'text-rose-400'}">
-          {grossDelta.text}
+        <div class="mt-2 text-2xl font-bold font-mono tracking-tight tabular-nums {formatDeltaCurrency(comparison.delta_gross_paid).isPositive ? 'text-emerald-400' : formatDeltaCurrency(comparison.delta_gross_paid).isNeutral ? 'text-zinc-300' : 'text-rose-400'}">
+          {formatDeltaCurrency(comparison.delta_gross_paid).text}
         </div>
         <div class="mt-1 text-[11px] font-mono text-zinc-500">
           Difference in lifetime gross paid
@@ -162,62 +160,56 @@
             </tr>
 
             <!-- Extra Principal -->
-            {@const extraDelta = formatDeltaCurrency(comparison.delta_extra_payment)}
             <tr class="hover:bg-zinc-800/20 transition-colors">
               <td class="py-2.5 px-4 font-sans text-zinc-300 font-medium">⚡ Extra Principal Prepayments</td>
               <td class="py-2.5 px-4 text-right text-zinc-200 tabular-nums">{formatCurrency(comparison.baseline_extra_payment)}</td>
               <td class="py-2.5 px-4 text-right text-zinc-200 tabular-nums">{formatCurrency(comparison.alternative_extra_payment)}</td>
-              <td class="py-2.5 px-4 text-right font-bold text-zinc-300 tabular-nums">{extraDelta.text}</td>
+              <td class="py-2.5 px-4 text-right font-bold text-zinc-300 tabular-nums">{formatDeltaCurrency(comparison.delta_extra_payment).text}</td>
             </tr>
 
             <!-- Total Interest Paid -->
-            {@const intRowDelta = formatDeltaCurrency(comparison.delta_interest_paid)}
             <tr class="hover:bg-zinc-800/20 transition-colors">
               <td class="py-2.5 px-4 font-sans text-zinc-300 font-medium">📉 Total Interest Paid</td>
               <td class="py-2.5 px-4 text-right text-rose-300 tabular-nums">{formatCurrency(comparison.baseline_interest_paid)}</td>
               <td class="py-2.5 px-4 text-right text-rose-300 tabular-nums">{formatCurrency(comparison.alternative_interest_paid)}</td>
-              <td class="py-2.5 px-4 text-right font-bold tabular-nums {intRowDelta.isPositive ? 'text-emerald-400' : intRowDelta.isNeutral ? 'text-zinc-400' : 'text-rose-400'}">
-                {intRowDelta.text}
+              <td class="py-2.5 px-4 text-right font-bold tabular-nums {formatDeltaCurrency(comparison.delta_interest_paid).isPositive ? 'text-emerald-400' : formatDeltaCurrency(comparison.delta_interest_paid).isNeutral ? 'text-zinc-400' : 'text-rose-400'}">
+                {formatDeltaCurrency(comparison.delta_interest_paid).text}
               </td>
             </tr>
 
             <!-- Cash Yield -->
-            {@const cashDelta = formatDeltaCurrency(comparison.delta_cash_interest)}
             <tr class="hover:bg-zinc-800/20 transition-colors">
               <td class="py-2.5 px-4 font-sans text-zinc-300 font-medium">💵 Total Cash Yield Earned</td>
               <td class="py-2.5 px-4 text-right text-zinc-200 tabular-nums">{formatCurrency(comparison.baseline_cash_interest)}</td>
               <td class="py-2.5 px-4 text-right text-zinc-200 tabular-nums">{formatCurrency(comparison.alternative_cash_interest)}</td>
-              <td class="py-2.5 px-4 text-right font-bold text-zinc-300 tabular-nums">{cashDelta.text}</td>
+              <td class="py-2.5 px-4 text-right font-bold text-zinc-300 tabular-nums">{formatDeltaCurrency(comparison.delta_cash_interest).text}</td>
             </tr>
 
             <!-- Tax Savings -->
-            {@const taxDelta = formatDeltaCurrency(comparison.delta_tax_savings)}
             <tr class="hover:bg-zinc-800/20 transition-colors">
               <td class="py-2.5 px-4 font-sans text-zinc-300 font-medium">🧾 Total Tax Savings Realized</td>
               <td class="py-2.5 px-4 text-right text-emerald-400 tabular-nums">{formatCurrency(comparison.baseline_tax_savings)}</td>
               <td class="py-2.5 px-4 text-right text-emerald-400 tabular-nums">{formatCurrency(comparison.alternative_tax_savings)}</td>
-              <td class="py-2.5 px-4 text-right font-bold text-zinc-300 tabular-nums">{taxDelta.text}</td>
+              <td class="py-2.5 px-4 text-right font-bold text-zinc-300 tabular-nums">{formatDeltaCurrency(comparison.delta_tax_savings).text}</td>
             </tr>
 
             <!-- Lifetime Outlay -->
-            {@const grossRowDelta = formatDeltaCurrency(comparison.delta_gross_paid)}
             <tr class="hover:bg-zinc-800/20 transition-colors bg-zinc-950/30 font-semibold">
               <td class="py-2.5 px-4 font-sans text-white">💳 Total Lifetime Gross Outlay</td>
               <td class="py-2.5 px-4 text-right text-white tabular-nums">{formatCurrency(comparison.baseline_gross_paid)}</td>
               <td class="py-2.5 px-4 text-right text-white tabular-nums">{formatCurrency(comparison.alternative_gross_paid)}</td>
-              <td class="py-2.5 px-4 text-right font-bold tabular-nums {grossRowDelta.isPositive ? 'text-emerald-400' : grossRowDelta.isNeutral ? 'text-zinc-400' : 'text-rose-400'}">
-                {grossRowDelta.text}
+              <td class="py-2.5 px-4 text-right font-bold tabular-nums {formatDeltaCurrency(comparison.delta_gross_paid).isPositive ? 'text-emerald-400' : formatDeltaCurrency(comparison.delta_gross_paid).isNeutral ? 'text-zinc-400' : 'text-rose-400'}">
+                {formatDeltaCurrency(comparison.delta_gross_paid).text}
               </td>
             </tr>
 
             <!-- Present Value -->
-            {@const pvDelta = formatDeltaCurrency(comparison.delta_pv)}
             <tr class="hover:bg-zinc-800/20 transition-colors">
               <td class="py-2.5 px-4 font-sans text-zinc-300 font-medium">📊 Present Value Outflow (PV @ 4.0%)</td>
               <td class="py-2.5 px-4 text-right text-indigo-300 tabular-nums">{formatCurrency(comparison.baseline_pv)}</td>
               <td class="py-2.5 px-4 text-right text-indigo-300 tabular-nums">{formatCurrency(comparison.alternative_pv)}</td>
-              <td class="py-2.5 px-4 text-right font-bold tabular-nums {pvDelta.isPositive ? 'text-emerald-400' : pvDelta.isNeutral ? 'text-zinc-400' : 'text-rose-400'}">
-                {pvDelta.text}
+              <td class="py-2.5 px-4 text-right font-bold tabular-nums {formatDeltaCurrency(comparison.delta_pv).isPositive ? 'text-emerald-400' : formatDeltaCurrency(comparison.delta_pv).isNeutral ? 'text-zinc-400' : 'text-rose-400'}">
+                {formatDeltaCurrency(comparison.delta_pv).text}
               </td>
             </tr>
 

@@ -130,7 +130,7 @@
         <textarea
           id="json-paste-area"
           rows="4"
-          placeholder='{"name": "Custom", "house": {...}, "tools": [...]}'
+          placeholder="Paste raw scenario JSON here..."
           class="w-full p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-xs font-mono text-zinc-300 focus:border-emerald-500 focus:outline-none placeholder:text-zinc-700"
           bind:value={rawJsonText}
         ></textarea>
