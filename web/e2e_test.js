@@ -25,11 +25,11 @@ async function run() {
 
   // 2. Switch to Slot 2 and Slot 3 (confirm all populated with Default Scenario)
   console.log("Testing slot switching across independent default instances...");
-  await page.click('button:has-text("Slot 2")');
+  await page.locator('.hidden.md\\:flex button:has-text("Slot 2")').click();
   await page.waitForTimeout(300);
-  await page.click('button:has-text("Slot 3")');
+  await page.locator('.hidden.md\\:flex button:has-text("Slot 3")').click();
   await page.waitForTimeout(300);
-  await page.click('button:has-text("Slot 1")');
+  await page.locator('.hidden.md\\:flex button:has-text("Slot 1")').click();
   await page.waitForTimeout(300);
   console.log("✓ All 3 slots verified active with independent Default Scenario instances.");
 
