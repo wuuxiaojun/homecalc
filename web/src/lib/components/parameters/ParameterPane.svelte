@@ -10,7 +10,7 @@
   let savedSuccess = $state(false);
 
   function handleReset() {
-    if (confirm(`Reset ${appState.activeSlot.name} to the baseline Default Scenario?`)) {
+    if (confirm(`Reset ${appState.activeSlot.purchase.name} to Standard 30Y Mortgage?`)) {
       appState.resetSlot(appState.activeSlotId);
     }
   }

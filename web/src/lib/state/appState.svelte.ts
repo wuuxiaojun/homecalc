@@ -37,10 +37,10 @@ export class AppState {
   activeParamTab = $state<'property' | 'tools' | 'repayments'>('property');
   selectedMonth = $state<number | null>(null);
 
-  // Scenario slots storage (All 3 initialized with the same default scenario name "Standard 30Y Mortgage")
+  // Scenario slots storage (All 3 initialized with exact name "Standard 30Y Mortgage")
   slot1 = $state<ScenarioSlot>({
     id: 1,
-    name: 'Slot 1',
+    name: 'Standard 30Y Mortgage',
     purchase: createDefaultScenario('Standard 30Y Mortgage'),
     scenario: null,
     analysis: null,
@@ -49,7 +49,7 @@ export class AppState {
 
   slot2 = $state<ScenarioSlot>({
     id: 2,
-    name: 'Slot 2',
+    name: 'Standard 30Y Mortgage',
     purchase: createDefaultScenario('Standard 30Y Mortgage'),
     scenario: null,
     analysis: null,
@@ -58,7 +58,7 @@ export class AppState {
 
   slot3 = $state<ScenarioSlot>({
     id: 3,
-    name: 'Slot 3',
+    name: 'Standard 30Y Mortgage',
     purchase: createDefaultScenario('Standard 30Y Mortgage'),
     scenario: null,
     analysis: null,
@@ -69,6 +69,13 @@ export class AppState {
     this.init();
   }
 
+  // Normalize any legacy/previous default names stored in user's browser localStorage
+  private normalizeLegacyName(p: Purchase) {
+    if (!p.name || p.name.includes('Default Scenario') || p.name.includes('New Scenario') || p.name.startsWith('Slot ')) {
+      p.name = 'Standard 30Y Mortgage';
+    }
+  }
+
   async init() {
     await ensureWasmInitialized();
     this.isInitialized = true;
@@ -76,9 +83,19 @@ export class AppState {
     // Restore from localStorage if user had previous sessions
     const saved = loadSlotsFromStorage();
     if (saved) {
-      if (saved.slot1) this.loadPurchaseIntoSlot(1, saved.slot1, false);
-      if (saved.slot2) this.loadPurchaseIntoSlot(2, saved.slot2, false);
-      if (saved.slot3) this.loadPurchaseIntoSlot(3, saved.slot3, false);
+      if (saved.slot1) {
+        this.normalizeLegacyName(saved.slot1);
+        this.loadPurchaseIntoSlot(1, saved.slot1, false);
+      }
+      if (saved.slot2) {
+        this.normalizeLegacyName(saved.slot2);
+        this.loadPurchaseIntoSlot(2, saved.slot2, false);
+      }
+      if (saved.slot3) {
+        this.normalizeLegacyName(saved.slot3);
+        this.loadPurchaseIntoSlot(3, saved.slot3, false);
+      }
+      this.persistSlots();
     } else {
       this.persistSlots();
     }
@@ -144,6 +161,7 @@ export class AppState {
   updateActivePurchase(updater: (purchase: Purchase) => void) {
     const slot = this.activeSlot;
     updater(slot.purchase);
+    slot.name = slot.purchase.name;
     this.recalculateSlot(this.activeSlotId);
     this.persistSlots();
   }
@@ -160,7 +178,7 @@ export class AppState {
   loadPurchaseIntoSlot(slotId: SlotId, purchase: Purchase, persist = true) {
     const slot = this.getSlot(slotId);
     slot.purchase = JSON.parse(JSON.stringify(purchase));
-    slot.name = purchase.name || `Slot ${slotId}`;
+    slot.name = purchase.name || 'Standard 30Y Mortgage';
     this.recalculateSlot(slotId);
     if (persist) {
       this.persistSlots();
