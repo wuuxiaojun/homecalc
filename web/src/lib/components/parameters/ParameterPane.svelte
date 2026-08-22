@@ -4,16 +4,9 @@
   import PropertyInputs from './PropertyInputs.svelte';
   import ToolInputs from './ToolInputs.svelte';
   import RepaymentScheduleEditor from './RepaymentScheduleEditor.svelte';
-  import type { SlotId } from '../../state/types';
 
   let activeTab = $state<'property' | 'tools' | 'repayments'>('property');
   let savedSuccess = $state(false);
-
-  function handleReset() {
-    if (confirm(`Reset ${appState.activeSlot.purchase.name} to Standard 30Y Mortgage?`)) {
-      appState.resetSlot(appState.activeSlotId);
-    }
-  }
 
   function handleSaveToLibrary() {
     saveCustomScenario(appState.activeSlot.purchase);
@@ -21,13 +14,7 @@
     setTimeout(() => savedSuccess = false, 2000);
   }
 
-  function handleDuplicate(targetId: SlotId) {
-    appState.duplicateSlot(appState.activeSlotId, targetId);
-    appState.setActiveSlot(targetId);
-  }
-
   const purchase = $derived(appState.activeSlot.purchase);
-  const house = $derived(purchase.house);
   const cashAmount = $derived(purchase.tools.find(t => 'Cash' in t)?.Cash?.amount || 0);
   const mortAmount = $derived(purchase.tools.find(t => 'Mortgage' in t)?.Mortgage?.amount || 0);
   const locAmount = $derived(purchase.tools.find(t => 'Loc' in t)?.Loc?.amount || 0);
@@ -41,40 +28,19 @@
       <div class="flex items-center gap-2">
         <div class="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
         <span class="text-xs font-mono font-semibold uppercase tracking-wider text-zinc-300">
-          Slot {appState.activeSlotId} Active
+          Slot {appState.activeSlotId}
         </span>
       </div>
 
-      <!-- Actions Dropdown / Buttons -->
+      <!-- Actions Buttons -->
       <div class="flex items-center gap-1.5">
         <button
-          class="px-2 py-1 text-[11px] font-medium rounded bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 transition-colors"
+          class="px-2.5 py-1 text-[11px] font-medium rounded-lg bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 transition-colors shadow-sm"
           onclick={handleSaveToLibrary}
           title="Save to My Scenarios"
         >
           {savedSuccess ? '✓ Saved!' : '💾 Save'}
         </button>
-
-        <button
-          class="px-2 py-1 text-[11px] font-medium rounded bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors"
-          onclick={handleReset}
-          title="Reset Slot to Default Scenario"
-        >
-          ↺ Reset
-        </button>
-
-        <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded p-0.5 text-[11px] text-zinc-400 font-mono">
-          <span class="px-1 text-[10px] text-zinc-500">Copy:</span>
-          {#if appState.activeSlotId !== 1}
-            <button class="px-1.5 py-0.5 hover:text-white transition-colors" onclick={() => handleDuplicate(1)}>S1</button>
-          {/if}
-          {#if appState.activeSlotId !== 2}
-            <button class="px-1.5 py-0.5 hover:text-white transition-colors" onclick={() => handleDuplicate(2)}>S2</button>
-          {/if}
-          {#if appState.activeSlotId !== 3}
-            <button class="px-1.5 py-0.5 hover:text-white transition-colors" onclick={() => handleDuplicate(3)}>S3</button>
-          {/if}
-        </div>
       </div>
     </div>
 
@@ -119,12 +85,11 @@
   <!-- Live Capital Split Card at Bottom of Left Pane -->
   <div class="pt-4 mt-auto border-t border-zinc-800/60 space-y-3">
     <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-2.5">
-      <div class="flex items-center justify-between text-xs font-semibold text-zinc-300 border-b border-zinc-800/60 pb-2">
+      <div class="flex items-center justify-between text-xs font-semibold text-zinc-300">
         <span class="flex items-center gap-1.5">
           <span>⚡</span>
           <span>Capital Allocation</span>
         </span>
-        <span class="font-mono text-[11px] text-zinc-400">100% Funded</span>
       </div>
 
       <div class="grid grid-cols-2 gap-2 text-xs font-mono">

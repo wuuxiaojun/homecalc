@@ -188,22 +188,6 @@ export class AppState {
     }
   }
 
-  // Reset a slot back to the baseline Standard 30Y Mortgage scenario
-  resetSlot(slotId: SlotId) {
-    this.loadPurchaseIntoSlot(slotId, createDefaultScenario('Standard 30Y Mortgage'));
-  }
-
-  // Duplicate one slot to another
-  duplicateSlot(sourceId: SlotId, targetId: SlotId) {
-    const src = this.getSlot(sourceId);
-    const target = this.getSlot(targetId);
-    target.purchase = JSON.parse(JSON.stringify(src.purchase));
-    target.name = `${src.purchase.name} (Copy)`;
-    target.purchase.name = target.name;
-    this.recalculateSlot(targetId);
-    this.persistSlots();
-  }
-
   // Save current slots to LocalStorage
   persistSlots() {
     saveSlotsToStorage(this.slot1.purchase, this.slot2.purchase, this.slot3.purchase);

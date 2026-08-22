@@ -54,7 +54,7 @@
 </script>
 
 {#if purchase}
-  <div class="space-y-5">
+  <div class="space-y-4">
     <!-- Scenario Name -->
     <div>
       <label for="scenario-name" class="block text-xs font-semibold text-zinc-300 mb-1.5">Scenario Name</label>
@@ -68,7 +68,7 @@
       />
     </div>
 
-    <!-- Purchase Price -->
+    <!-- Purchase Price (with slide bar, no quick adjust buttons) -->
     <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-3">
       <div class="flex items-center justify-between">
         <label for="purchase-price-input" class="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
@@ -98,35 +98,16 @@
         value={house.purchase_price}
         oninput={(e) => updatePrice(parseFloat(e.currentTarget.value) || 0)}
       />
-
-      <!-- Quick Increment Presets -->
-      <div class="flex items-center gap-1.5 pt-1">
-        <span class="text-[10px] text-zinc-500 font-mono">Quick Adjust:</span>
-        <button
-          class="px-2 py-0.5 text-[11px] font-mono rounded bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 transition-colors"
-          onclick={() => updatePrice(house.purchase_price - 50000)}
-        >
-          -$50k
-        </button>
-        <button
-          class="px-2 py-0.5 text-[11px] font-mono rounded bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 transition-colors"
-          onclick={() => updatePrice(house.purchase_price + 50000)}
-        >
-          +$50k
-        </button>
-        <button
-          class="px-2 py-0.5 text-[11px] font-mono rounded bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 transition-colors"
-          onclick={() => updatePrice(house.purchase_price + 100000)}
-        >
-          +$100k
-        </button>
-      </div>
     </div>
 
-    <!-- Property Tax Rate -->
-    <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-2.5">
+    <!-- 3 Parallel, Equal Weight Holding Cost Sections: Tax, Insurance, HOA -->
+    
+    <!-- 1. Property Tax -->
+    <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-2">
       <div class="flex items-center justify-between">
-        <label for="tax-rate-input" class="text-xs font-semibold text-zinc-300">🏛️ Annual Property Tax</label>
+        <label for="tax-rate-input" class="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
+          <span>🏛️ Property Tax</span>
+        </label>
         <div class="flex items-center gap-1">
           <input
             id="tax-rate-input"
@@ -134,67 +115,68 @@
             step="0.05"
             min="0"
             max="10"
-            class="w-20 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
+            class="w-24 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
             value={house.annual_property_tax_rate}
             oninput={(e) => updateTaxRate(parseFloat(e.currentTarget.value) || 0)}
           />
           <span class="text-xs font-mono text-zinc-400">%</span>
         </div>
       </div>
-
-      <input
-        type="range"
-        min="0"
-        max="4.0"
-        step="0.05"
-        aria-label="Annual Property Tax Slider"
-        class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-        value={house.annual_property_tax_rate}
-        oninput={(e) => updateTaxRate(parseFloat(e.currentTarget.value) || 0)}
-      />
-
-      <div class="flex justify-between text-[11px] text-zinc-500 font-mono">
-        <span>Monthly Est: ${Math.round(monthlyTax).toLocaleString()}/mo</span>
-        <span>US Avg: ~1.1%</span>
+      <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500">
+        <span>${Math.round(house.purchase_price * house.annual_property_tax_rate * 0.01).toLocaleString()}/yr</span>
+        <span class="text-zinc-300 font-medium">${Math.round(monthlyTax).toLocaleString()}/mo</span>
       </div>
     </div>
 
-    <!-- Annual Insurance & Monthly HOA (Side-by-side) -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <!-- Annual Insurance -->
-      <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-2">
-        <div class="flex items-center justify-between">
-          <label for="insurance-input" class="text-xs font-semibold text-zinc-300">🛡️ Insurance</label>
-          <span class="text-[11px] font-mono text-zinc-500">$/year</span>
+    <!-- 2. Home Insurance -->
+    <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-2">
+      <div class="flex items-center justify-between">
+        <label for="insurance-input" class="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
+          <span>🛡️ Home Insurance</span>
+        </label>
+        <div class="flex items-center gap-1">
+          <span class="text-xs font-mono text-zinc-500">$</span>
+          <input
+            id="insurance-input"
+            type="number"
+            step="100"
+            min="0"
+            class="w-24 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
+            value={house.annual_insurance}
+            oninput={(e) => updateInsurance(parseFloat(e.currentTarget.value) || 0)}
+          />
+          <span class="text-xs font-mono text-zinc-400">/yr</span>
         </div>
-        <input
-          id="insurance-input"
-          type="number"
-          step="100"
-          min="0"
-          class="w-full px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
-          value={house.annual_insurance}
-          oninput={(e) => updateInsurance(parseFloat(e.currentTarget.value) || 0)}
-        />
-        <p class="text-[10px] text-zinc-500 font-mono text-right">${Math.round(monthlyInsurance).toLocaleString()}/mo</p>
       </div>
+      <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500">
+        <span>${Math.round(house.annual_insurance).toLocaleString()}/yr</span>
+        <span class="text-zinc-300 font-medium">${Math.round(monthlyInsurance).toLocaleString()}/mo</span>
+      </div>
+    </div>
 
-      <!-- Monthly HOA -->
-      <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-2">
-        <div class="flex items-center justify-between">
-          <label for="hoa-input" class="text-xs font-semibold text-zinc-300">🏢 HOA Fee</label>
-          <span class="text-[11px] font-mono text-zinc-500">$/month</span>
+    <!-- 3. HOA Fee -->
+    <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-2">
+      <div class="flex items-center justify-between">
+        <label for="hoa-input" class="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
+          <span>🏢 HOA Fee</span>
+        </label>
+        <div class="flex items-center gap-1">
+          <span class="text-xs font-mono text-zinc-500">$</span>
+          <input
+            id="hoa-input"
+            type="number"
+            step="25"
+            min="0"
+            class="w-24 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
+            value={house.monthly_hoa}
+            oninput={(e) => updateHoa(parseFloat(e.currentTarget.value) || 0)}
+          />
+          <span class="text-xs font-mono text-zinc-400">/mo</span>
         </div>
-        <input
-          id="hoa-input"
-          type="number"
-          step="25"
-          min="0"
-          class="w-full px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
-          value={house.monthly_hoa}
-          oninput={(e) => updateHoa(parseFloat(e.currentTarget.value) || 0)}
-        />
-        <p class="text-[10px] text-zinc-500 font-mono text-right">${Math.round(house.monthly_hoa).toLocaleString()}/mo</p>
+      </div>
+      <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500">
+        <span>${Math.round(house.monthly_hoa * 12).toLocaleString()}/yr</span>
+        <span class="text-zinc-300 font-medium">${Math.round(house.monthly_hoa).toLocaleString()}/mo</span>
       </div>
     </div>
 
