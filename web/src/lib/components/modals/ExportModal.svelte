@@ -68,7 +68,12 @@
           <!-- 1. CLI JSON -->
           <button
             class="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800/80 hover:border-emerald-500/60 transition-all text-left space-y-1.5 group"
-            onclick={() => { if (purchase) { exportPurchaseToJson(purchase); onClose(); } }}
+            onclick={async () => {
+              if (purchase) {
+                await exportPurchaseToJson(purchase);
+                onClose();
+              }
+            }}
           >
             <div class="flex items-center justify-between">
               <span class="text-sm font-semibold text-white group-hover:text-emerald-400 transition-colors flex items-center gap-2">
@@ -85,7 +90,10 @@
           <!-- 2. Full Analytical Report -->
           <button
             class="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800/80 hover:border-indigo-500/60 transition-all text-left space-y-1.5 group"
-            onclick={() => { exportFullReportJson(slot); onClose(); }}
+            onclick={async () => {
+              await exportFullReportJson(slot);
+              onClose();
+            }}
           >
             <div class="flex items-center justify-between">
               <span class="text-sm font-semibold text-white group-hover:text-indigo-300 transition-colors flex items-center gap-2">
