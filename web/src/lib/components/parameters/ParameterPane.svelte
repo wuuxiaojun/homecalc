@@ -4,6 +4,7 @@
   import PropertyInputs from './PropertyInputs.svelte';
   import ToolInputs from './ToolInputs.svelte';
   import RepaymentScheduleEditor from './RepaymentScheduleEditor.svelte';
+  import Card from '../common/Card.svelte';
 
   let activeTab = $state<'property' | 'tools' | 'repayments'>('property');
   let savedSuccess = $state(false);
@@ -83,25 +84,18 @@
   </div>
 
   <!-- Live Capital Split Card at Bottom of Left Pane -->
-  <div class="pt-4 mt-auto border-t border-zinc-800/60 space-y-3">
-    <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-2.5">
-      <div class="flex items-center justify-between text-xs font-semibold text-zinc-300">
-        <span class="flex items-center gap-1.5">
-          <span>⚡</span>
-          <span>Capital Allocation</span>
-        </span>
-      </div>
-
+  <div class="pt-4 mt-auto border-t border-zinc-800/60">
+    <Card icon="⚡" title="Capital Allocation">
       <div class="grid grid-cols-2 gap-2 text-xs font-mono">
-        <div class="p-2 rounded-lg bg-zinc-950/70 border border-zinc-800/50">
+        <div class="p-2.5 rounded-xl bg-zinc-950/70 border border-zinc-800/50">
           <div class="text-[10px] text-zinc-500">Cash Required</div>
           <div class="font-bold text-emerald-400 tabular-nums">${cashAmount.toLocaleString()}</div>
         </div>
-        <div class="p-2 rounded-lg bg-zinc-950/70 border border-zinc-800/50">
+        <div class="p-2.5 rounded-xl bg-zinc-950/70 border border-zinc-800/50">
           <div class="text-[10px] text-zinc-500">Total Borrowed</div>
           <div class="font-bold text-indigo-300 tabular-nums">${totalDebt.toLocaleString()}</div>
         </div>
       </div>
-    </div>
+    </Card>
   </div>
 </div>

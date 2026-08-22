@@ -1,6 +1,7 @@
 <script lang="ts">
   import { appState } from '../../state/appState.svelte';
   import KpiCards from './KpiCards.svelte';
+  import Card from '../common/Card.svelte';
 
   const purchase = $derived(appState.activeSlot.purchase);
   const house = $derived(purchase.house);
@@ -41,16 +42,12 @@
   <!-- Detailed Property & Financing Summary Breakdown -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <!-- Property Details Table Card -->
-    <div class="p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 space-y-4">
-      <div class="flex items-center justify-between border-b border-zinc-800/60 pb-3">
-        <h3 class="text-sm font-semibold text-zinc-200 flex items-center gap-2">
-          <span>🏡</span>
-          <span>Property & Valuation</span>
-        </h3>
+    <Card icon="🏡" title="Property & Valuation">
+      {#snippet headerRight()}
         <span class="text-xs font-mono text-emerald-400 font-bold">
           ${house.purchase_price.toLocaleString()}
         </span>
-      </div>
+      {/snippet}
 
       <table class="w-full text-xs">
         <tbody class="divide-y divide-zinc-800/40 font-mono">
@@ -76,19 +73,15 @@
           </tr>
         </tbody>
       </table>
-    </div>
+    </Card>
 
     <!-- Financial Tools Table Card -->
-    <div class="p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 space-y-4">
-      <div class="flex items-center justify-between border-b border-zinc-800/60 pb-3">
-        <h3 class="text-sm font-semibold text-zinc-200 flex items-center gap-2">
-          <span>💳</span>
-          <span>Financing Structure</span>
-        </h3>
+    <Card icon="💳" title="Financing Structure">
+      {#snippet headerRight()}
         <span class="text-xs font-mono text-zinc-400 font-medium">
           {purchase.tools.length} Instruments
         </span>
-      </div>
+      {/snippet}
 
       <div class="space-y-3">
         {#each purchase.tools as tool}
@@ -137,20 +130,16 @@
           {/if}
         {/each}
       </div>
-    </div>
+    </Card>
   </div>
 
   <!-- Bottom Row: 30-Year Milestones & Monthly Payment Composition -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Milestone Progress Card -->
-    <div class="lg:col-span-2 p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 space-y-4">
-      <div class="flex items-center justify-between border-b border-zinc-800/60 pb-3">
-        <h3 class="text-sm font-semibold text-zinc-200 flex items-center gap-2">
-          <span>📈</span>
-          <span>Equity Milestones & Principal Trajectory</span>
-        </h3>
+    <Card icon="📈" title="Equity Milestones & Principal Trajectory" class="lg:col-span-2">
+      {#snippet headerRight()}
         <span class="text-xs font-mono text-zinc-400">Amortization Milestones</span>
-      </div>
+      {/snippet}
 
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
         <!-- Year 5 Milestone -->
@@ -197,19 +186,15 @@
           </div>
         </div>
       </div>
-    </div>
+    </Card>
 
     <!-- Monthly Payment Breakdown Card -->
-    <div class="p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 space-y-4">
-      <div class="flex items-center justify-between border-b border-zinc-800/60 pb-3">
-        <h3 class="text-sm font-semibold text-zinc-200 flex items-center gap-2">
-          <span>📊</span>
-          <span>Monthly Outlay Split</span>
-        </h3>
+    <Card icon="📊" title="Monthly Outlay Split">
+      {#snippet headerRight()}
         <span class="text-xs font-mono text-emerald-400 font-bold">
           ${Math.round(m1Total).toLocaleString()}/mo
         </span>
-      </div>
+      {/snippet}
 
       <!-- Segmented Bar -->
       <div class="h-3 w-full rounded-full bg-zinc-950 overflow-hidden flex shadow-inner">
@@ -239,6 +224,6 @@
           <span class="text-zinc-200 font-semibold">${Math.round(m1Ins).toLocaleString()}</span>
         </div>
       </div>
-    </div>
+    </Card>
   </div>
 </div>

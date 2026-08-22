@@ -1,6 +1,7 @@
 <script lang="ts">
   import { appState } from '../../state/appState.svelte';
   import type { Cash, Loc, Mortgage, Tool } from '../../state/types';
+  import Card from '../common/Card.svelte';
 
   const purchase = $derived(appState.activeSlot.purchase);
   const housePrice = $derived(purchase?.house.purchase_price || 0);
@@ -132,13 +133,12 @@
 </script>
 
 {#if purchase}
-  <div class="space-y-5">
-    <!-- Capital Structure Segmented Bar -->
-    <div class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800/80 space-y-2">
-      <div class="flex items-center justify-between text-xs">
-        <span class="font-medium text-zinc-300">Capital Structure</span>
-        <span class="font-mono text-zinc-400 font-medium">Total: ${totalFunding.toLocaleString()}</span>
-      </div>
+  <div class="space-y-4">
+    <!-- Capital Structure Segmented Bar Card -->
+    <Card icon="📊" title="Capital Structure">
+      {#snippet headerRight()}
+        <span class="font-mono text-zinc-400 font-medium text-xs">Total: ${totalFunding.toLocaleString()}</span>
+      {/snippet}
 
       <!-- Visual Stacked Bar -->
       <div class="w-full h-3 rounded-full bg-zinc-800 overflow-hidden flex">
@@ -201,19 +201,15 @@
           ⚠️ Total borrowed (${totalBorrowed.toLocaleString()}) exceeds purchase price (${housePrice.toLocaleString()}).
         </div>
       {/if}
-    </div>
+    </Card>
 
-    <!-- 1. Cash Down Payment Section -->
-    <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-3">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <span class="text-emerald-400 text-sm">💵</span>
-          <span class="text-xs font-semibold text-zinc-200">Cash Down Payment</span>
-        </div>
+    <!-- 1. Cash Down Payment Card -->
+    <Card icon="💵" title="Cash Down Payment">
+      {#snippet headerRight()}
         <div class="text-sm font-mono font-bold text-emerald-400 tabular-nums">
           ${cashAmount.toLocaleString()}
         </div>
-      </div>
+      {/snippet}
 
       <div class="flex items-center justify-between text-xs">
         <label for="cash-yield-input" class="text-zinc-400 text-[11px]">Annual Cash Yield / Opportunity Cost</label>
@@ -231,15 +227,11 @@
           <span class="text-xs font-mono text-zinc-400">%</span>
         </div>
       </div>
-    </div>
+    </Card>
 
-    <!-- 2. Mortgage Loan Instrument Section -->
-    <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-3.5">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <span class="text-indigo-400 text-sm">🏦</span>
-          <span class="text-xs font-semibold text-zinc-200">Mortgage Loan</span>
-        </div>
+    <!-- 2. Mortgage Loan Instrument Card -->
+    <Card icon="🏦" title="Mortgage Loan">
+      {#snippet headerRight()}
         <button
           type="button"
           role="switch"
@@ -252,7 +244,7 @@
             class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {mortgageTool ? 'translate-x-4' : 'translate-x-0'}"
           ></span>
         </button>
-      </div>
+      {/snippet}
 
       {#if mortgageTool}
         <!-- Principal Amount -->
@@ -332,15 +324,11 @@
           </span>
         </div>
       {/if}
-    </div>
+    </Card>
 
-    <!-- 3. Line of Credit (LOC) Instrument Section -->
-    <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-3.5">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <span class="text-amber-400 text-sm">💳</span>
-          <span class="text-xs font-semibold text-zinc-200">Line of Credit (LOC)</span>
-        </div>
+    <!-- 3. Line of Credit (LOC) Instrument Card -->
+    <Card icon="💳" title="Line of Credit (LOC)">
+      {#snippet headerRight()}
         <button
           type="button"
           role="switch"
@@ -353,7 +341,7 @@
             class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {locTool ? 'translate-x-4' : 'translate-x-0'}"
           ></span>
         </button>
-      </div>
+      {/snippet}
 
       {#if locTool}
         <!-- Principal Amount -->
@@ -411,6 +399,6 @@
           </span>
         </div>
       {/if}
-    </div>
+    </Card>
   </div>
 {/if}

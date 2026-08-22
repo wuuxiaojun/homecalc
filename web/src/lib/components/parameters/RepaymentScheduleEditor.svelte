@@ -1,5 +1,6 @@
 <script lang="ts">
   import { appState } from '../../state/appState.svelte';
+  import Card from '../common/Card.svelte';
 
   let targetTool = $state<'mortgage' | 'loc'>('mortgage');
   let inputMonth = $state<number>(12);
@@ -42,30 +43,25 @@
 </script>
 
 {#if purchase}
-  <div class="space-y-5">
-    <!-- Header info & total extra scheduled -->
-    <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 flex items-center justify-between">
-      <div>
-        <div class="text-xs font-semibold text-zinc-200 flex items-center gap-1.5">
-          <span>⚡ Scheduled Prepayments</span>
-          <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-zinc-800 text-zinc-300">
-            {repaymentsList.length} scheduled
-          </span>
-        </div>
-        <div class="text-[11px] text-zinc-400 mt-0.5">Applied directly to loan principal</div>
-      </div>
-      <div class="text-right">
-        <div class="text-sm font-bold font-mono text-emerald-400 tabular-nums">
+  <div class="space-y-4">
+    <!-- Header summary Card -->
+    <Card icon="⚡" title="Scheduled Prepayments">
+      {#snippet headerRight()}
+        <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-zinc-800 text-zinc-300">
+          {repaymentsList.length} scheduled
+        </span>
+      {/snippet}
+
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-zinc-400">Applied directly to principal</span>
+        <span class="text-sm font-bold font-mono text-emerald-400 tabular-nums">
           ${totalExtraPrincipal.toLocaleString()}
-        </div>
-        <div class="text-[10px] text-zinc-500 font-mono">Total Extra</div>
+        </span>
       </div>
-    </div>
+    </Card>
 
-    <!-- Add New Extra Payment Form -->
-    <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-3">
-      <div class="text-xs font-semibold text-zinc-200">➕ Add Extra Principal Prepayment</div>
-
+    <!-- Add New Extra Payment Card -->
+    <Card icon="➕" title="Add Extra Principal Prepayment">
       <!-- Loan Selector -->
       <div class="grid grid-cols-2 gap-2">
         <button
@@ -134,24 +130,23 @@
         <span>⚡</span>
         <span>Add Prepayment Entry</span>
       </button>
-    </div>
+    </Card>
 
-    <!-- Active Repayments List -->
+    <!-- Active Repayments List Card -->
     {#if repaymentsList.length > 0}
-      <div class="space-y-2">
-        <div class="flex items-center justify-between text-xs font-semibold text-zinc-300">
-          <span>Active Prepayment Schedule ({repaymentsList.length})</span>
+      <Card icon="📋" title="Active Schedule ({repaymentsList.length})">
+        {#snippet headerRight()}
           <button
             class="text-[11px] text-rose-400 hover:text-rose-300 transition-colors font-medium"
             onclick={handleClearAll}
           >
             Clear All
           </button>
-        </div>
+        {/snippet}
 
         <div class="max-h-56 overflow-y-auto space-y-1.5 pr-1">
           {#each repaymentsList as item}
-            <div class="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800/80 flex items-center justify-between text-xs">
+            <div class="p-2.5 rounded-lg bg-zinc-950/70 border border-zinc-800/80 flex items-center justify-between text-xs">
               <div class="flex items-center gap-2">
                 <span class="text-sm">{item.tool === 'mortgage' ? '🏦' : '💳'}</span>
                 <span class="font-mono text-zinc-200 font-semibold">Month {item.month}</span>
@@ -172,7 +167,7 @@
             </div>
           {/each}
         </div>
-      </div>
+      </Card>
     {/if}
   </div>
 {/if}

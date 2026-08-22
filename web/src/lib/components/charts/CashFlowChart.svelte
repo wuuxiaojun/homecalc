@@ -1,5 +1,6 @@
 <script lang="ts">
   import { appState } from '../../state/appState.svelte';
+  import Card from '../common/Card.svelte';
 
   const slot = $derived(appState.activeSlot);
   const yearlyData = $derived(slot.scenario?.yearly_statement || []);
@@ -35,19 +36,12 @@
   }
 </script>
 
-<div class="p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 space-y-4">
-  <div class="flex items-center justify-between border-b border-zinc-800/60 pb-3">
-    <div>
-      <h3 class="text-sm font-semibold text-zinc-200 flex items-center gap-2">
-        <span>📊</span>
-        <span>Annual Cash Outflow Trajectory</span>
-      </h3>
-      <p class="text-xs text-zinc-500">Year-by-year required payments, prepayments, and holding costs</p>
-    </div>
-    <div class="text-xs font-mono text-zinc-400">
+<Card icon="📊" title="Annual Cash Outflow Trajectory">
+  {#snippet headerRight()}
+    <span class="text-xs font-mono text-zinc-400">
       {yearlyData.length} Years Horizon
-    </div>
-  </div>
+    </span>
+  {/snippet}
 
   <div class="w-full overflow-hidden">
     <svg viewBox="0 0 {width} {height}" class="w-full h-auto select-none">
@@ -62,42 +56,55 @@
       {/each}
 
       <!-- Bars -->
-      {#each yearlyData as yRow, idx}
+      {#each yearlyData as d, idx}
         {@const x = getBarX(idx)}
-        {@const debtH = getBarH(yRow.annual_debt_paid)}
-        {@const extraH = getBarH(yRow.annual_extra_payment)}
-        {@const holdingH = getBarH(yRow.annual_holding_cost)}
-        {@const totalH = getBarH(yRow.annual_paid)}
+        {@const h = getBarH(d.annual_paid)}
+        {@const y = getY(d.annual_paid)}
+        {@const isLast = idx === yearlyData.length - 1}
 
-        <!-- Stacked Column Bar -->
-        <g class="cursor-pointer group">
-          <rect
-            x={x}
-            y={padTop + chartH - totalH}
-            width={barWidth}
-            height={totalH}
-            fill="#6366f1"
-            rx="3"
-            class="hover:fill-emerald-400 transition-colors opacity-90"
+        <!-- Bar rectangle -->
+        <rect
+          x={x}
+          y={y}
+          width={barWidth}
+          height={h}
+          rx="3"
+          fill={isLast ? '#10b981' : '#6366f1'}
+          opacity="0.85"
+          class="hover:opacity-100 transition-opacity cursor-pointer"
+        >
+          <title>Year {d.year}: ${Math.round(d.annual_paid).toLocaleString()} paid</title>
+        </rect>
+
+        <!-- X Label (Every 5 years or first/last) -->
+        {#if d.year === 1 || d.year % 5 === 0 || isLast}
+          <text
+            x={x + barWidth / 2}
+            y={height - 10}
+            fill="#71717a"
+            font-size="10"
+            font-family="monospace"
+            text-anchor="middle"
           >
-            <title>Year {yRow.year}: Paid ${Math.round(yRow.annual_paid).toLocaleString()} (Interest: ${Math.round(yRow.annual_interest_paid).toLocaleString()}, Tax Savings: -${Math.round(yRow.annual_tax_savings).toLocaleString()})</title>
-          </rect>
-
-          <!-- Year Label (every 5 years or 1st/last) -->
-          {#if yRow.year === 1 || yRow.year % 5 === 0 || yRow.year === yearlyData.length}
-            <text
-              x={x + barWidth / 2}
-              y={padTop + chartH + 18}
-              fill="#a1a1aa"
-              font-size="10"
-              font-family="monospace"
-              text-anchor="middle"
-            >
-              Y{yRow.year}
-            </text>
-          {/if}
-        </g>
+            Y{d.year}
+          </text>
+        {/if}
       {/each}
     </svg>
   </div>
-</div>
+
+  <!-- Legend -->
+  <div class="flex items-center justify-between text-xs font-mono text-zinc-400 pt-1 border-t border-zinc-800/60">
+    <div class="flex items-center gap-4">
+      <span class="flex items-center gap-1.5">
+        <span class="w-2.5 h-2.5 rounded bg-indigo-500"></span>
+        <span>Standard Year Outflow</span>
+      </span>
+      <span class="flex items-center gap-1.5">
+        <span class="w-2.5 h-2.5 rounded bg-emerald-500"></span>
+        <span>Final Payoff Year</span>
+      </span>
+    </div>
+    <span class="text-[11px] text-zinc-500">Hover bar for details</span>
+  </div>
+</Card>

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { appState } from '../../state/appState.svelte';
+  import Card from '../common/Card.svelte';
 
   const purchase = $derived(appState.activeSlot.purchase);
   const house = $derived(purchase?.house || {
@@ -68,12 +69,9 @@
       />
     </div>
 
-    <!-- Purchase Price (with slide bar, no quick adjust buttons) -->
-    <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-3">
-      <div class="flex items-center justify-between">
-        <label for="purchase-price-input" class="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-          <span>🏡 Purchase Price</span>
-        </label>
+    <!-- Purchase Price Card -->
+    <Card icon="🏡" title="Purchase Price">
+      {#snippet headerRight()}
         <div class="flex items-center gap-1">
           <span class="text-xs font-mono text-zinc-500">$</span>
           <input
@@ -86,7 +84,7 @@
             oninput={(e) => updatePrice(parseFloat(e.currentTarget.value) || 0)}
           />
         </div>
-      </div>
+      {/snippet}
 
       <input
         type="range"
@@ -98,16 +96,11 @@
         value={house.purchase_price}
         oninput={(e) => updatePrice(parseFloat(e.currentTarget.value) || 0)}
       />
-    </div>
+    </Card>
 
-    <!-- 3 Parallel, Equal Weight Holding Cost Sections: Tax, Insurance, HOA -->
-    
-    <!-- 1. Property Tax -->
-    <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-2">
-      <div class="flex items-center justify-between">
-        <label for="tax-rate-input" class="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-          <span>🏛️ Property Tax</span>
-        </label>
+    <!-- 1. Property Tax Card -->
+    <Card icon="🏛️" title="Property Tax">
+      {#snippet headerRight()}
         <div class="flex items-center gap-1">
           <input
             id="tax-rate-input"
@@ -121,19 +114,17 @@
           />
           <span class="text-xs font-mono text-zinc-400">%</span>
         </div>
-      </div>
+      {/snippet}
+
       <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500">
         <span>${Math.round(house.purchase_price * house.annual_property_tax_rate * 0.01).toLocaleString()}/yr</span>
         <span class="text-zinc-300 font-medium">${Math.round(monthlyTax).toLocaleString()}/mo</span>
       </div>
-    </div>
+    </Card>
 
-    <!-- 2. Home Insurance -->
-    <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-2">
-      <div class="flex items-center justify-between">
-        <label for="insurance-input" class="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-          <span>🛡️ Home Insurance</span>
-        </label>
+    <!-- 2. Home Insurance Card -->
+    <Card icon="🛡️" title="Home Insurance">
+      {#snippet headerRight()}
         <div class="flex items-center gap-1">
           <span class="text-xs font-mono text-zinc-500">$</span>
           <input
@@ -147,19 +138,17 @@
           />
           <span class="text-xs font-mono text-zinc-400">/yr</span>
         </div>
-      </div>
+      {/snippet}
+
       <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500">
         <span>${Math.round(house.annual_insurance).toLocaleString()}/yr</span>
         <span class="text-zinc-300 font-medium">${Math.round(monthlyInsurance).toLocaleString()}/mo</span>
       </div>
-    </div>
+    </Card>
 
-    <!-- 3. HOA Fee -->
-    <div class="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-2">
-      <div class="flex items-center justify-between">
-        <label for="hoa-input" class="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-          <span>🏢 HOA Fee</span>
-        </label>
+    <!-- 3. HOA Fee Card -->
+    <Card icon="🏢" title="HOA Fee">
+      {#snippet headerRight()}
         <div class="flex items-center gap-1">
           <span class="text-xs font-mono text-zinc-500">$</span>
           <input
@@ -173,30 +162,28 @@
           />
           <span class="text-xs font-mono text-zinc-400">/mo</span>
         </div>
-      </div>
+      {/snippet}
+
       <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500">
         <span>${Math.round(house.monthly_hoa * 12).toLocaleString()}/yr</span>
         <span class="text-zinc-300 font-medium">${Math.round(house.monthly_hoa).toLocaleString()}/mo</span>
       </div>
-    </div>
+    </Card>
 
-    <!-- Holding Cost Aggregate Callout -->
-    <div class="p-3 rounded-xl bg-zinc-950 border border-zinc-800/80 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <span class="text-base">🏚️</span>
-        <div>
-          <div class="text-xs font-medium text-zinc-300">Initial Holding Cost</div>
-          <div class="text-[10px] text-zinc-500">Tax + Insurance + HOA</div>
+    <!-- Holding Cost Aggregate Callout Card -->
+    <Card icon="🏚️" title="Initial Holding Cost">
+      {#snippet headerRight()}
+        <div class="text-right">
+          <div class="text-sm font-bold font-mono text-amber-400 tabular-nums">
+            ${Math.round(totalMonthlyHolding).toLocaleString()} <span class="text-[10px] font-normal text-zinc-400">/mo</span>
+          </div>
         </div>
+      {/snippet}
+
+      <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500">
+        <span>Tax + Insurance + HOA</span>
+        <span>${Math.round(totalMonthlyHolding * 12).toLocaleString()} /yr</span>
       </div>
-      <div class="text-right">
-        <div class="text-sm font-bold font-mono text-amber-400 tabular-nums">
-          ${Math.round(totalMonthlyHolding).toLocaleString()} <span class="text-[10px] font-normal text-zinc-400">/mo</span>
-        </div>
-        <div class="text-[10px] text-zinc-500 font-mono">
-          ${Math.round(totalMonthlyHolding * 12).toLocaleString()} /yr
-        </div>
-      </div>
-    </div>
+    </Card>
   </div>
 {/if}

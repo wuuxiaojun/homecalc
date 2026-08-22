@@ -111,19 +111,11 @@
   function handleMouseLeave() {
     hoveredMonth = null;
   }
+  import Card from '../common/Card.svelte';
 </script>
 
-<div class="p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 space-y-4">
-  <!-- Chart Controls & Header -->
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/60 pb-3">
-    <div>
-      <h3 class="text-sm font-semibold text-zinc-200 flex items-center gap-2">
-        <span>📉</span>
-        <span>Amortization Balance Trajectory</span>
-      </h3>
-      <p class="text-xs text-zinc-500">Remaining loan principal balance amortization over time</p>
-    </div>
-
+<Card icon="📉" title="Amortization Balance Trajectory">
+  {#snippet headerRight()}
     <div class="flex items-center gap-2">
       <!-- Horizon Switcher -->
       <div class="flex items-center bg-zinc-950 p-0.5 rounded-lg border border-zinc-800 text-[11px] font-mono">
@@ -162,7 +154,7 @@
         <span>⚖️ Overlay S{appState.comparisonAlternativeId}</span>
       </button>
     </div>
-  </div>
+  {/snippet}
 
   <!-- Interactive SVG Canvas -->
   <div class="relative w-full overflow-hidden">
@@ -307,4 +299,4 @@
       Hover crosshair to inspect month balance
     </div>
   </div>
-</div>
+</Card>

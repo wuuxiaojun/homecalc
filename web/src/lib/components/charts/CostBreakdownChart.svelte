@@ -1,5 +1,6 @@
 <script lang="ts">
   import { appState } from '../../state/appState.svelte';
+  import Card from '../common/Card.svelte';
 
   const slot = $derived(appState.activeSlot);
   const scenario = $derived(slot.scenario);
@@ -23,20 +24,13 @@
   const pctHolding = $derived(grossCost > 0 ? (totalHolding / grossCost) * 100 : 0);
 </script>
 
-<div class="p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 space-y-4">
-  <div class="flex items-center justify-between border-b border-zinc-800/60 pb-3">
-    <div>
-      <h3 class="text-sm font-semibold text-zinc-200 flex items-center gap-2">
-        <span>🍩</span>
-        <span>Lifetime Cost & Waste Breakdown</span>
-      </h3>
-      <p class="text-xs text-zinc-500">Distribution of all gross capital outlays and offsets</p>
-    </div>
+<Card icon="🍩" title="Lifetime Cost Breakdown">
+  {#snippet headerRight()}
     <div class="text-right font-mono">
-      <div class="text-xs text-zinc-400">Total Net Outlay</div>
-      <div class="text-base font-bold text-white tabular-nums">${Math.round(netCost).toLocaleString()}</div>
+      <span class="text-[10px] text-zinc-400 mr-1.5">Total Net Outlay:</span>
+      <span class="text-sm font-bold text-white tabular-nums">${Math.round(netCost).toLocaleString()}</span>
     </div>
-  </div>
+  {/snippet}
 
   <!-- Horizontal Multi-Tier Stacked Bar -->
   <div class="space-y-2">
@@ -130,4 +124,4 @@
       Combined Benefit: <span class="font-bold text-emerald-300">-${Math.round(totalTaxSavings + totalCashInterest).toLocaleString()}</span>
     </div>
   </div>
-</div>
+</Card>
