@@ -54,7 +54,7 @@ export async function exportPurchaseToJson(purchase: Purchase): Promise<void> {
 export async function exportFullReportJson(slot: ScenarioSlot): Promise<void> {
   const reportData = {
     exportedAt: new Date().toISOString(),
-    engine: 'Homecalc Rust WASM v2.0',
+    engine: 'Homecalc Rust WASM v2.0.0',
     purchase: slot.purchase,
     analysis: slot.analysis,
     totalStatement: slot.scenario?.total_statement,
