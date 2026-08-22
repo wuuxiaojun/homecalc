@@ -1,5 +1,6 @@
 <script lang="ts">
   import { appState } from '../../state/appState.svelte';
+  import { exportCsvFile } from '../../services/importExport';
 
   const slot = $derived(appState.activeSlot);
   const yearlyRows = $derived(slot.scenario?.yearly_statement || []);
@@ -36,14 +37,8 @@
     ]);
 
     const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `homecalc_yearly_statement_${slot.name.replace(/\s+/g, '_')}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const filename = `homecalc_yearly_statement_${slot.name.replace(/\s+/g, '_')}.csv`;
+    exportCsvFile(csvContent, filename);
   }
 </script>
 
