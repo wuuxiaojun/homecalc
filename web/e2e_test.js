@@ -13,6 +13,7 @@ async function run() {
   await page.waitForTimeout(500);
 
   // 1. Verify Default Scenario (Standard 30Y Mortgage) is loaded immediately into all 3 slots
+  await page.waitForSelector('text=Homecalc', { timeout: 10000 });
   const title = await page.title();
   console.log("Page title:", title);
   if (!title.includes("Homecalc")) throw new Error("Incorrect page title");
