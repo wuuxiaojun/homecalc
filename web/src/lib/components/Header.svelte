@@ -2,8 +2,8 @@
   import { appState } from '../state/appState.svelte';
   import type { SlotId } from '../state/types';
 
-  let { onOpenLibrary, onOpenExport, onOpenImport }: { 
-    onOpenLibrary?: () => void; 
+  let { onOpenLibrary, onOpenExport, onOpenImport }: {
+    onOpenLibrary?: () => void;
     onOpenExport?: () => void;
     onOpenImport?: () => void;
   } = $props();
@@ -30,13 +30,13 @@
         <div>
           <div class="flex items-center gap-2">
             <span class="font-bold text-base tracking-tight text-white">Homecalc</span>
-            <span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded font-mono font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700/60">v2.0</span>
+            <span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded font-mono font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700/60">v2.0.0</span>
             <span class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-mono bg-emerald-950/70 text-emerald-300 border border-emerald-800/50">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
               Rust WASM
             </span>
           </div>
-          <p class="text-[11px] text-zinc-400 hidden sm:block">Reactive Mortgage & Scenario Engine</p>
+          <p class="text-[11px] text-zinc-400 hidden sm:block">Reactive Scenario Engine</p>
         </div>
       </div>
     </div>
