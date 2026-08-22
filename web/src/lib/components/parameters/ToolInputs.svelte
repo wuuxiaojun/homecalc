@@ -257,22 +257,27 @@
             </div>
           </div>
 
-          <!-- Term Selector -->
+          <!-- Term (Years) Input -->
           <div class="space-y-1">
-            <span class="text-[11px] text-zinc-400 block">Term (Years)</span>
+            <label for="mortgage-term-input" class="text-[11px] text-zinc-400 block">Term (Years)</label>
             <div class="flex items-center gap-1">
-              <button
-                class="flex-1 py-1 text-xs font-mono rounded transition-colors {mortgageTool.term === 15 ? 'bg-indigo-600 text-white font-bold' : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200'}"
-                onclick={() => updateMortgage(m => m.term = 15)}
-              >
-                15y
-              </button>
-              <button
-                class="flex-1 py-1 text-xs font-mono rounded transition-colors {mortgageTool.term === 30 ? 'bg-indigo-600 text-white font-bold' : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200'}"
-                onclick={() => updateMortgage(m => m.term = 30)}
-              >
-                30y
-              </button>
+              <input
+                id="mortgage-term-input"
+                type="number"
+                step="1"
+                min="1"
+                max="30"
+                class="w-full px-2 py-1 text-right rounded bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-indigo-500 focus:outline-none"
+                value={mortgageTool.term}
+                oninput={(e) => {
+                  const val = parseInt(e.currentTarget.value, 10);
+                  if (!isNaN(val)) {
+                    const clamped = Math.max(1, Math.min(30, val));
+                    updateMortgage(m => m.term = clamped);
+                  }
+                }}
+              />
+              <span class="text-xs font-mono text-zinc-500">yr</span>
             </div>
           </div>
         </div>
