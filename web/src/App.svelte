@@ -21,7 +21,7 @@
   });
 </script>
 
-<div class="min-h-screen flex flex-col bg-[#09090b] text-zinc-100 font-sans selection:bg-emerald-500/30 selection:text-emerald-200">
+<div class="h-screen w-screen flex flex-col bg-[#09090b] text-zinc-100 font-sans selection:bg-emerald-500/30 selection:text-emerald-200 overflow-hidden">
   <Header
     onOpenLibrary={() => isLibraryOpen = true}
     onOpenExport={() => isExportOpen = true}
@@ -34,7 +34,7 @@
     {/snippet}
 
     {#snippet right()}
-      <div class="space-y-6">
+      <div class="w-full space-y-6">
         <!-- View Switcher / Title Banner -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/60 pb-4">
           <div>

@@ -33,11 +33,11 @@
 
   // Chart dimensions
   const width = 800;
-  const height = 300;
+  const height = 360;
   const padLeft = 70;
   const padRight = 30;
-  const padTop = 20;
-  const padBottom = 40;
+  const padTop = 25;
+  const padBottom = 45;
 
   const chartW = $derived(width - padLeft - padRight);
   const chartH = $derived(height - padTop - padBottom);
@@ -170,7 +170,7 @@
       role="img"
       aria-label="Amortization trajectory chart"
       viewBox="0 0 {width} {height}"
-      class="w-full h-auto max-h-[340px] select-none cursor-crosshair"
+      class="w-full h-auto max-h-[420px] select-none cursor-crosshair"
       onmousemove={handleMouseMove}
       onmouseleave={handleMouseLeave}
     >
