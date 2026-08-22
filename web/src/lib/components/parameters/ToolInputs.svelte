@@ -42,7 +42,7 @@
   function updateCashRate(rate: number) {
     appState.updateActivePurchase((p) => {
       let c = p.tools.find(t => 'Cash' in t);
-      if (c && 'Cash' in c) {
+      if (c && 'Cash' in c && c.Cash) {
         c.Cash.rate = Math.max(0, rate);
       } else {
         p.tools.push({ Cash: { amount: Math.max(0, housePrice - totalBorrowed), rate } });
@@ -53,7 +53,7 @@
   function updateMortgage(updater: (m: Mortgage) => void) {
     appState.updateActivePurchase((p) => {
       let m = p.tools.find(t => 'Mortgage' in t);
-      if (!m || !('Mortgage' in m)) {
+      if (!m || !('Mortgage' in m) || !m.Mortgage) {
         const newM: Mortgage = { amount: 0, rate: 6.5, term: 30 };
         updater(newM);
         p.tools.push({ Mortgage: newM });
@@ -68,7 +68,7 @@
   function updateLoc(updater: (l: Loc) => void) {
     appState.updateActivePurchase((p) => {
       let l = p.tools.find(t => 'Loc' in t);
-      if (!l || !('Loc' in l)) {
+      if (!l || !('Loc' in l) || !l.Loc) {
         const newL: Loc = { amount: 0, rate: 7.0 };
         updater(newL);
         p.tools.push({ Loc: newL });
@@ -100,7 +100,7 @@
     appState.updateActivePurchase((p) => {
       const targetMortgage = Math.round(p.house.purchase_price * (ltvPercent / 100));
       let m = p.tools.find(t => 'Mortgage' in t);
-      if (m && 'Mortgage' in m) {
+      if (m && 'Mortgage' in m && m.Mortgage) {
         m.Mortgage.amount = targetMortgage;
       } else if (targetMortgage > 0) {
         p.tools.push({ Mortgage: { amount: targetMortgage, rate: 6.5, term: 30 } });
@@ -122,7 +122,7 @@
     let cashIdx = p.tools.findIndex(t => 'Cash' in t);
     if (cashIdx >= 0) {
       const c = p.tools[cashIdx];
-      if ('Cash' in c) {
+      if ('Cash' in c && c.Cash) {
         c.Cash.amount = neededCash;
       }
     } else {

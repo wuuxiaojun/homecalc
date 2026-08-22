@@ -94,7 +94,9 @@
   });
 
   function handleMouseMove(e: MouseEvent) {
-    const svgRect = e.currentTarget.getBoundingClientRect();
+    const target = e.currentTarget as SVGElement | null;
+    if (!target) return;
+    const svgRect = target.getBoundingClientRect();
     const clientX = e.clientX - svgRect.left;
     const relX = clientX - padLeft;
     if (relX < 0 || relX > chartW) {

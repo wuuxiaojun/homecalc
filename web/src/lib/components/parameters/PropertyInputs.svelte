@@ -21,7 +21,7 @@
       const mort = p.tools.find(t => 'Mortgage' in t)?.Mortgage?.amount || 0;
       const loc = p.tools.find(t => 'Loc' in t)?.Loc?.amount || 0;
       const cashTool = p.tools.find(t => 'Cash' in t);
-      if (cashTool && 'Cash' in cashTool) {
+      if (cashTool && 'Cash' in cashTool && cashTool.Cash) {
         cashTool.Cash.amount = Math.max(0, clamped - (mort + loc));
       }
     });
