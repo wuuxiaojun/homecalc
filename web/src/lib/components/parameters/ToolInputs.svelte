@@ -97,23 +97,6 @@
     });
   }
 
-  function setLtvPreset(ltvPercent: number) {
-    appState.updateActivePurchase((p) => {
-      const targetMortgage = Math.round(p.house.purchase_price * (ltvPercent / 100));
-      let m = p.tools.find(t => 'Mortgage' in t);
-      if (m && 'Mortgage' in m && m.Mortgage) {
-        m.Mortgage.amount = targetMortgage;
-      } else if (targetMortgage > 0) {
-        p.tools.push({ Mortgage: { amount: targetMortgage, rate: 6.5, term: 30 } });
-      }
-      const locIdx = p.tools.findIndex(t => 'Loc' in t);
-      if (locIdx >= 0 && ltvPercent >= 100) {
-        p.tools.splice(locIdx, 1);
-      }
-      rebalanceCashInPurchase(p);
-    });
-  }
-
   function rebalanceCashInPurchase(p: typeof purchase) {
     if (!p) return;
     const mort = p.tools.find(t => 'Mortgage' in t)?.Mortgage?.amount || 0;
@@ -165,35 +148,13 @@
         {/if}
       </div>
 
-      <!-- Legend & LTV quick tags -->
-      <div class="flex items-center justify-between text-[11px] font-mono text-zinc-400 pt-1">
-        <div class="flex items-center gap-3">
-          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Cash {cashPercent.toFixed(0)}%</span>
-          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-400"></span> Mort {mortgagePercent.toFixed(0)}%</span>
-          {#if locPercent > 0}
-            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span> LOC {locPercent.toFixed(0)}%</span>
-          {/if}
-        </div>
-        <div class="flex items-center gap-1">
-          <button
-            class="px-1.5 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] text-zinc-300 transition-colors"
-            onclick={() => setLtvPreset(80)}
-          >
-            80% LTV
-          </button>
-          <button
-            class="px-1.5 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] text-zinc-300 transition-colors"
-            onclick={() => setLtvPreset(100)}
-          >
-            All Loan
-          </button>
-          <button
-            class="px-1.5 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] text-zinc-300 transition-colors"
-            onclick={() => setLtvPreset(0)}
-          >
-            All Cash
-          </button>
-        </div>
+      <!-- Legend -->
+      <div class="flex items-center gap-3 text-[11px] font-mono text-zinc-400 pt-1">
+        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Cash {cashPercent.toFixed(0)}%</span>
+        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-400"></span> Mort {mortgagePercent.toFixed(0)}%</span>
+        {#if locPercent > 0}
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span> LOC {locPercent.toFixed(0)}%</span>
+        {/if}
       </div>
 
       {#if isOverAllocated}

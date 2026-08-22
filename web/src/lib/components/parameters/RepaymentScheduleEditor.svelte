@@ -107,22 +107,6 @@
         </div>
       </div>
 
-      <!-- Quick Month / Amount Presets -->
-      <div class="flex items-center justify-between text-[10px] font-mono text-zinc-500 pt-1">
-        <div class="flex items-center gap-1.5">
-          <span>Month:</span>
-          <button class="px-1.5 py-0.5 rounded bg-zinc-950 border border-zinc-800 hover:text-zinc-200" onclick={() => inputMonth = 12}>M12</button>
-          <button class="px-1.5 py-0.5 rounded bg-zinc-950 border border-zinc-800 hover:text-zinc-200" onclick={() => inputMonth = 24}>M24</button>
-          <button class="px-1.5 py-0.5 rounded bg-zinc-950 border border-zinc-800 hover:text-zinc-200" onclick={() => inputMonth = 60}>M60</button>
-        </div>
-        <div class="flex items-center gap-1.5">
-          <span>+$:</span>
-          <button class="px-1.5 py-0.5 rounded bg-zinc-950 border border-zinc-800 hover:text-zinc-200" onclick={() => inputAmount = 10000}>10k</button>
-          <button class="px-1.5 py-0.5 rounded bg-zinc-950 border border-zinc-800 hover:text-zinc-200" onclick={() => inputAmount = 25000}>25k</button>
-          <button class="px-1.5 py-0.5 rounded bg-zinc-950 border border-zinc-800 hover:text-zinc-200" onclick={() => inputAmount = 50000}>50k</button>
-        </div>
-      </div>
-
       <button
         class="w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-sm transition-colors flex items-center justify-center gap-1.5"
         onclick={handleAddOneTime}
