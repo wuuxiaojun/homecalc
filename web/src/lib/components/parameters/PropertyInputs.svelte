@@ -56,18 +56,17 @@
 
 {#if purchase}
   <div class="space-y-4">
-    <!-- Scenario Name -->
-    <div>
-      <label for="scenario-name" class="block text-xs font-semibold text-zinc-300 mb-1.5">Scenario Name</label>
+    <!-- Scenario Name Card -->
+    <Card icon="📝" title="Scenario Name">
       <input
         id="scenario-name"
         type="text"
-        class="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-sm font-medium text-white transition-all"
+        class="w-full px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-sm font-medium text-white transition-all focus:outline-none"
         value={purchase.name}
         oninput={(e) => updateName(e.currentTarget.value)}
         placeholder="e.g. Standard 30Y Mortgage"
       />
-    </div>
+    </Card>
 
     <!-- Purchase Price Card -->
     <Card icon="🏡" title="Purchase Price">
