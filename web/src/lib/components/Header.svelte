@@ -19,9 +19,9 @@
   }
 </script>
 
-<header class="sticky top-0 z-30 border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-md px-2 sm:px-4 lg:px-6 py-2.5">
-  <div class="max-w-[1920px] mx-auto flex items-center justify-between gap-4">
-    <!-- Brand Title & WASM Engine Badge (Enlarged & positioned closer to left edge) -->
+<header class="sticky top-0 z-30 border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-md px-3 py-2.5 w-full">
+  <div class="w-full flex items-center justify-between gap-4">
+    <!-- Brand Title & WASM Engine Badge (Enlarged & pinned with minimal edge padding) -->
     <div class="flex items-center gap-3">
       <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/35 flex items-center justify-center text-2xl sm:text-[26px] shadow-lg shadow-emerald-950/50 shrink-0">
         🏡
