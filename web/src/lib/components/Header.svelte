@@ -17,21 +17,12 @@
   function handleSlotSelect(id: SlotId) {
     appState.setActiveSlot(id);
   }
-
-  function toggleComparison() {
-    appState.isComparisonMode = !appState.isComparisonMode;
-    if (appState.isComparisonMode) {
-      appState.activeView = 'comparison';
-    } else if (appState.activeView === 'comparison') {
-      appState.activeView = 'overview';
-    }
-  }
 </script>
 
 <header class="sticky top-0 z-30 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md px-4 lg:px-6 py-2.5">
-  <div class="max-w-[1920px] mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+  <div class="max-w-[1920px] mx-auto flex items-center justify-between gap-3">
     <!-- Brand Title & WASM Engine Badge -->
-    <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+    <div class="flex items-center gap-3">
       <div class="flex items-center gap-2.5">
         <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-lg shadow-sm shadow-emerald-950/50">
           🏡
@@ -48,59 +39,12 @@
           <p class="text-[11px] text-zinc-400 hidden sm:block">Reactive Mortgage & Scenario Engine</p>
         </div>
       </div>
-
-      <!-- Mobile Slot Switcher -->
-      <div class="flex md:hidden items-center gap-1 bg-zinc-900/90 p-1 rounded-lg border border-zinc-800">
-        {#each slots as s}
-          <button
-            class="px-2.5 py-1 text-xs font-mono font-medium rounded transition-all {appState.activeSlotId === s.id ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}"
-            onclick={() => handleSlotSelect(s.id)}
-          >
-            {s.label}
-          </button>
-        {/each}
-      </div>
     </div>
 
-    <!-- Center Navigation Tabs -->
-    <div class="flex items-center bg-zinc-900/90 p-1 rounded-xl border border-zinc-800/80 shadow-inner">
-      <button
-        class="px-3.5 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center gap-1.5 {appState.activeView === 'overview' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}"
-        onclick={() => appState.activeView = 'overview'}
-      >
-        <span>📊</span>
-        <span>Dashboard</span>
-      </button>
-      <button
-        class="px-3.5 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center gap-1.5 {appState.activeView === 'charts' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}"
-        onclick={() => appState.activeView = 'charts'}
-      >
-        <span>📈</span>
-        <span>Analytics</span>
-      </button>
-      <button
-        class="px-3.5 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center gap-1.5 {appState.activeView === 'statements' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}"
-        onclick={() => appState.activeView = 'statements'}
-      >
-        <span>📅</span>
-        <span>Statements</span>
-      </button>
-      <button
-        class="px-3.5 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center gap-1.5 {appState.activeView === 'comparison' ? 'bg-indigo-950/80 text-indigo-200 border border-indigo-700/50 shadow-sm shadow-indigo-950/50' : 'text-zinc-400 hover:text-zinc-200'}"
-        onclick={() => {
-          appState.activeView = 'comparison';
-          appState.isComparisonMode = true;
-        }}
-      >
-        <span>⚖️</span>
-        <span>Compare</span>
-      </button>
-    </div>
-
-    <!-- Right Controls: Slot Tabs & Tools -->
+    <!-- Right Controls: Slot Switcher & Action Tools -->
     <div class="flex items-center gap-2.5">
-      <!-- Desktop Slot Selector -->
-      <div class="hidden md:flex items-center gap-1 bg-zinc-900/90 p-1 rounded-xl border border-zinc-800/80">
+      <!-- Slot Switcher -->
+      <div class="flex items-center gap-1 bg-zinc-900/90 p-1 rounded-xl border border-zinc-800/80">
         {#each slots as s}
           {@const currentSlot = appState.getSlot(s.id)}
           <button

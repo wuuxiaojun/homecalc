@@ -70,13 +70,13 @@
               Statements
             </button>
             <button
-              class="px-3 py-1 rounded-lg transition-all {appState.activeView === 'comparison' ? 'bg-indigo-950 text-indigo-200 border border-indigo-700/50 font-medium' : 'text-zinc-400 hover:text-zinc-200'}"
+              class="px-3 py-1 rounded-lg transition-all {appState.activeView === 'comparison' ? 'bg-zinc-800 text-white font-medium shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}"
               onclick={() => {
                 appState.activeView = 'comparison';
                 appState.isComparisonMode = true;
               }}
             >
-              Comparison
+              Compare
             </button>
           </div>
         </div>

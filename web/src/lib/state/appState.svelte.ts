@@ -8,7 +8,7 @@ import {
 } from '../engine/engineBridge';
 import { loadSlotsFromStorage, saveSlotsToStorage } from '../services/persistence';
 
-export function createDefaultScenario(name = 'Default Scenario'): Purchase {
+export function createDefaultScenario(name = 'Standard 30Y Mortgage'): Purchase {
   return {
     name,
     house: {
@@ -37,11 +37,11 @@ export class AppState {
   activeParamTab = $state<'property' | 'tools' | 'repayments'>('property');
   selectedMonth = $state<number | null>(null);
 
-  // Scenario slots storage (All 3 initialized with independent Default Scenario instances)
+  // Scenario slots storage (All 3 initialized with the same default scenario name "Standard 30Y Mortgage")
   slot1 = $state<ScenarioSlot>({
     id: 1,
     name: 'Slot 1',
-    purchase: createDefaultScenario('Default Scenario (Slot 1)'),
+    purchase: createDefaultScenario('Standard 30Y Mortgage'),
     scenario: null,
     analysis: null,
     error: null
@@ -50,7 +50,7 @@ export class AppState {
   slot2 = $state<ScenarioSlot>({
     id: 2,
     name: 'Slot 2',
-    purchase: createDefaultScenario('Default Scenario (Slot 2)'),
+    purchase: createDefaultScenario('Standard 30Y Mortgage'),
     scenario: null,
     analysis: null,
     error: null
@@ -59,7 +59,7 @@ export class AppState {
   slot3 = $state<ScenarioSlot>({
     id: 3,
     name: 'Slot 3',
-    purchase: createDefaultScenario('Default Scenario (Slot 3)'),
+    purchase: createDefaultScenario('Standard 30Y Mortgage'),
     scenario: null,
     analysis: null,
     error: null
@@ -167,9 +167,9 @@ export class AppState {
     }
   }
 
-  // Reset a slot back to the baseline Default Scenario
+  // Reset a slot back to the baseline Standard 30Y Mortgage scenario
   resetSlot(slotId: SlotId) {
-    this.loadPurchaseIntoSlot(slotId, createDefaultScenario(`Default Scenario (Slot ${slotId})`));
+    this.loadPurchaseIntoSlot(slotId, createDefaultScenario('Standard 30Y Mortgage'));
   }
 
   // Duplicate one slot to another

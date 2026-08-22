@@ -9,7 +9,7 @@
   let searchQuery = $state('');
   let customList = $state<SavedUserScenario[]>(getCustomScenarios());
 
-  const defaultScenario = createDefaultScenario('Default Scenario');
+  const defaultScenario = createDefaultScenario('Standard 30Y Mortgage');
 
   const filteredCustom = $derived.by(() => {
     const q = searchQuery.toLowerCase().trim();
@@ -66,7 +66,7 @@
           <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
             <div>
               <div class="flex items-center gap-2">
-                <h4 class="text-sm font-bold text-white">Default Scenario</h4>
+                <h4 class="text-sm font-bold text-white">Standard 30Y Mortgage</h4>
                 <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800/60 font-semibold">
                   Standard Baseline
                 </span>
