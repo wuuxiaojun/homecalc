@@ -32,7 +32,6 @@
   const mortAmount = $derived(purchase.tools.find(t => 'Mortgage' in t)?.Mortgage?.amount || 0);
   const locAmount = $derived(purchase.tools.find(t => 'Loc' in t)?.Loc?.amount || 0);
   const totalDebt = $derived(mortAmount + locAmount);
-  const monthlyHold = $derived(((house.purchase_price * house.annual_property_tax_rate * 0.01) / 12) + (house.annual_insurance / 12) + house.monthly_hoa);
 </script>
 
 <div class="p-4 lg:p-6 space-y-5 flex-1 flex flex-col justify-between">
@@ -137,11 +136,6 @@
           <div class="text-[10px] text-zinc-500">Total Borrowed</div>
           <div class="font-bold text-indigo-300 tabular-nums">${totalDebt.toLocaleString()}</div>
         </div>
-      </div>
-
-      <div class="flex items-center justify-between text-[11px] font-mono text-zinc-400 pt-0.5">
-        <span>Initial Holding Cost:</span>
-        <span class="text-amber-400 font-semibold">${Math.round(monthlyHold).toLocaleString()}/mo</span>
       </div>
     </div>
   </div>
