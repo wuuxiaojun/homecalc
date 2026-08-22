@@ -241,10 +241,16 @@
           <span class="text-xs font-semibold text-zinc-200">Mortgage Loan</span>
         </div>
         <button
-          class="text-xs font-mono px-2 py-0.5 rounded transition-colors {mortgageTool ? 'bg-indigo-950 text-indigo-300 border border-indigo-800/60' : 'bg-zinc-800 text-zinc-400'}"
+          type="button"
+          role="switch"
+          aria-checked={!!mortgageTool}
+          aria-label="Toggle Mortgage Loan"
+          class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-zinc-900 {mortgageTool ? 'bg-indigo-600' : 'bg-zinc-700'}"
           onclick={() => toggleTool('Mortgage')}
         >
-          {mortgageTool ? 'Enabled' : 'Disabled'}
+          <span
+            class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {mortgageTool ? 'translate-x-4' : 'translate-x-0'}"
+          ></span>
         </button>
       </div>
 
@@ -336,10 +342,16 @@
           <span class="text-xs font-semibold text-zinc-200">Line of Credit (LOC)</span>
         </div>
         <button
-          class="text-xs font-mono px-2 py-0.5 rounded transition-colors {locTool ? 'bg-amber-950 text-amber-300 border border-amber-800/60' : 'bg-zinc-800 text-zinc-400'}"
+          type="button"
+          role="switch"
+          aria-checked={!!locTool}
+          aria-label="Toggle Line of Credit"
+          class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-900 {locTool ? 'bg-amber-500' : 'bg-zinc-700'}"
           onclick={() => toggleTool('Loc')}
         >
-          {locTool ? 'Enabled' : 'Disabled'}
+          <span
+            class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {locTool ? 'translate-x-4' : 'translate-x-0'}"
+          ></span>
         </button>
       </div>
 

@@ -19,32 +19,32 @@
   }
 </script>
 
-<header class="sticky top-0 z-30 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md px-4 lg:px-6 py-2.5">
-  <div class="max-w-[1920px] mx-auto flex items-center justify-between gap-3">
-    <!-- Brand Title & WASM Engine Badge -->
+<header class="sticky top-0 z-30 border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-md px-2 sm:px-4 lg:px-6 py-2.5">
+  <div class="max-w-[1920px] mx-auto flex items-center justify-between gap-4">
+    <!-- Brand Title & WASM Engine Badge (Enlarged & positioned closer to left edge) -->
     <div class="flex items-center gap-3">
-      <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-lg shadow-sm shadow-emerald-950/50">
-          🏡
+      <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/35 flex items-center justify-center text-2xl sm:text-[26px] shadow-lg shadow-emerald-950/50 shrink-0">
+        🏡
+      </div>
+      <div>
+        <div class="flex items-center gap-2 sm:gap-2.5">
+          <span class="font-black text-xl sm:text-2xl tracking-tight text-white">Homecalc</span>
+          <span class="text-xs uppercase tracking-wider px-2 py-0.5 rounded-md font-mono font-bold bg-zinc-800 text-zinc-200 border border-zinc-700/80 shadow-sm">
+            v2.0
+          </span>
+          <span class="inline-flex items-center gap-1.5 text-xs px-2.5 py-0.5 rounded-full font-mono bg-emerald-950/90 text-emerald-300 border border-emerald-800/70 font-semibold shadow-sm">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            Rust WASM
+          </span>
         </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="font-bold text-base tracking-tight text-white">Homecalc</span>
-            <span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded font-mono font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700/60">v2.0.0</span>
-            <span class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-mono bg-emerald-950/70 text-emerald-300 border border-emerald-800/50">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              Rust WASM
-            </span>
-          </div>
-          <p class="text-[11px] text-zinc-400 hidden sm:block">Reactive Scenario Engine</p>
-        </div>
+        <p class="text-xs text-zinc-400 font-medium mt-0.5 hidden sm:block">Reactive Mortgage & Scenario Engine</p>
       </div>
     </div>
 
     <!-- Right Controls: Slot Switcher & Action Tools -->
     <div class="flex items-center gap-2.5">
       <!-- Slot Switcher -->
-      <div class="flex items-center gap-1 bg-zinc-900/90 p-1 rounded-xl border border-zinc-800/80">
+      <div class="flex items-center gap-1 bg-zinc-900/90 p-1 rounded-xl border border-zinc-800/80 shadow-inner">
         {#each slots as s}
           {@const currentSlot = appState.getSlot(s.id)}
           <button

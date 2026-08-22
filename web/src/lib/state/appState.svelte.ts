@@ -13,7 +13,7 @@ export function createDefaultScenario(name = 'Standard 30Y Mortgage'): Purchase 
     name,
     house: {
       purchase_price: 1_000_000,
-      annual_property_tax_rate: 1.25,
+      annual_property_tax_rate: 1.20,
       annual_insurance: 2_400,
       monthly_hoa: 120
     },
@@ -73,6 +73,9 @@ export class AppState {
   private normalizeLegacyName(p: Purchase) {
     if (!p.name || p.name.includes('Default Scenario') || p.name.includes('New Scenario') || p.name.startsWith('Slot ')) {
       p.name = 'Standard 30Y Mortgage';
+    }
+    if (p.house && p.house.annual_property_tax_rate === 1.25 && p.house.purchase_price === 1_000_000) {
+      p.house.annual_property_tax_rate = 1.20;
     }
   }
 
