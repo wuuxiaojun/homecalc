@@ -92,16 +92,10 @@
         </div>
       {/snippet}
 
-      <input
-        type="range"
-        min="0"
-        max="5000000"
-        step="25000"
-        aria-label="Purchase Price Slider"
-        class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-        value={Math.max(0, Math.min(5000000, house.purchase_price))}
-        oninput={(e) => updatePrice(parseFloat(e.currentTarget.value) || 0)}
-      />
+      <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500">
+        <span>Full Acquisition Cost</span>
+        <span class="text-zinc-300 font-medium">${house.purchase_price.toLocaleString()}</span>
+      </div>
     </Card>
 
     <!-- 1. Property Tax Card -->

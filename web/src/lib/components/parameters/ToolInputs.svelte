@@ -186,39 +186,27 @@
 
       {#if mortgageTool}
         <!-- Principal Amount -->
-        <div class="space-y-1.5">
-          <div class="flex items-center justify-between text-xs">
-            <label for="mortgage-principal-input" class="text-zinc-400">Loan Principal</label>
-            <div class="flex items-center gap-1">
-              <span class="text-xs font-mono text-zinc-500">$</span>
-              <input
-                id="mortgage-principal-input"
-                type="number"
-                step="10000"
-                min="0"
-                max={housePrice}
-                class="w-28 px-1.5 py-0.5 text-right rounded bg-zinc-950 border border-zinc-800 text-xs font-mono font-bold text-indigo-300 tabular-nums focus:border-indigo-500 focus:outline-none"
-                value={mortgageTool.amount}
-                onblur={(e) => {
-                  const val = parseFloat(e.currentTarget.value);
-                  const clamped = isNaN(val) ? 0 : Math.max(0, Math.min(housePrice, val));
-                  updateMortgage(m => m.amount = clamped);
-                  e.currentTarget.value = String(clamped);
-                }}
-                onkeydown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
-              />
-            </div>
+        <div class="flex items-center justify-between text-xs">
+          <label for="mortgage-principal-input" class="text-zinc-400">Loan Principal</label>
+          <div class="flex items-center gap-1">
+            <span class="text-xs font-mono text-zinc-500">$</span>
+            <input
+              id="mortgage-principal-input"
+              type="number"
+              step="10000"
+              min="0"
+              max={housePrice}
+              class="w-28 px-1.5 py-0.5 text-right rounded bg-zinc-950 border border-zinc-800 text-xs font-mono font-bold text-indigo-300 tabular-nums focus:border-indigo-500 focus:outline-none"
+              value={mortgageTool.amount}
+              onblur={(e) => {
+                const val = parseFloat(e.currentTarget.value);
+                const clamped = isNaN(val) ? 0 : Math.max(0, Math.min(housePrice, val));
+                updateMortgage(m => m.amount = clamped);
+                e.currentTarget.value = String(clamped);
+              }}
+              onkeydown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+            />
           </div>
-          <input
-            type="range"
-            min="0"
-            max={Math.max(0, housePrice)}
-            step="10000"
-            aria-label="Mortgage Loan Principal Slider"
-            class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-            value={Math.max(0, Math.min(housePrice, mortgageTool.amount))}
-            oninput={(e) => updateMortgage(m => m.amount = parseFloat(e.currentTarget.value) || 0)}
-          />
         </div>
 
         <!-- Rate & Term Grid -->
@@ -301,39 +289,27 @@
 
       {#if locTool}
         <!-- Principal Amount -->
-        <div class="space-y-1.5">
-          <div class="flex items-center justify-between text-xs">
-            <label for="loc-amount-input" class="text-zinc-400">LOC Credit Amount</label>
-            <div class="flex items-center gap-1">
-              <span class="text-xs font-mono text-zinc-500">$</span>
-              <input
-                id="loc-amount-input"
-                type="number"
-                step="10000"
-                min="0"
-                max={housePrice}
-                class="w-28 px-1.5 py-0.5 text-right rounded bg-zinc-950 border border-zinc-800 text-xs font-mono font-bold text-amber-300 tabular-nums focus:border-amber-500 focus:outline-none"
-                value={locTool.amount}
-                onblur={(e) => {
-                  const val = parseFloat(e.currentTarget.value);
-                  const clamped = isNaN(val) ? 0 : Math.max(0, Math.min(housePrice, val));
-                  updateLoc(l => l.amount = clamped);
-                  e.currentTarget.value = String(clamped);
-                }}
-                onkeydown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
-              />
-            </div>
+        <div class="flex items-center justify-between text-xs">
+          <label for="loc-amount-input" class="text-zinc-400">LOC Credit Amount</label>
+          <div class="flex items-center gap-1">
+            <span class="text-xs font-mono text-zinc-500">$</span>
+            <input
+              id="loc-amount-input"
+              type="number"
+              step="10000"
+              min="0"
+              max={housePrice}
+              class="w-28 px-1.5 py-0.5 text-right rounded bg-zinc-950 border border-zinc-800 text-xs font-mono font-bold text-amber-300 tabular-nums focus:border-amber-500 focus:outline-none"
+              value={locTool.amount}
+              onblur={(e) => {
+                const val = parseFloat(e.currentTarget.value);
+                const clamped = isNaN(val) ? 0 : Math.max(0, Math.min(housePrice, val));
+                updateLoc(l => l.amount = clamped);
+                e.currentTarget.value = String(clamped);
+              }}
+              onkeydown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+            />
           </div>
-          <input
-            type="range"
-            min="0"
-            max={Math.max(0, housePrice)}
-            step="10000"
-            aria-label="LOC Credit Amount Slider"
-            class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
-            value={Math.max(0, Math.min(housePrice, locTool.amount))}
-            oninput={(e) => updateLoc(l => l.amount = parseFloat(e.currentTarget.value) || 0)}
-          />
         </div>
 
         <!-- Rate -->
