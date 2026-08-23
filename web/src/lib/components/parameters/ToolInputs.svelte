@@ -127,8 +127,12 @@
 
       <!-- Legend -->
       <div class="flex items-center gap-3 text-[11px] font-mono text-zinc-400 pt-1">
-        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Cash {cashPercent.toFixed(0)}%</span>
-        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-400"></span> Mort {mortgagePercent.toFixed(0)}%</span>
+        {#if cashPercent > 0}
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Cash {cashPercent.toFixed(0)}%</span>
+        {/if}
+        {#if mortgagePercent > 0}
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-400"></span> Mort {mortgagePercent.toFixed(0)}%</span>
+        {/if}
         {#if locPercent > 0}
           <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span> LOC {locPercent.toFixed(0)}%</span>
         {/if}
