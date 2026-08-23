@@ -16,6 +16,12 @@ pub fn wasm_engine_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
 
+/// Returns the default starting cash limit constant from engine configuration.
+#[wasm_bindgen]
+pub fn wasm_default_starting_cash() -> f64 {
+    engine::config::constant::DEFAULT_STARTING_CASH
+}
+
 /// Simulates a purchase scenario from a JavaScript `Purchase` object and returns the full `Scenario`.
 #[wasm_bindgen]
 pub fn wasm_create_scenario(val: JsValue) -> Result<JsValue, JsValue> {
@@ -193,6 +199,11 @@ mod tests {
         let val = irr.unwrap();
         let expected = (1.10_f64).powi(12) - 1.0;
         assert!((val - expected).abs() < 1e-4);
+    }
+
+    #[test]
+    fn test_wasm_default_starting_cash() {
+        assert_eq!(wasm_default_starting_cash(), 1_000_000.00);
     }
 
     #[test]

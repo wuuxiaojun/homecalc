@@ -81,16 +81,18 @@
           </div>
         </div>
 
-        <!-- Render Current Active View -->
-        {#if appState.activeView === 'overview'}
-          <ScenarioSummaryView />
-        {:else if appState.activeView === 'charts'}
-          <AnalyticsWorkspace />
-        {:else if appState.activeView === 'statements'}
-          <StatementWorkspace />
-        {:else if appState.activeView === 'comparison'}
-          <ComparisonView />
-        {/if}
+        <!-- Render Current Active View with right-canvas freeze guard -->
+        <div class={appState.activeSlot.error ? 'opacity-40 pointer-events-none select-none transition-opacity duration-300' : 'transition-opacity duration-300'}>
+          {#if appState.activeView === 'overview'}
+            <ScenarioSummaryView />
+          {:else if appState.activeView === 'charts'}
+            <AnalyticsWorkspace />
+          {:else if appState.activeView === 'statements'}
+            <StatementWorkspace />
+          {:else if appState.activeView === 'comparison'}
+            <ComparisonView />
+          {/if}
+        </div>
       </div>
     {/snippet}
   </SplitPane>

@@ -5,6 +5,7 @@
   import ToolInputs from './ToolInputs.svelte';
   import RepaymentScheduleEditor from './RepaymentScheduleEditor.svelte';
   import Card from '../common/Card.svelte';
+  import { formatCurrency } from '../../utils/format';
 
   let activeTab = $state<'property' | 'tools' | 'repayments'>('property');
   let savedSuccess = $state(false);
@@ -44,6 +45,17 @@
         </button>
       </div>
     </div>
+
+    <!-- Validation Error Callout (No quick-adjust buttons) -->
+    {#if appState.activeSlot.error}
+      <div class="p-3.5 rounded-2xl bg-rose-950/80 border border-rose-800/80 text-rose-200 text-xs font-mono flex items-start gap-2.5 shadow-sm">
+        <span class="text-base shrink-0">⚠️</span>
+        <div class="space-y-1">
+          <div class="font-bold text-rose-300 uppercase tracking-wide text-[10px]">Validation Error</div>
+          <div class="leading-relaxed">{appState.activeSlot.error}</div>
+        </div>
+      </div>
+    {/if}
 
     <!-- Inner Parameter Tabs -->
     <div class="flex items-center bg-zinc-900/80 p-1 rounded-xl border border-zinc-800/80">
@@ -89,11 +101,11 @@
       <div class="grid grid-cols-2 gap-2 text-xs font-mono">
         <div class="p-2.5 rounded-xl bg-zinc-950/70 border border-zinc-800/50">
           <div class="text-[10px] text-zinc-500">Cash Required</div>
-          <div class="font-bold text-emerald-400 tabular-nums">${cashAmount.toLocaleString()}</div>
+          <div class="font-bold text-emerald-400 tabular-nums">{formatCurrency(cashAmount)}</div>
         </div>
         <div class="p-2.5 rounded-xl bg-zinc-950/70 border border-zinc-800/50">
           <div class="text-[10px] text-zinc-500">Total Borrowed</div>
-          <div class="font-bold text-indigo-300 tabular-nums">${totalDebt.toLocaleString()}</div>
+          <div class="font-bold text-indigo-300 tabular-nums">{formatCurrency(totalDebt)}</div>
         </div>
       </div>
     </Card>

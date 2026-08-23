@@ -16,7 +16,6 @@
   const locAmount = $derived(locTool?.amount || 0);
   const totalBorrowed = $derived(mortgageAmount + locAmount);
   const totalFunding = $derived(cashAmount + totalBorrowed);
-  const isOverAllocated = $derived(totalFunding > housePrice + 1);
 
   // Ratios
   const cashPercent = $derived(housePrice > 0 ? (cashAmount / housePrice) * 100 : 0);
@@ -43,10 +42,11 @@
   function updateCashRate(rate: number) {
     appState.updateActivePurchase((p) => {
       let c = p.tools.find(t => 'Cash' in t);
+      const clamped = Math.max(0, Math.min(25.0, rate));
       if (c && 'Cash' in c && c.Cash) {
-        c.Cash.rate = Math.max(0, rate);
+        c.Cash.rate = clamped;
       } else {
-        p.tools.push({ Cash: { amount: Math.max(0, housePrice - totalBorrowed), rate } });
+        p.tools.push({ Cash: { amount: Math.max(0, housePrice - totalBorrowed), rate: clamped } });
       }
     });
   }
@@ -61,8 +61,6 @@
       } else {
         updater(m.Mortgage);
       }
-      // Rebalance cash
-      rebalanceCashInPurchase(p);
     });
   }
 
@@ -76,8 +74,6 @@
       } else {
         updater(l.Loc);
       }
-      // Rebalance cash
-      rebalanceCashInPurchase(p);
     });
   }
 
@@ -88,30 +84,12 @@
         p.tools.splice(idx, 1);
       } else {
         if (type === 'Mortgage') {
-          p.tools.push({ Mortgage: { amount: Math.max(0, p.house.purchase_price * 0.8), rate: 6.5, term: 30 } });
+          p.tools.push({ Mortgage: { amount: Math.max(0, Math.min(p.house.purchase_price, p.house.purchase_price * 0.8)), rate: 6.5, term: 30 } });
         } else {
-          p.tools.push({ Loc: { amount: Math.max(0, p.house.purchase_price * 0.2), rate: 7.0 } });
+          p.tools.push({ Loc: { amount: Math.max(0, Math.min(p.house.purchase_price, p.house.purchase_price * 0.2)), rate: 7.0 } });
         }
       }
-      rebalanceCashInPurchase(p);
     });
-  }
-
-  function rebalanceCashInPurchase(p: typeof purchase) {
-    if (!p) return;
-    const mort = p.tools.find(t => 'Mortgage' in t)?.Mortgage?.amount || 0;
-    const loc = p.tools.find(t => 'Loc' in t)?.Loc?.amount || 0;
-    const neededCash = Math.max(0, p.house.purchase_price - (mort + loc));
-
-    let cashIdx = p.tools.findIndex(t => 'Cash' in t);
-    if (cashIdx >= 0) {
-      const c = p.tools[cashIdx];
-      if ('Cash' in c && c.Cash) {
-        c.Cash.amount = neededCash;
-      }
-    } else {
-      p.tools.push({ Cash: { amount: neededCash, rate: 4.0 } });
-    }
   }
 </script>
 
@@ -156,12 +134,6 @@
           <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span> LOC {locPercent.toFixed(0)}%</span>
         {/if}
       </div>
-
-      {#if isOverAllocated}
-        <div class="p-2 rounded-lg bg-rose-950/80 border border-rose-800/80 text-[11px] text-rose-300 font-mono">
-          ⚠️ Total borrowed (${totalBorrowed.toLocaleString()}) exceeds purchase price (${housePrice.toLocaleString()}).
-        </div>
-      {/if}
     </Card>
 
     <!-- 1. Cash Down Payment Card -->
@@ -180,7 +152,7 @@
             type="number"
             step="0.1"
             min="0"
-            max="15"
+            max="25"
             class="w-16 px-1.5 py-0.5 text-right rounded bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
             value={cashTool?.rate || 4.0}
             oninput={(e) => updateCashRate(parseFloat(e.currentTarget.value) || 0)}
@@ -219,9 +191,10 @@
                 type="number"
                 step="10000"
                 min="0"
+                max={housePrice}
                 class="w-28 px-1.5 py-0.5 text-right rounded bg-zinc-950 border border-zinc-800 text-xs font-mono font-bold text-indigo-300 tabular-nums focus:border-indigo-500 focus:outline-none"
                 value={mortgageTool.amount}
-                oninput={(e) => updateMortgage(m => m.amount = Math.max(0, parseFloat(e.currentTarget.value) || 0))}
+                oninput={(e) => updateMortgage(m => m.amount = Math.max(0, Math.min(housePrice, parseFloat(e.currentTarget.value) || 0)))}
               />
             </div>
           </div>
@@ -233,7 +206,7 @@
             aria-label="Mortgage Loan Principal Slider"
             class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
             value={mortgageTool.amount}
-            oninput={(e) => updateMortgage(m => m.amount = Math.max(0, parseFloat(e.currentTarget.value) || 0))}
+            oninput={(e) => updateMortgage(m => m.amount = Math.max(0, Math.min(housePrice, parseFloat(e.currentTarget.value) || 0)))}
           />
         </div>
 
@@ -248,10 +221,10 @@
                 type="number"
                 step="0.05"
                 min="0"
-                max="20"
+                max="25"
                 class="w-full px-2 py-1 text-right rounded bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-indigo-500 focus:outline-none"
                 value={mortgageTool.rate}
-                oninput={(e) => updateMortgage(m => m.rate = Math.max(0, parseFloat(e.currentTarget.value) || 0))}
+                oninput={(e) => updateMortgage(m => m.rate = Math.max(0, Math.min(25.0, parseFloat(e.currentTarget.value) || 0)))}
               />
               <span class="text-xs font-mono text-zinc-500">%</span>
             </div>
@@ -321,9 +294,10 @@
                 type="number"
                 step="10000"
                 min="0"
+                max={housePrice}
                 class="w-28 px-1.5 py-0.5 text-right rounded bg-zinc-950 border border-zinc-800 text-xs font-mono font-bold text-amber-300 tabular-nums focus:border-amber-500 focus:outline-none"
                 value={locTool.amount}
-                oninput={(e) => updateLoc(l => l.amount = Math.max(0, parseFloat(e.currentTarget.value) || 0))}
+                oninput={(e) => updateLoc(l => l.amount = Math.max(0, Math.min(housePrice, parseFloat(e.currentTarget.value) || 0)))}
               />
             </div>
           </div>
@@ -335,7 +309,7 @@
             aria-label="LOC Credit Amount Slider"
             class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
             value={locTool.amount}
-            oninput={(e) => updateLoc(l => l.amount = Math.max(0, parseFloat(e.currentTarget.value) || 0))}
+            oninput={(e) => updateLoc(l => l.amount = Math.max(0, Math.min(housePrice, parseFloat(e.currentTarget.value) || 0)))}
           />
         </div>
 
@@ -348,10 +322,10 @@
               type="number"
               step="0.1"
               min="0"
-              max="20"
+              max="25"
               class="w-16 px-1.5 py-0.5 text-right rounded bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-amber-500 focus:outline-none"
               value={locTool.rate}
-              oninput={(e) => updateLoc(l => l.rate = Math.max(0, parseFloat(e.currentTarget.value) || 0))}
+              oninput={(e) => updateLoc(l => l.rate = Math.max(0, Math.min(25.0, parseFloat(e.currentTarget.value) || 0)))}
             />
             <span class="text-xs font-mono text-zinc-500">%</span>
           </div>

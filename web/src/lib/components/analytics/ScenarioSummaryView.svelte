@@ -2,6 +2,7 @@
   import { appState } from '../../state/appState.svelte';
   import KpiCards from './KpiCards.svelte';
   import Card from '../common/Card.svelte';
+  import { formatCurrency, formatPercent, formatYears, isValidNumber } from '../../utils/format';
 
   const purchase = $derived(appState.activeSlot.purchase);
   const house = $derived(purchase.house);
@@ -12,12 +13,10 @@
   const yStatements = $derived(scenario?.yearly_statement || []);
   const y5 = $derived(yStatements.find(y => y.year === 5));
   const y10 = $derived(yStatements.find(y => y.year === 10));
-  const y15 = $derived(yStatements.find(y => y.year === 15));
 
-  const totalMortgage = $derived(purchase.tools.find(t => 'Mortgage' in t)?.Mortgage?.amount || 0);
-  const totalLoc = $derived(purchase.tools.find(t => 'Loc' in t)?.Loc?.amount || 0);
-  const totalLoan = $derived(totalMortgage + totalLoc);
-  const cashDown = $derived(purchase.tools.find(t => 'Cash' in t)?.Cash?.amount || 0);
+  const monthlyTax = $derived((house.purchase_price * house.annual_property_tax_rate * 0.01) / 12);
+  const monthlyIns = $derived(house.annual_insurance / 12);
+  const initialHolding = $derived(monthlyTax + monthlyIns + house.monthly_hoa);
 
   // Month 1 Cost Breakdown for visual bar
   const m1 = $derived(scenario?.monthly_statement?.[1]);
@@ -28,11 +27,11 @@
   const m1Hoa = $derived(m1?.house?.monthly_hoa || 0);
   const m1Total = $derived(m1Principal + m1Interest + m1Tax + m1Ins + m1Hoa || 1);
 
-  const pctPrincipal = $derived(((m1Principal / m1Total) * 100).toFixed(1));
-  const pctInterest = $derived(((m1Interest / m1Total) * 100).toFixed(1));
-  const pctTax = $derived(((m1Tax / m1Total) * 100).toFixed(1));
-  const pctIns = $derived(((m1Ins / m1Total) * 100).toFixed(1));
-  const pctHoa = $derived(((m1Hoa / m1Total) * 100).toFixed(1));
+  const pctPrincipal = $derived(isValidNumber(m1Principal / m1Total) ? ((m1Principal / m1Total) * 100).toFixed(1) : '0.0');
+  const pctInterest = $derived(isValidNumber(m1Interest / m1Total) ? ((m1Interest / m1Total) * 100).toFixed(1) : '0.0');
+  const pctTax = $derived(isValidNumber(m1Tax / m1Total) ? ((m1Tax / m1Total) * 100).toFixed(1) : '0.0');
+  const pctIns = $derived(isValidNumber(m1Ins / m1Total) ? ((m1Ins / m1Total) * 100).toFixed(1) : '0.0');
+  const pctHoa = $derived(isValidNumber(m1Hoa / m1Total) ? ((m1Hoa / m1Total) * 100).toFixed(1) : '0.0');
 </script>
 
 <div class="space-y-6">
@@ -45,7 +44,7 @@
     <Card icon="🏡" title="Property & Valuation">
       {#snippet headerRight()}
         <span class="text-xs font-mono text-emerald-400 font-bold">
-          ${house.purchase_price.toLocaleString()}
+          {formatCurrency(house.purchase_price)}
         </span>
       {/snippet}
 
@@ -53,23 +52,23 @@
         <tbody class="divide-y divide-zinc-800/40 font-mono">
           <tr class="py-2 flex justify-between">
             <td class="text-zinc-400">Purchase Price</td>
-            <td class="text-zinc-200 font-semibold tabular-nums">${house.purchase_price.toLocaleString()}</td>
+            <td class="text-zinc-200 font-semibold tabular-nums">{formatCurrency(house.purchase_price)}</td>
           </tr>
           <tr class="py-2 flex justify-between">
             <td class="text-zinc-400">Annual Property Tax Rate</td>
-            <td class="text-zinc-200 font-semibold tabular-nums">{house.annual_property_tax_rate.toFixed(2)}% (${Math.round((house.purchase_price * house.annual_property_tax_rate * 0.01) / 12).toLocaleString()}/mo)</td>
+            <td class="text-zinc-200 font-semibold tabular-nums">{formatPercent(house.annual_property_tax_rate, 2)} ({formatCurrency(monthlyTax)}/mo)</td>
           </tr>
           <tr class="py-2 flex justify-between">
             <td class="text-zinc-400">Annual Home Insurance</td>
-            <td class="text-zinc-200 font-semibold tabular-nums">${house.annual_insurance.toLocaleString()} (${Math.round(house.annual_insurance / 12).toLocaleString()}/mo)</td>
+            <td class="text-zinc-200 font-semibold tabular-nums">{formatCurrency(house.annual_insurance)} ({formatCurrency(monthlyIns)}/mo)</td>
           </tr>
           <tr class="py-2 flex justify-between">
             <td class="text-zinc-400">Monthly HOA Fee</td>
-            <td class="text-zinc-200 font-semibold tabular-nums">${house.monthly_hoa.toLocaleString()}/mo</td>
+            <td class="text-zinc-200 font-semibold tabular-nums">{formatCurrency(house.monthly_hoa)}/mo</td>
           </tr>
           <tr class="py-2 flex justify-between">
             <td class="text-amber-400 font-medium">Initial Monthly Holding Cost</td>
-            <td class="text-amber-400 font-bold tabular-nums">${Math.round((house.purchase_price * house.annual_property_tax_rate * 0.01) / 12 + house.annual_insurance / 12 + house.monthly_hoa).toLocaleString()}/mo</td>
+            <td class="text-amber-400 font-bold tabular-nums">{formatCurrency(initialHolding)}/mo</td>
           </tr>
         </tbody>
       </table>
@@ -91,12 +90,12 @@
                 <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
                 <div>
                   <div class="font-semibold text-zinc-200">Cash Down Payment</div>
-                  <div class="text-[11px] text-zinc-500 font-mono">Yield: {tool.Cash.rate.toFixed(2)}% APR</div>
+                  <div class="text-[11px] text-zinc-500 font-mono">Yield: {formatPercent(tool.Cash.rate, 2)} APR</div>
                 </div>
               </div>
               <div class="text-right font-mono">
-                <div class="font-bold text-emerald-400 tabular-nums">${tool.Cash.amount.toLocaleString()}</div>
-                <div class="text-[10px] text-zinc-500">{((tool.Cash.amount / house.purchase_price) * 100).toFixed(1)}% of price</div>
+                <div class="font-bold text-emerald-400 tabular-nums">{formatCurrency(tool.Cash.amount)}</div>
+                <div class="text-[10px] text-zinc-500">{house.purchase_price > 0 ? ((tool.Cash.amount / house.purchase_price) * 100).toFixed(1) : '0.0'}% of price</div>
               </div>
             </div>
           {:else if 'Mortgage' in tool && tool.Mortgage}
@@ -105,12 +104,12 @@
                 <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
                 <div>
                   <div class="font-semibold text-zinc-200">Mortgage Loan ({tool.Mortgage.term} Years)</div>
-                  <div class="text-[11px] text-zinc-500 font-mono">Rate: {tool.Mortgage.rate.toFixed(2)}% Fixed</div>
+                  <div class="text-[11px] text-zinc-500 font-mono">Rate: {formatPercent(tool.Mortgage.rate, 2)} Fixed</div>
                 </div>
               </div>
               <div class="text-right font-mono">
-                <div class="font-bold text-indigo-300 tabular-nums">${tool.Mortgage.amount.toLocaleString()}</div>
-                <div class="text-[10px] text-zinc-500">{((tool.Mortgage.amount / house.purchase_price) * 100).toFixed(1)}% LTV</div>
+                <div class="font-bold text-indigo-300 tabular-nums">{formatCurrency(tool.Mortgage.amount)}</div>
+                <div class="text-[10px] text-zinc-500">{house.purchase_price > 0 ? ((tool.Mortgage.amount / house.purchase_price) * 100).toFixed(1) : '0.0'}% LTV</div>
               </div>
             </div>
           {:else if 'Loc' in tool && tool.Loc}
@@ -119,12 +118,12 @@
                 <span class="w-2 h-2 rounded-full bg-amber-400"></span>
                 <div>
                   <div class="font-semibold text-zinc-200">Line of Credit (LOC)</div>
-                  <div class="text-[11px] text-zinc-500 font-mono">Rate: {tool.Loc.rate.toFixed(2)}% Variable</div>
+                  <div class="text-[11px] text-zinc-500 font-mono">Rate: {formatPercent(tool.Loc.rate, 2)} Variable</div>
                 </div>
               </div>
               <div class="text-right font-mono">
-                <div class="font-bold text-amber-300 tabular-nums">${tool.Loc.amount.toLocaleString()}</div>
-                <div class="text-[10px] text-zinc-500">{((tool.Loc.amount / house.purchase_price) * 100).toFixed(1)}% of price</div>
+                <div class="font-bold text-amber-300 tabular-nums">{formatCurrency(tool.Loc.amount)}</div>
+                <div class="text-[10px] text-zinc-500">{house.purchase_price > 0 ? ((tool.Loc.amount / house.purchase_price) * 100).toFixed(1) : '0.0'}% of price</div>
               </div>
             </div>
           {/if}
@@ -147,11 +146,11 @@
           <div class="flex items-center justify-between">
             <span class="text-xs font-mono font-semibold text-zinc-400">Year 5</span>
             <span class="text-[11px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300">
-              {y5 ? `${(((house.purchase_price - y5.ending_remaining_balance) / house.purchase_price) * 100).toFixed(0)}% Equity` : 'N/A'}
+              {y5 && house.purchase_price > 0 ? `${(((house.purchase_price - y5.ending_remaining_balance) / house.purchase_price) * 100).toFixed(0)}% Equity` : 'N/A'}
             </span>
           </div>
           <div class="text-lg font-bold font-mono text-white tabular-nums">
-            ${y5 ? Math.round(y5.ending_remaining_balance).toLocaleString() : '$0'}
+            {y5 ? formatCurrency(y5.ending_remaining_balance) : '$0'}
           </div>
           <div class="text-[11px] font-mono text-zinc-500">Remaining Debt Balance</div>
         </div>
@@ -161,11 +160,11 @@
           <div class="flex items-center justify-between">
             <span class="text-xs font-mono font-semibold text-indigo-300">Year 10</span>
             <span class="text-[11px] font-mono px-1.5 py-0.5 rounded bg-indigo-950/80 text-indigo-300 border border-indigo-800/50">
-              {y10 ? `${(((house.purchase_price - y10.ending_remaining_balance) / house.purchase_price) * 100).toFixed(0)}% Equity` : 'N/A'}
+              {y10 && house.purchase_price > 0 ? `${(((house.purchase_price - y10.ending_remaining_balance) / house.purchase_price) * 100).toFixed(0)}% Equity` : 'N/A'}
             </span>
           </div>
           <div class="text-lg font-bold font-mono text-indigo-200 tabular-nums">
-            ${y10 ? Math.round(y10.ending_remaining_balance).toLocaleString() : '$0'}
+            {y10 ? formatCurrency(y10.ending_remaining_balance) : '$0'}
           </div>
           <div class="text-[11px] font-mono text-zinc-500">Remaining Debt Balance</div>
         </div>
@@ -179,10 +178,10 @@
             </span>
           </div>
           <div class="text-lg font-bold font-mono text-emerald-400 tabular-nums">
-            {analysis ? `${(analysis.payoff_month / 12).toFixed(1)} Years` : '30.0 Years'}
+            {analysis && isValidNumber(analysis.payoff_month) ? `${formatYears(analysis.payoff_month)} Years` : '30.0 Years'}
           </div>
           <div class="text-[11px] font-mono text-zinc-500">
-            {analysis ? `Month ${analysis.payoff_month} to debt-free` : 'Month 360'}
+            {analysis && isValidNumber(analysis.payoff_month) ? `Month ${analysis.payoff_month} to debt-free` : 'Month 360'}
           </div>
         </div>
       </div>
@@ -192,7 +191,7 @@
     <Card icon="📊" title="Monthly Outlay Split">
       {#snippet headerRight()}
         <span class="text-xs font-mono text-emerald-400 font-bold">
-          ${Math.round(m1Total).toLocaleString()}/mo
+          {formatCurrency(m1Total)}/mo
         </span>
       {/snippet}
 
@@ -209,19 +208,19 @@
       <div class="grid grid-cols-2 gap-2 text-[11px] font-mono text-zinc-400">
         <div class="flex items-center justify-between">
           <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-indigo-500"></span>Principal</span>
-          <span class="text-zinc-200 font-semibold">${Math.round(m1Principal).toLocaleString()}</span>
+          <span class="text-zinc-200 font-semibold">{formatCurrency(m1Principal)}</span>
         </div>
         <div class="flex items-center justify-between">
           <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-500"></span>Interest</span>
-          <span class="text-zinc-200 font-semibold">${Math.round(m1Interest).toLocaleString()}</span>
+          <span class="text-zinc-200 font-semibold">{formatCurrency(m1Interest)}</span>
         </div>
         <div class="flex items-center justify-between">
           <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span>Property Tax</span>
-          <span class="text-zinc-200 font-semibold">${Math.round(m1Tax).toLocaleString()}</span>
+          <span class="text-zinc-200 font-semibold">{formatCurrency(m1Tax)}</span>
         </div>
         <div class="flex items-center justify-between">
           <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-cyan-500"></span>Insurance</span>
-          <span class="text-zinc-200 font-semibold">${Math.round(m1Ins).toLocaleString()}</span>
+          <span class="text-zinc-200 font-semibold">{formatCurrency(m1Ins)}</span>
         </div>
       </div>
     </Card>

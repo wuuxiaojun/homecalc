@@ -8,6 +8,10 @@
 
   const purchase = $derived(appState.activeSlot.purchase);
 
+  const mortPrincipal = $derived(purchase?.tools.find(t => 'Mortgage' in t)?.Mortgage?.amount || 0);
+  const locPrincipal = $derived(purchase?.tools.find(t => 'Loc' in t)?.Loc?.amount || 0);
+  const activePrincipal = $derived(targetTool === 'mortgage' ? mortPrincipal : locPrincipal);
+
   // Combined sorted list of repayments
   const repaymentsList = $derived.by(() => {
     if (!purchase) return [];
@@ -24,8 +28,11 @@
   const totalExtraPrincipal = $derived(repaymentsList.reduce((sum, r) => sum + r.amount, 0));
 
   function handleAddOneTime() {
-    if (inputMonth <= 0 || inputAmount <= 0) return;
-    appState.addExtraPayment(targetTool, inputMonth, inputAmount);
+    const validMonth = Math.max(1, Math.min(360, inputMonth || 1));
+    const maxAmt = Math.max(1, activePrincipal);
+    const validAmount = Math.max(1, Math.min(maxAmt, inputAmount || 1));
+    if (validAmount <= 0) return;
+    appState.addExtraPayment(targetTool, validMonth, validAmount);
   }
 
   function handleRemove(tool: 'mortgage' | 'loc', month: number) {
@@ -83,7 +90,7 @@
       <!-- Month & Amount Inputs -->
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label for="repay-month-input" class="text-[11px] text-zinc-400 block mb-1">Month Number</label>
+          <label for="repay-month-input" class="text-[11px] text-zinc-400 block mb-1">Month (1-360)</label>
           <input
             id="repay-month-input"
             type="number"
@@ -100,7 +107,8 @@
             id="repay-amount-input"
             type="number"
             step="1000"
-            min="100"
+            min="1"
+            max={Math.max(1, activePrincipal)}
             class="w-full px-2.5 py-1.5 text-right rounded-lg bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-emerald-400 tabular-nums focus:border-emerald-500 focus:outline-none"
             bind:value={inputAmount}
           />

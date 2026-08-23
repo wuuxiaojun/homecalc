@@ -4,7 +4,8 @@ import initWasm, {
   wasm_compare_scenarios_from_json,
   wasm_calculate_scenario_pv_from_json,
   wasm_solve_irr,
-  wasm_engine_version
+  wasm_engine_version,
+  wasm_default_starting_cash
 } from '../wasm/engine_wasm.js';
 import type { Purchase, Scenario, ScenarioAnalysis, ScenarioComparison } from '../state/types';
 
@@ -66,5 +67,13 @@ export function getEngineVersion(): string {
     return wasm_engine_version();
   } catch {
     return '2.0.0';
+  }
+}
+
+export function getDefaultStartingCash(): number {
+  try {
+    return wasm_default_starting_cash();
+  } catch {
+    return 1_000_000.00;
   }
 }

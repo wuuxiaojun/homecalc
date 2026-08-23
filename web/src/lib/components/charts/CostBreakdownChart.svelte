@@ -1,6 +1,7 @@
 <script lang="ts">
   import { appState } from '../../state/appState.svelte';
   import Card from '../common/Card.svelte';
+  import { formatCurrency, formatPercent, isValidNumber } from '../../utils/format';
 
   const slot = $derived(appState.activeSlot);
   const scenario = $derived(slot.scenario);
@@ -28,7 +29,7 @@
   {#snippet headerRight()}
     <div class="text-right font-mono">
       <span class="text-[10px] text-zinc-400 mr-1.5">Total Net Outlay:</span>
-      <span class="text-sm font-bold text-white tabular-nums">${Math.round(netCost).toLocaleString()}</span>
+      <span class="text-sm font-bold text-white tabular-nums">{formatCurrency(netCost)}</span>
     </div>
   {/snippet}
 
@@ -72,7 +73,7 @@
           <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
           <span>Cash Down</span>
         </div>
-        <div class="text-sm font-bold text-emerald-400 mt-1 tabular-nums">${Math.round(cashDown).toLocaleString()}</div>
+        <div class="text-sm font-bold text-emerald-400 mt-1 tabular-nums">{formatCurrency(cashDown)}</div>
         <div class="text-[10px] text-zinc-500">{pctCash.toFixed(1)}% of gross</div>
       </div>
 
@@ -82,7 +83,7 @@
           <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
           <span>Loan Principal</span>
         </div>
-        <div class="text-sm font-bold text-indigo-300 mt-1 tabular-nums">${Math.round(principalBorrowed).toLocaleString()}</div>
+        <div class="text-sm font-bold text-indigo-300 mt-1 tabular-nums">{formatCurrency(principalBorrowed)}</div>
         <div class="text-[10px] text-zinc-500">{pctPrincipal.toFixed(1)}% of gross</div>
       </div>
 
@@ -92,7 +93,7 @@
           <span class="w-2 h-2 rounded-full bg-rose-400"></span>
           <span>Total Interest</span>
         </div>
-        <div class="text-sm font-bold text-rose-400 mt-1 tabular-nums">${Math.round(totalInterest).toLocaleString()}</div>
+        <div class="text-sm font-bold text-rose-400 mt-1 tabular-nums">{formatCurrency(totalInterest)}</div>
         <div class="text-[10px] text-zinc-500">{pctInterest.toFixed(1)}% of gross</div>
       </div>
 
@@ -102,7 +103,7 @@
           <span class="w-2 h-2 rounded-full bg-amber-400"></span>
           <span>Holding Costs</span>
         </div>
-        <div class="text-sm font-bold text-amber-400 mt-1 tabular-nums">${Math.round(totalHolding).toLocaleString()}</div>
+        <div class="text-sm font-bold text-amber-400 mt-1 tabular-nums">{formatCurrency(totalHolding)}</div>
         <div class="text-[10px] text-zinc-500">{pctHolding.toFixed(1)}% of gross</div>
       </div>
     </div>
@@ -113,15 +114,15 @@
     <div class="flex items-center gap-4">
       <div class="flex items-center gap-2">
         <span class="text-emerald-400 font-bold">🧾 Tax Deduction Offset:</span>
-        <span class="text-emerald-400 font-semibold tabular-nums">-${Math.round(totalTaxSavings).toLocaleString()}</span>
+        <span class="text-emerald-400 font-semibold tabular-nums">-{formatCurrency(totalTaxSavings)}</span>
       </div>
       <div class="flex items-center gap-2">
         <span class="text-cyan-400 font-bold">💵 Cash Yield Earned:</span>
-        <span class="text-cyan-400 font-semibold tabular-nums">-${Math.round(totalCashInterest).toLocaleString()}</span>
+        <span class="text-cyan-400 font-semibold tabular-nums">-{formatCurrency(totalCashInterest)}</span>
       </div>
     </div>
     <div class="text-zinc-400">
-      Combined Benefit: <span class="font-bold text-emerald-300">-${Math.round(totalTaxSavings + totalCashInterest).toLocaleString()}</span>
+      Combined Benefit: <span class="font-bold text-emerald-300">-{formatCurrency(totalTaxSavings + totalCashInterest)}</span>
     </div>
   </div>
 </Card>

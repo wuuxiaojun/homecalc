@@ -15,10 +15,10 @@
   const totalMonthlyHolding = $derived(monthlyTax + monthlyInsurance + house.monthly_hoa);
 
   function updatePrice(val: number) {
-    const clamped = Math.max(0, val);
+    const clamped = Math.max(10_000, Math.min(100_000_000, val));
     appState.updateActivePurchase((p) => {
       p.house.purchase_price = clamped;
-      // Auto-rebalance cash if needed
+      // Auto-rebalance cash
       const mort = p.tools.find(t => 'Mortgage' in t)?.Mortgage?.amount || 0;
       const loc = p.tools.find(t => 'Loc' in t)?.Loc?.amount || 0;
       const cashTool = p.tools.find(t => 'Cash' in t);
@@ -30,19 +30,19 @@
 
   function updateTaxRate(val: number) {
     appState.updateActivePurchase((p) => {
-      p.house.annual_property_tax_rate = Math.max(0, Math.min(20, val));
+      p.house.annual_property_tax_rate = Math.max(0, Math.min(10.0, val));
     });
   }
 
   function updateInsurance(val: number) {
     appState.updateActivePurchase((p) => {
-      p.house.annual_insurance = Math.max(0, val);
+      p.house.annual_insurance = Math.max(0, Math.min(100_000, val));
     });
   }
 
   function updateHoa(val: number) {
     appState.updateActivePurchase((p) => {
-      p.house.monthly_hoa = Math.max(0, val);
+      p.house.monthly_hoa = Math.max(0, Math.min(10_000, val));
     });
   }
 
@@ -77,23 +77,24 @@
             id="purchase-price-input"
             type="number"
             step="10000"
-            min="0"
+            min="10000"
+            max="100000000"
             class="w-32 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-sm font-mono font-bold text-emerald-400 tabular-nums focus:border-emerald-500 focus:outline-none"
             value={house.purchase_price}
-            oninput={(e) => updatePrice(parseFloat(e.currentTarget.value) || 0)}
+            oninput={(e) => updatePrice(parseFloat(e.currentTarget.value) || 10000)}
           />
         </div>
       {/snippet}
 
       <input
         type="range"
-        min="100000"
+        min="10000"
         max="5000000"
         step="25000"
         aria-label="Purchase Price Slider"
         class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-        value={house.purchase_price}
-        oninput={(e) => updatePrice(parseFloat(e.currentTarget.value) || 0)}
+        value={Math.min(5000000, house.purchase_price)}
+        oninput={(e) => updatePrice(parseFloat(e.currentTarget.value) || 10000)}
       />
     </Card>
 
@@ -131,6 +132,7 @@
             type="number"
             step="100"
             min="0"
+            max="100000"
             class="w-24 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
             value={house.annual_insurance}
             oninput={(e) => updateInsurance(parseFloat(e.currentTarget.value) || 0)}
@@ -155,6 +157,7 @@
             type="number"
             step="25"
             min="0"
+            max="10000"
             class="w-24 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
             value={house.monthly_hoa}
             oninput={(e) => updateHoa(parseFloat(e.currentTarget.value) || 0)}

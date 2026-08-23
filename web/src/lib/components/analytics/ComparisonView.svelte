@@ -1,6 +1,7 @@
 <script lang="ts">
   import { appState } from '../../state/appState.svelte';
   import type { SlotId } from '../../state/types';
+  import { formatCurrency, formatPercent, isValidNumber } from '../../utils/format';
 
   const baselineSlot = $derived(appState.getSlot(appState.comparisonBaselineId));
   const alternativeSlot = $derived(appState.getSlot(appState.comparisonAlternativeId));
@@ -14,11 +15,8 @@
     appState.comparisonAlternativeId = id;
   }
 
-  function formatCurrency(val: number): string {
-    return '$' + Math.round(val).toLocaleString();
-  }
-
-  function formatDeltaCurrency(val: number): { text: string; isPositive: boolean; isNeutral: boolean } {
+  function formatDeltaCurrency(val: number | null | undefined): { text: string; isPositive: boolean; isNeutral: boolean } {
+    if (!isValidNumber(val)) return { text: 'N/A', isPositive: false, isNeutral: true };
     const rounded = Math.round(val);
     if (Math.abs(rounded) < 1) return { text: '$0', isPositive: false, isNeutral: true };
     if (rounded < 0) {
@@ -79,17 +77,19 @@
       <!-- Months Saved -->
       <div class="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80">
         <div class="text-xs font-semibold text-zinc-400">⏱️ Payoff Acceleration</div>
-        <div class="mt-2 text-2xl font-bold font-mono tracking-tight tabular-nums {comparison.months_saved > 0 ? 'text-emerald-400' : comparison.months_saved < 0 ? 'text-rose-400' : 'text-zinc-300'}">
-          {#if comparison.months_saved > 0}
+        <div class="mt-2 text-2xl font-bold font-mono tracking-tight tabular-nums {isValidNumber(comparison.months_saved) && comparison.months_saved > 0 ? 'text-emerald-400' : isValidNumber(comparison.months_saved) && comparison.months_saved < 0 ? 'text-rose-400' : 'text-zinc-300'}">
+          {#if isValidNumber(comparison.months_saved) && comparison.months_saved > 0}
             +{comparison.months_saved} Months
-          {:else if comparison.months_saved < 0}
+          {:else if isValidNumber(comparison.months_saved) && comparison.months_saved < 0}
             {comparison.months_saved} Months
-          {:else}
+          {:else if isValidNumber(comparison.months_saved)}
             0 Months
+          {:else}
+            N/A
           {/if}
         </div>
         <div class="mt-1 text-[11px] font-mono text-zinc-500">
-          {(comparison.months_saved / 12).toFixed(1)} years faster payoff
+          {isValidNumber(comparison.months_saved) ? `${(comparison.months_saved / 12).toFixed(1)} years faster payoff` : 'Amortization variance'}
         </div>
       </div>
 
@@ -119,8 +119,8 @@
       <div class="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80">
         <div class="text-xs font-semibold text-zinc-400">📈 Strategy IRR</div>
         <div class="mt-2 text-2xl font-bold font-mono tracking-tight text-indigo-400 tabular-nums">
-          {#if comparison.irr !== null && comparison.irr !== undefined}
-            {(comparison.irr * 100).toFixed(2)}%
+          {#if isValidNumber(comparison.irr)}
+            {formatPercent(comparison.irr * 100, 2)}
           {:else}
             <span class="text-zinc-500 text-lg">N/A</span>
           {/if}
@@ -152,10 +152,20 @@
             <!-- Timeline -->
             <tr class="hover:bg-zinc-800/20 transition-colors">
               <td class="py-2.5 px-4 font-sans text-zinc-300 font-medium">⏱️ Payoff Timeline</td>
-              <td class="py-2.5 px-4 text-right text-zinc-200 tabular-nums">Month {comparison.baseline_payoff_month} ({(comparison.baseline_payoff_month / 12).toFixed(1)}y)</td>
-              <td class="py-2.5 px-4 text-right text-zinc-200 tabular-nums">Month {comparison.alternative_payoff_month} ({(comparison.alternative_payoff_month / 12).toFixed(1)}y)</td>
-              <td class="py-2.5 px-4 text-right font-bold tabular-nums {comparison.months_saved > 0 ? 'text-emerald-400' : comparison.months_saved < 0 ? 'text-rose-400' : 'text-zinc-400'}">
-                {comparison.months_saved > 0 ? `-${comparison.months_saved} Months Saved` : `${comparison.months_saved} Months`}
+              <td class="py-2.5 px-4 text-right text-zinc-200 tabular-nums">
+                {isValidNumber(comparison.baseline_payoff_month) ? `Month ${comparison.baseline_payoff_month} (${(comparison.baseline_payoff_month / 12).toFixed(1)}y)` : 'N/A'}
+              </td>
+              <td class="py-2.5 px-4 text-right text-zinc-200 tabular-nums">
+                {isValidNumber(comparison.alternative_payoff_month) ? `Month ${comparison.alternative_payoff_month} (${(comparison.alternative_payoff_month / 12).toFixed(1)}y)` : 'N/A'}
+              </td>
+              <td class="py-2.5 px-4 text-right font-bold tabular-nums {isValidNumber(comparison.months_saved) && comparison.months_saved > 0 ? 'text-emerald-400' : isValidNumber(comparison.months_saved) && comparison.months_saved < 0 ? 'text-rose-400' : 'text-zinc-400'}">
+                {#if isValidNumber(comparison.months_saved) && comparison.months_saved > 0}
+                  -{comparison.months_saved} Months Saved
+                {:else if isValidNumber(comparison.months_saved)}
+                  {comparison.months_saved} Months
+                {:else}
+                  N/A
+                {/if}
               </td>
             </tr>
 
@@ -219,7 +229,7 @@
               <td class="py-2.5 px-4 text-right text-zinc-500">N/A</td>
               <td class="py-2.5 px-4 text-right text-zinc-500">N/A</td>
               <td class="py-2.5 px-4 text-right font-bold text-indigo-400 tabular-nums">
-                {comparison.irr !== null && comparison.irr !== undefined ? `${(comparison.irr * 100).toFixed(2)}%` : 'N/A'}
+                {isValidNumber(comparison.irr) ? formatPercent(comparison.irr * 100, 2) : 'N/A'}
               </td>
             </tr>
           </tbody>

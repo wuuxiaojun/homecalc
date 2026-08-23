@@ -4,7 +4,8 @@ import {
   isWasmReady,
   computeScenarioSync,
   computeAnalysisSync,
-  computeComparisonSync
+  computeComparisonSync,
+  getDefaultStartingCash
 } from '../engine/engineBridge';
 import { loadSlotsFromStorage, saveSlotsToStorage } from '../services/persistence';
 
@@ -137,16 +138,68 @@ export class AppState {
     }
   }
 
-  // Recalculate single slot
+  // Validate purchase and derive cash down
+  validateAndDeriveCash(purchase: Purchase): { isValid: boolean; error: string | null; derivedCashDown: number } {
+    const housePrice = purchase.house.purchase_price;
+    const mort = purchase.tools.find(t => 'Mortgage' in t)?.Mortgage?.amount || 0;
+    const loc = purchase.tools.find(t => 'Loc' in t)?.Loc?.amount || 0;
+    const totalDebt = mort + loc;
+    const derivedCashDown = housePrice - totalDebt;
+    const startingCashLimit = getDefaultStartingCash();
+
+    // Check 1: Total borrowed > Purchase price
+    if (totalDebt > housePrice) {
+      const excess = totalDebt - housePrice;
+      return {
+        isValid: false,
+        error: `Total borrowed ($${totalDebt.toLocaleString()}) exceeds purchase price ($${housePrice.toLocaleString()}) by $${excess.toLocaleString()}.`,
+        derivedCashDown
+      };
+    }
+
+    // Check 2: Derived Cash Down > Engine Starting Cash Limit
+    if (derivedCashDown > startingCashLimit) {
+      const excess = derivedCashDown - startingCashLimit;
+      return {
+        isValid: false,
+        error: `Required cash down payment ($${derivedCashDown.toLocaleString()}) exceeds maximum available starting cash ($${startingCashLimit.toLocaleString()}) by $${excess.toLocaleString()}.`,
+        derivedCashDown
+      };
+    }
+
+    return {
+      isValid: true,
+      error: null,
+      derivedCashDown
+    };
+  }
+
+  // Recalculate single slot with validation guard
   recalculateSlot(slotId: SlotId) {
     if (!isWasmReady()) return;
     const slot = this.getSlot(slotId);
+    const validation = this.validateAndDeriveCash(slot.purchase);
+
+    if (!validation.isValid) {
+      slot.error = validation.error;
+      // Skip WASM recalculation, freeze and preserve previous valid scenario and analysis
+      return;
+    }
+
+    // Valid state: sync derived cash down into tools and clear error
+    slot.error = null;
+    let cashTool = slot.purchase.tools.find(t => 'Cash' in t);
+    if (cashTool && 'Cash' in cashTool && cashTool.Cash) {
+      cashTool.Cash.amount = validation.derivedCashDown;
+    } else {
+      slot.purchase.tools.push({ Cash: { amount: validation.derivedCashDown, rate: 4.0 } });
+    }
+
     try {
       const scenario = computeScenarioSync(slot.purchase);
       const analysis = computeAnalysisSync(scenario);
       slot.scenario = scenario;
       slot.analysis = analysis;
-      slot.error = null;
     } catch (err: any) {
       slot.error = err?.message || String(err);
       console.error(`Slot ${slotId} simulation error:`, err);
