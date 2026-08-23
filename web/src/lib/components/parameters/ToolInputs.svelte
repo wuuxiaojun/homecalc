@@ -156,7 +156,9 @@
             value={cashTool?.rate || 4.0}
             oninput={(e) => {
               const val = parseFloat(e.currentTarget.value);
-              if (!isNaN(val)) updateCashRate(val);
+              if (!isNaN(val) && val >= 0 && val <= 25.0) {
+                updateCashRate(val);
+              }
             }}
             onblur={(e) => {
               const val = parseFloat(e.currentTarget.value);
@@ -205,7 +207,9 @@
                 value={mortgageTool.amount}
                 oninput={(e) => {
                   const val = parseFloat(e.currentTarget.value);
-                  if (!isNaN(val)) updateMortgage(m => m.amount = val);
+                  if (!isNaN(val) && val >= 0) {
+                    updateMortgage(m => m.amount = val);
+                  }
                 }}
                 onblur={(e) => {
                   const val = parseFloat(e.currentTarget.value);
@@ -245,7 +249,9 @@
                 value={mortgageTool.rate}
                 oninput={(e) => {
                   const val = parseFloat(e.currentTarget.value);
-                  if (!isNaN(val)) updateMortgage(m => m.rate = val);
+                  if (!isNaN(val) && val >= 0 && val <= 25.0) {
+                    updateMortgage(m => m.rate = val);
+                  }
                 }}
                 onblur={(e) => {
                   const val = parseFloat(e.currentTarget.value);
@@ -273,7 +279,9 @@
                 value={mortgageTool.term}
                 oninput={(e) => {
                   const val = parseInt(e.currentTarget.value, 10);
-                  if (!isNaN(val)) updateMortgage(m => m.term = val);
+                  if (!isNaN(val) && val >= 1 && val <= 30) {
+                    updateMortgage(m => m.term = val);
+                  }
                 }}
                 onblur={(e) => {
                   const val = parseInt(e.currentTarget.value, 10);
@@ -332,7 +340,9 @@
                 value={locTool.amount}
                 oninput={(e) => {
                   const val = parseFloat(e.currentTarget.value);
-                  if (!isNaN(val)) updateLoc(l => l.amount = val);
+                  if (!isNaN(val) && val >= 0) {
+                    updateLoc(l => l.amount = val);
+                  }
                 }}
                 onblur={(e) => {
                   const val = parseFloat(e.currentTarget.value);
@@ -370,7 +380,9 @@
               value={locTool.rate}
               oninput={(e) => {
                 const val = parseFloat(e.currentTarget.value);
-                if (!isNaN(val)) updateLoc(l => l.rate = val);
+                if (!isNaN(val) && val >= 0 && val <= 25.0) {
+                  updateLoc(l => l.rate = val);
+                }
               }}
               onblur={(e) => {
                 const val = parseFloat(e.currentTarget.value);

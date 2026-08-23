@@ -4,10 +4,11 @@
   import Card from '../common/Card.svelte';
   import { formatCurrency, formatPercent, formatYears, isValidNumber } from '../../utils/format';
 
-  const purchase = $derived(appState.activeSlot.purchase);
-  const house = $derived(purchase.house);
-  const scenario = $derived(appState.activeSlot.scenario);
-  const analysis = $derived(appState.activeSlot.analysis);
+  const slot = $derived(appState.activeSlot);
+  const scenario = $derived(slot.scenario);
+  const analysis = $derived(slot.analysis);
+  const displayPurchase = $derived(scenario?.purchase || slot.purchase);
+  const house = $derived(displayPurchase.house);
 
   // Derive Milestone metrics from yearly statements
   const yStatements = $derived(scenario?.yearly_statement || []);
@@ -78,12 +79,12 @@
     <Card icon="💳" title="Financing Structure">
       {#snippet headerRight()}
         <span class="text-xs font-mono text-zinc-400 font-medium">
-          {purchase.tools.length} Instruments
+          {displayPurchase.tools.length} Instruments
         </span>
       {/snippet}
 
       <div class="space-y-3">
-        {#each purchase.tools as tool}
+        {#each displayPurchase.tools as tool}
           {#if 'Cash' in tool && tool.Cash}
             <div class="p-3 rounded-xl bg-zinc-950/80 border border-zinc-800/60 flex items-center justify-between text-xs">
               <div class="flex items-center gap-2.5">

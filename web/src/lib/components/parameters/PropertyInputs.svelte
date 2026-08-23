@@ -83,7 +83,10 @@
             value={house.purchase_price}
             oninput={(e) => {
               const val = parseFloat(e.currentTarget.value);
-              if (!isNaN(val)) updatePrice(val);
+              // Only trigger real-time recalculation if within single-field boundaries
+              if (!isNaN(val) && val >= 0 && val <= 100_000_000) {
+                updatePrice(val);
+              }
             }}
             onblur={(e) => {
               const val = parseFloat(e.currentTarget.value);
@@ -122,7 +125,10 @@
             value={house.annual_property_tax_rate}
             oninput={(e) => {
               const val = parseFloat(e.currentTarget.value);
-              if (!isNaN(val)) updateTaxRate(val);
+              // Only trigger real-time calculation if valid (0 to 10%)
+              if (!isNaN(val) && val >= 0 && val <= 10.0) {
+                updateTaxRate(val);
+              }
             }}
             onblur={(e) => {
               const val = parseFloat(e.currentTarget.value);
@@ -157,7 +163,9 @@
             value={house.annual_insurance}
             oninput={(e) => {
               const val = parseFloat(e.currentTarget.value);
-              if (!isNaN(val)) updateInsurance(val);
+              if (!isNaN(val) && val >= 0 && val <= 100_000) {
+                updateInsurance(val);
+              }
             }}
             onblur={(e) => {
               const val = parseFloat(e.currentTarget.value);
@@ -192,7 +200,9 @@
             value={house.monthly_hoa}
             oninput={(e) => {
               const val = parseFloat(e.currentTarget.value);
-              if (!isNaN(val)) updateHoa(val);
+              if (!isNaN(val) && val >= 0 && val <= 10_000) {
+                updateHoa(val);
+              }
             }}
             onblur={(e) => {
               const val = parseFloat(e.currentTarget.value);
