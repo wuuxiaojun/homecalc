@@ -107,6 +107,7 @@
               inputMonth = isNaN(val) ? 1 : Math.max(1, Math.min(360, val));
               e.currentTarget.value = String(inputMonth);
             }}
+            onkeydown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
           />
         </div>
 
@@ -130,6 +131,7 @@
               inputAmount = isNaN(val) ? 1 : Math.max(1, Math.min(maxAmt, val));
               e.currentTarget.value = String(inputAmount);
             }}
+            onkeydown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
           />
         </div>
       </div>

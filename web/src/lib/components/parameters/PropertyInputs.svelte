@@ -15,34 +15,33 @@
   const totalMonthlyHolding = $derived(monthlyTax + monthlyInsurance + house.monthly_hoa);
 
   function updatePrice(val: number) {
-    const clamped = Math.max(0, Math.min(100_000_000, val));
     appState.updateActivePurchase((p) => {
-      p.house.purchase_price = clamped;
+      p.house.purchase_price = val;
       // Auto-rebalance cash
       const mort = p.tools.find(t => 'Mortgage' in t)?.Mortgage?.amount || 0;
       const loc = p.tools.find(t => 'Loc' in t)?.Loc?.amount || 0;
       const cashTool = p.tools.find(t => 'Cash' in t);
       if (cashTool && 'Cash' in cashTool && cashTool.Cash) {
-        cashTool.Cash.amount = Math.max(0, clamped - (mort + loc));
+        cashTool.Cash.amount = Math.max(0, val - (mort + loc));
       }
     });
   }
 
   function updateTaxRate(val: number) {
     appState.updateActivePurchase((p) => {
-      p.house.annual_property_tax_rate = Math.max(0, Math.min(10.0, val));
+      p.house.annual_property_tax_rate = val;
     });
   }
 
   function updateInsurance(val: number) {
     appState.updateActivePurchase((p) => {
-      p.house.annual_insurance = Math.max(0, Math.min(100_000, val));
+      p.house.annual_insurance = val;
     });
   }
 
   function updateHoa(val: number) {
     appState.updateActivePurchase((p) => {
-      p.house.monthly_hoa = Math.max(0, Math.min(10_000, val));
+      p.house.monthly_hoa = val;
     });
   }
 
@@ -64,6 +63,7 @@
         class="w-full px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-sm font-medium text-white transition-all focus:outline-none"
         value={purchase.name}
         oninput={(e) => updateName(e.currentTarget.value)}
+        onkeydown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
         placeholder="e.g. Standard 30Y Mortgage"
       />
     </Card>
@@ -81,13 +81,17 @@
             max="100000000"
             class="w-32 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-sm font-mono font-bold text-emerald-400 tabular-nums focus:border-emerald-500 focus:outline-none"
             value={house.purchase_price}
-            oninput={(e) => updatePrice(parseFloat(e.currentTarget.value) || 0)}
+            oninput={(e) => {
+              const val = parseFloat(e.currentTarget.value);
+              if (!isNaN(val)) updatePrice(val);
+            }}
             onblur={(e) => {
               const val = parseFloat(e.currentTarget.value);
               const clamped = isNaN(val) ? 0 : Math.max(0, Math.min(100_000_000, val));
               updatePrice(clamped);
               e.currentTarget.value = String(clamped);
             }}
+            onkeydown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
           />
         </div>
       {/snippet}
@@ -99,7 +103,7 @@
         step="25000"
         aria-label="Purchase Price Slider"
         class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-        value={Math.min(5000000, house.purchase_price)}
+        value={Math.max(0, Math.min(5000000, house.purchase_price))}
         oninput={(e) => updatePrice(parseFloat(e.currentTarget.value) || 0)}
       />
     </Card>
@@ -116,13 +120,17 @@
             max="10"
             class="w-24 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
             value={house.annual_property_tax_rate}
-            oninput={(e) => updateTaxRate(parseFloat(e.currentTarget.value) || 0)}
+            oninput={(e) => {
+              const val = parseFloat(e.currentTarget.value);
+              if (!isNaN(val)) updateTaxRate(val);
+            }}
             onblur={(e) => {
               const val = parseFloat(e.currentTarget.value);
               const clamped = isNaN(val) ? 0 : Math.max(0, Math.min(10.0, val));
               updateTaxRate(clamped);
               e.currentTarget.value = String(clamped);
             }}
+            onkeydown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
           />
           <span class="text-xs font-mono text-zinc-400">%</span>
         </div>
@@ -147,13 +155,17 @@
             max="100000"
             class="w-24 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
             value={house.annual_insurance}
-            oninput={(e) => updateInsurance(parseFloat(e.currentTarget.value) || 0)}
+            oninput={(e) => {
+              const val = parseFloat(e.currentTarget.value);
+              if (!isNaN(val)) updateInsurance(val);
+            }}
             onblur={(e) => {
               const val = parseFloat(e.currentTarget.value);
               const clamped = isNaN(val) ? 0 : Math.max(0, Math.min(100_000, val));
               updateInsurance(clamped);
               e.currentTarget.value = String(clamped);
             }}
+            onkeydown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
           />
           <span class="text-xs font-mono text-zinc-400">/yr</span>
         </div>
@@ -178,13 +190,17 @@
             max="10000"
             class="w-24 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
             value={house.monthly_hoa}
-            oninput={(e) => updateHoa(parseFloat(e.currentTarget.value) || 0)}
+            oninput={(e) => {
+              const val = parseFloat(e.currentTarget.value);
+              if (!isNaN(val)) updateHoa(val);
+            }}
             onblur={(e) => {
               const val = parseFloat(e.currentTarget.value);
               const clamped = isNaN(val) ? 0 : Math.max(0, Math.min(10_000, val));
               updateHoa(clamped);
               e.currentTarget.value = String(clamped);
             }}
+            onkeydown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
           />
           <span class="text-xs font-mono text-zinc-400">/mo</span>
         </div>
