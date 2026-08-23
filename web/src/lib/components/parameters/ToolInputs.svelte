@@ -154,12 +154,6 @@
             max="25"
             class="w-16 px-1.5 py-0.5 text-right rounded bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
             value={cashTool?.rate || 4.0}
-            oninput={(e) => {
-              const val = parseFloat(e.currentTarget.value);
-              if (!isNaN(val) && val >= 0 && val <= 25.0) {
-                updateCashRate(val);
-              }
-            }}
             onblur={(e) => {
               const val = parseFloat(e.currentTarget.value);
               const clamped = isNaN(val) ? 0 : Math.max(0, Math.min(25.0, val));
@@ -205,12 +199,6 @@
                 max={housePrice}
                 class="w-28 px-1.5 py-0.5 text-right rounded bg-zinc-950 border border-zinc-800 text-xs font-mono font-bold text-indigo-300 tabular-nums focus:border-indigo-500 focus:outline-none"
                 value={mortgageTool.amount}
-                oninput={(e) => {
-                  const val = parseFloat(e.currentTarget.value);
-                  if (!isNaN(val) && val >= 0) {
-                    updateMortgage(m => m.amount = val);
-                  }
-                }}
                 onblur={(e) => {
                   const val = parseFloat(e.currentTarget.value);
                   const clamped = isNaN(val) ? 0 : Math.max(0, Math.min(housePrice, val));
@@ -247,12 +235,6 @@
                 max="25"
                 class="w-full px-2 py-1 text-right rounded bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-indigo-500 focus:outline-none"
                 value={mortgageTool.rate}
-                oninput={(e) => {
-                  const val = parseFloat(e.currentTarget.value);
-                  if (!isNaN(val) && val >= 0 && val <= 25.0) {
-                    updateMortgage(m => m.rate = val);
-                  }
-                }}
                 onblur={(e) => {
                   const val = parseFloat(e.currentTarget.value);
                   const clamped = isNaN(val) ? 0 : Math.max(0, Math.min(25.0, val));
@@ -277,12 +259,6 @@
                 max="30"
                 class="w-full px-2 py-1 text-right rounded bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-indigo-500 focus:outline-none"
                 value={mortgageTool.term}
-                oninput={(e) => {
-                  const val = parseInt(e.currentTarget.value, 10);
-                  if (!isNaN(val) && val >= 1 && val <= 30) {
-                    updateMortgage(m => m.term = val);
-                  }
-                }}
                 onblur={(e) => {
                   const val = parseInt(e.currentTarget.value, 10);
                   const clamped = isNaN(val) ? 30 : Math.max(1, Math.min(30, val));
@@ -338,12 +314,6 @@
                 max={housePrice}
                 class="w-28 px-1.5 py-0.5 text-right rounded bg-zinc-950 border border-zinc-800 text-xs font-mono font-bold text-amber-300 tabular-nums focus:border-amber-500 focus:outline-none"
                 value={locTool.amount}
-                oninput={(e) => {
-                  const val = parseFloat(e.currentTarget.value);
-                  if (!isNaN(val) && val >= 0) {
-                    updateLoc(l => l.amount = val);
-                  }
-                }}
                 onblur={(e) => {
                   const val = parseFloat(e.currentTarget.value);
                   const clamped = isNaN(val) ? 0 : Math.max(0, Math.min(housePrice, val));
@@ -378,12 +348,6 @@
               max="25"
               class="w-16 px-1.5 py-0.5 text-right rounded bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-amber-500 focus:outline-none"
               value={locTool.rate}
-              oninput={(e) => {
-                const val = parseFloat(e.currentTarget.value);
-                if (!isNaN(val) && val >= 0 && val <= 25.0) {
-                  updateLoc(l => l.rate = val);
-                }
-              }}
               onblur={(e) => {
                 const val = parseFloat(e.currentTarget.value);
                 const clamped = isNaN(val) ? 0 : Math.max(0, Math.min(25.0, val));

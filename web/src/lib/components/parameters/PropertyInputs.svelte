@@ -62,7 +62,7 @@
         type="text"
         class="w-full px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-sm font-medium text-white transition-all focus:outline-none"
         value={purchase.name}
-        oninput={(e) => updateName(e.currentTarget.value)}
+        onblur={(e) => updateName(e.currentTarget.value.trim() || 'Untitled Scenario')}
         onkeydown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
         placeholder="e.g. Standard 30Y Mortgage"
       />
@@ -81,13 +81,6 @@
             max="100000000"
             class="w-32 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-sm font-mono font-bold text-emerald-400 tabular-nums focus:border-emerald-500 focus:outline-none"
             value={house.purchase_price}
-            oninput={(e) => {
-              const val = parseFloat(e.currentTarget.value);
-              // Only trigger real-time recalculation if within single-field boundaries
-              if (!isNaN(val) && val >= 0 && val <= 100_000_000) {
-                updatePrice(val);
-              }
-            }}
             onblur={(e) => {
               const val = parseFloat(e.currentTarget.value);
               const clamped = isNaN(val) ? 0 : Math.max(0, Math.min(100_000_000, val));
@@ -123,13 +116,6 @@
             max="10"
             class="w-24 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
             value={house.annual_property_tax_rate}
-            oninput={(e) => {
-              const val = parseFloat(e.currentTarget.value);
-              // Only trigger real-time calculation if valid (0 to 10%)
-              if (!isNaN(val) && val >= 0 && val <= 10.0) {
-                updateTaxRate(val);
-              }
-            }}
             onblur={(e) => {
               const val = parseFloat(e.currentTarget.value);
               const clamped = isNaN(val) ? 0 : Math.max(0, Math.min(10.0, val));
@@ -161,12 +147,6 @@
             max="100000"
             class="w-24 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
             value={house.annual_insurance}
-            oninput={(e) => {
-              const val = parseFloat(e.currentTarget.value);
-              if (!isNaN(val) && val >= 0 && val <= 100_000) {
-                updateInsurance(val);
-              }
-            }}
             onblur={(e) => {
               const val = parseFloat(e.currentTarget.value);
               const clamped = isNaN(val) ? 0 : Math.max(0, Math.min(100_000, val));
@@ -198,12 +178,6 @@
             max="10000"
             class="w-24 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
             value={house.monthly_hoa}
-            oninput={(e) => {
-              const val = parseFloat(e.currentTarget.value);
-              if (!isNaN(val) && val >= 0 && val <= 10_000) {
-                updateHoa(val);
-              }
-            }}
             onblur={(e) => {
               const val = parseFloat(e.currentTarget.value);
               const clamped = isNaN(val) ? 0 : Math.max(0, Math.min(10_000, val));
