@@ -4,8 +4,6 @@
   import PropertyInputs from './PropertyInputs.svelte';
   import ToolInputs from './ToolInputs.svelte';
   import RepaymentScheduleEditor from './RepaymentScheduleEditor.svelte';
-  import Card from '../common/Card.svelte';
-  import { formatCurrency } from '../../utils/format';
 
   let activeTab = $state<'property' | 'tools' | 'repayments'>('property');
   let savedSuccess = $state(false);
@@ -15,15 +13,9 @@
     savedSuccess = true;
     setTimeout(() => savedSuccess = false, 2000);
   }
-
-  const purchase = $derived(appState.activeSlot.purchase);
-  const cashAmount = $derived(purchase.tools.find(t => 'Cash' in t)?.Cash?.amount || 0);
-  const mortAmount = $derived(purchase.tools.find(t => 'Mortgage' in t)?.Mortgage?.amount || 0);
-  const locAmount = $derived(purchase.tools.find(t => 'Loc' in t)?.Loc?.amount || 0);
-  const totalDebt = $derived(mortAmount + locAmount);
 </script>
 
-<div class="p-4 lg:p-6 space-y-5 flex-1 flex flex-col justify-between">
+<div class="p-4 lg:p-6 space-y-5 flex-1 flex flex-col">
   <div class="space-y-5">
     <!-- Slot Info & Quick Actions Bar -->
     <div class="flex items-center justify-between pb-3 border-b border-zinc-800/70">
@@ -93,21 +85,5 @@
     {:else if activeTab === 'repayments'}
       <RepaymentScheduleEditor />
     {/if}
-  </div>
-
-  <!-- Live Capital Split Card at Bottom of Left Pane -->
-  <div class="pt-4 mt-auto border-t border-zinc-800/60">
-    <Card icon="⚡" title="Capital Allocation">
-      <div class="grid grid-cols-2 gap-2 text-xs font-mono">
-        <div class="p-2.5 rounded-xl bg-zinc-950/70 border border-zinc-800/50">
-          <div class="text-[10px] text-zinc-500">Cash Required</div>
-          <div class="font-bold text-emerald-400 tabular-nums">{formatCurrency(cashAmount)}</div>
-        </div>
-        <div class="p-2.5 rounded-xl bg-zinc-950/70 border border-zinc-800/50">
-          <div class="text-[10px] text-zinc-500">Total Borrowed</div>
-          <div class="font-bold text-indigo-300 tabular-nums">{formatCurrency(totalDebt)}</div>
-        </div>
-      </div>
-    </Card>
   </div>
 </div>
