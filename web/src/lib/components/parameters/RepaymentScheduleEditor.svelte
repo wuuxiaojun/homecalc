@@ -97,7 +97,16 @@
             min="1"
             max="360"
             class="w-full px-2.5 py-1.5 text-right rounded-lg bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
-            bind:value={inputMonth}
+            value={inputMonth}
+            oninput={(e) => {
+              const val = parseInt(e.currentTarget.value, 10);
+              if (!isNaN(val)) inputMonth = val;
+            }}
+            onblur={(e) => {
+              const val = parseInt(e.currentTarget.value, 10);
+              inputMonth = isNaN(val) ? 1 : Math.max(1, Math.min(360, val));
+              e.currentTarget.value = String(inputMonth);
+            }}
           />
         </div>
 
@@ -110,7 +119,17 @@
             min="1"
             max={Math.max(1, activePrincipal)}
             class="w-full px-2.5 py-1.5 text-right rounded-lg bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-emerald-400 tabular-nums focus:border-emerald-500 focus:outline-none"
-            bind:value={inputAmount}
+            value={inputAmount}
+            oninput={(e) => {
+              const val = parseFloat(e.currentTarget.value);
+              if (!isNaN(val)) inputAmount = val;
+            }}
+            onblur={(e) => {
+              const val = parseFloat(e.currentTarget.value);
+              const maxAmt = Math.max(1, activePrincipal);
+              inputAmount = isNaN(val) ? 1 : Math.max(1, Math.min(maxAmt, val));
+              e.currentTarget.value = String(inputAmount);
+            }}
           />
         </div>
       </div>

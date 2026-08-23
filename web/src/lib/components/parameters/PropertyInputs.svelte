@@ -15,7 +15,7 @@
   const totalMonthlyHolding = $derived(monthlyTax + monthlyInsurance + house.monthly_hoa);
 
   function updatePrice(val: number) {
-    const clamped = Math.max(10_000, Math.min(100_000_000, val));
+    const clamped = Math.max(0, Math.min(100_000_000, val));
     appState.updateActivePurchase((p) => {
       p.house.purchase_price = clamped;
       // Auto-rebalance cash
@@ -77,24 +77,30 @@
             id="purchase-price-input"
             type="number"
             step="10000"
-            min="10000"
+            min="0"
             max="100000000"
             class="w-32 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-sm font-mono font-bold text-emerald-400 tabular-nums focus:border-emerald-500 focus:outline-none"
             value={house.purchase_price}
-            oninput={(e) => updatePrice(parseFloat(e.currentTarget.value) || 10000)}
+            oninput={(e) => updatePrice(parseFloat(e.currentTarget.value) || 0)}
+            onblur={(e) => {
+              const val = parseFloat(e.currentTarget.value);
+              const clamped = isNaN(val) ? 0 : Math.max(0, Math.min(100_000_000, val));
+              updatePrice(clamped);
+              e.currentTarget.value = String(clamped);
+            }}
           />
         </div>
       {/snippet}
 
       <input
         type="range"
-        min="10000"
+        min="0"
         max="5000000"
         step="25000"
         aria-label="Purchase Price Slider"
         class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
         value={Math.min(5000000, house.purchase_price)}
-        oninput={(e) => updatePrice(parseFloat(e.currentTarget.value) || 10000)}
+        oninput={(e) => updatePrice(parseFloat(e.currentTarget.value) || 0)}
       />
     </Card>
 
@@ -111,6 +117,12 @@
             class="w-24 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
             value={house.annual_property_tax_rate}
             oninput={(e) => updateTaxRate(parseFloat(e.currentTarget.value) || 0)}
+            onblur={(e) => {
+              const val = parseFloat(e.currentTarget.value);
+              const clamped = isNaN(val) ? 0 : Math.max(0, Math.min(10.0, val));
+              updateTaxRate(clamped);
+              e.currentTarget.value = String(clamped);
+            }}
           />
           <span class="text-xs font-mono text-zinc-400">%</span>
         </div>
@@ -136,6 +148,12 @@
             class="w-24 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
             value={house.annual_insurance}
             oninput={(e) => updateInsurance(parseFloat(e.currentTarget.value) || 0)}
+            onblur={(e) => {
+              const val = parseFloat(e.currentTarget.value);
+              const clamped = isNaN(val) ? 0 : Math.max(0, Math.min(100_000, val));
+              updateInsurance(clamped);
+              e.currentTarget.value = String(clamped);
+            }}
           />
           <span class="text-xs font-mono text-zinc-400">/yr</span>
         </div>
@@ -161,6 +179,12 @@
             class="w-24 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
             value={house.monthly_hoa}
             oninput={(e) => updateHoa(parseFloat(e.currentTarget.value) || 0)}
+            onblur={(e) => {
+              const val = parseFloat(e.currentTarget.value);
+              const clamped = isNaN(val) ? 0 : Math.max(0, Math.min(10_000, val));
+              updateHoa(clamped);
+              e.currentTarget.value = String(clamped);
+            }}
           />
           <span class="text-xs font-mono text-zinc-400">/mo</span>
         </div>
