@@ -94,11 +94,21 @@
   });
 
   function handleMouseMove(e: MouseEvent) {
-    const target = e.currentTarget as SVGElement | null;
+    const target = e.currentTarget as SVGSVGElement | null;
     if (!target) return;
-    const svgRect = target.getBoundingClientRect();
-    const clientX = e.clientX - svgRect.left;
-    const relX = clientX - padLeft;
+
+    // Use native SVG screenCTM inverse matrix for sub-pixel exact coordinate projection
+    const ctm = target.getScreenCTM();
+    if (!ctm) return;
+
+    const pt = target.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    const svgPoint = pt.matrixTransform(ctm.inverse());
+
+    const svgX = svgPoint.x;
+    const relX = svgX - padLeft;
+
     if (relX < 0 || relX > chartW) {
       hoveredMonth = null;
       return;
