@@ -91,11 +91,6 @@
           />
         </div>
       {/snippet}
-
-      <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500">
-        <span>Full Acquisition Cost</span>
-        <span class="text-zinc-300 font-medium">${house.purchase_price.toLocaleString()}</span>
-      </div>
     </Card>
 
     <!-- 1. Property Tax Card -->

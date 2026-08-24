@@ -100,13 +100,7 @@
   <!-- ========================================================================= -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <!-- 1. Property Details Table Card -->
-    <Card icon="🏡" title="Property & Valuation">
-      {#snippet headerRight()}
-        <span class="text-xs font-mono text-emerald-400 font-bold">
-          {formatCurrency(house.purchase_price)}
-        </span>
-      {/snippet}
-
+    <Card icon="🏡" title="Property">
       <table class="w-full text-xs">
         <tbody class="divide-y divide-zinc-800/40 font-mono">
           <tr class="py-2 flex justify-between">
@@ -177,7 +171,7 @@
                 <span class="w-2 h-2 rounded-full bg-amber-400"></span>
                 <div>
                   <div class="font-semibold text-zinc-200">Line of Credit (LOC)</div>
-                  <div class="text-[11px] text-zinc-500 font-mono">Rate: {formatPercent(tool.Loc.rate, 2)} Variable</div>
+                  <div class="text-[11px] text-zinc-500 font-mono">Rate: {formatPercent(tool.Loc.rate, 2)} Fixed</div>
                 </div>
               </div>
               <div class="text-right font-mono">
@@ -196,7 +190,7 @@
   <!-- ========================================================================= -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- 3-Stage Monthly Cash Flow Progression Card -->
-    <Card icon="📊" title="Monthly Payment Lifecycle Split" class="lg:col-span-2">
+    <Card icon="📊" title="Monthly Payment Split" class="lg:col-span-2">
       {#snippet headerRight()}
         <span class="text-xs font-mono text-zinc-400">
           {payoffMonth > 0 ? `Payoff in Month ${payoffMonth}` : 'All-Cash / Debt-Free'}

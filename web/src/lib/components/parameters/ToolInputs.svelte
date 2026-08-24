@@ -148,7 +148,7 @@
       {/snippet}
 
       <div class="flex items-center justify-between text-xs">
-        <label for="cash-yield-input" class="text-zinc-400 text-[11px]">Annual Cash Yield / Opportunity Cost</label>
+        <label for="cash-yield-input" class="text-zinc-400 text-[11px]">Annual Cash Yield</label>
         <div class="flex items-center gap-1">
           <input
             id="cash-yield-input"
@@ -318,7 +318,7 @@
 
         <!-- Rate -->
         <div class="flex items-center justify-between text-xs pt-1">
-          <label for="loc-rate-input" class="text-zinc-400 text-[11px]">Interest Rate (Interest-Only)</label>
+          <label for="loc-rate-input" class="text-zinc-400 text-[11px]">Interest Rate</label>
           <div class="flex items-center gap-1">
             <input
               id="loc-rate-input"
