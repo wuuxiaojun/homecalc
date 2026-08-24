@@ -4,7 +4,6 @@
   import type { MonthlyStatementRow } from '../../state/types';
 
   let filterMode = $state<'all' | 'extras' | 'milestones'>('all');
-  let searchQuery = $state<string>('');
   let page = $state<number>(1);
   let pageSize = $state<number>(36); // 3 years per page
 
@@ -12,22 +11,13 @@
   const monthlyRows = $derived(slot.scenario?.monthly_statement || []);
 
   const filteredRows = $derived.by(() => {
-    let list = monthlyRows;
-
     if (filterMode === 'extras') {
-      list = list.filter(r => r.total_extra_payment > 0 || r.month === 0);
-    } else if (filterMode === 'milestones') {
-      list = list.filter(r => r.month === 0 || r.month % 12 === 0 || r.month === monthlyRows[monthlyRows.length - 1]?.month);
+      return monthlyRows.filter(r => r.total_extra_payment > 0 || r.month === 0);
     }
-
-    if (searchQuery.trim()) {
-      const q = parseInt(searchQuery.trim(), 10);
-      if (!isNaN(q)) {
-        list = list.filter(r => r.month === q);
-      }
+    if (filterMode === 'milestones') {
+      return monthlyRows.filter(r => r.month === 0 || r.month % 12 === 0 || r.month === monthlyRows[monthlyRows.length - 1]?.month);
     }
-
-    return list;
+    return monthlyRows;
   });
 
   const totalPages = $derived(Math.max(1, Math.ceil(filteredRows.length / pageSize)));
@@ -76,38 +66,26 @@
 <div class="space-y-4">
   <!-- Controls Bar -->
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
-    <div class="flex items-center gap-2">
-      <!-- Filter Mode -->
-      <div class="flex items-center bg-zinc-950 p-1 rounded-lg border border-zinc-800 text-xs">
-        <button
-          class="px-2.5 py-1 rounded transition-colors {filterMode === 'all' ? 'bg-zinc-800 text-white font-medium' : 'text-zinc-400 hover:text-zinc-200'}"
-          onclick={() => { filterMode = 'all'; page = 1; }}
-        >
-          All ({monthlyRows.length})
-        </button>
-        <button
-          class="px-2.5 py-1 rounded transition-colors {filterMode === 'extras' ? 'bg-zinc-800 text-white font-medium' : 'text-zinc-400 hover:text-zinc-200'}"
-          onclick={() => { filterMode = 'extras'; page = 1; }}
-        >
-          ⚡ Extra Only
-        </button>
-        <button
-          class="px-2.5 py-1 rounded transition-colors {filterMode === 'milestones' ? 'bg-zinc-800 text-white font-medium' : 'text-zinc-400 hover:text-zinc-200'}"
-          onclick={() => { filterMode = 'milestones'; page = 1; }}
-        >
-          Yearly Milestones
-        </button>
-      </div>
-
-      <!-- Month Search -->
-      <input
-        type="number"
-        placeholder="Month #"
-        min="0"
-        max="360"
-        class="w-24 px-2.5 py-1 rounded-lg bg-zinc-950 border border-zinc-800 text-xs font-mono text-zinc-200 focus:border-emerald-500 focus:outline-none placeholder:text-zinc-600"
-        bind:value={searchQuery}
-      />
+    <!-- Filter Mode -->
+    <div class="flex items-center bg-zinc-950 p-1 rounded-lg border border-zinc-800 text-xs">
+      <button
+        class="px-2.5 py-1 rounded transition-colors {filterMode === 'all' ? 'bg-zinc-800 text-white font-medium' : 'text-zinc-400 hover:text-zinc-200'}"
+        onclick={() => { filterMode = 'all'; page = 1; }}
+      >
+        All ({monthlyRows.length})
+      </button>
+      <button
+        class="px-2.5 py-1 rounded transition-colors {filterMode === 'extras' ? 'bg-zinc-800 text-white font-medium' : 'text-zinc-400 hover:text-zinc-200'}"
+        onclick={() => { filterMode = 'extras'; page = 1; }}
+      >
+        ⚡ Extra Only
+      </button>
+      <button
+        class="px-2.5 py-1 rounded transition-colors {filterMode === 'milestones' ? 'bg-zinc-800 text-white font-medium' : 'text-zinc-400 hover:text-zinc-200'}"
+        onclick={() => { filterMode = 'milestones'; page = 1; }}
+      >
+        Yearly Milestones
+      </button>
     </div>
 
     <!-- Right Controls: Page Size & CSV Export -->
