@@ -2,21 +2,32 @@
   import { appState } from '../../state/appState.svelte';
   import Card from '../common/Card.svelte';
 
-  let showComparisonOverlay = $state(true);
+  // Independent toggle state for overlays
+  let overlaySlots = $state<Record<number, boolean>>({
+    1: false,
+    2: true,
+    3: true
+  });
+
   let hoveredMonth = $state<number | null>(null);
 
   const slot = $derived(appState.activeSlot);
   const scenario = $derived(slot.scenario);
-  const baselineScenario = $derived(appState.getSlot(appState.comparisonBaselineId).scenario);
-  const altScenario = $derived(appState.getSlot(appState.comparisonAlternativeId).scenario);
+
+  const slot1 = $derived(appState.getSlot(1));
+  const slot2 = $derived(appState.getSlot(2));
+  const slot3 = $derived(appState.getSlot(3));
 
   const monthlyData = $derived(scenario?.monthly_statement || []);
   const visibleLimit = 360;
 
-  // Max balance for Y-axis scaling
+  // Max balance for Y-axis scaling across all active / visible scenarios
   const maxBalance = $derived.by(() => {
-    const initBal = scenario?.purchase.house.purchase_price || 1_000_000;
-    return Math.max(initBal, 100_000);
+    let maxVal = scenario?.purchase.house.purchase_price || 1_000_000;
+    if (overlaySlots[1] && slot1?.scenario) maxVal = Math.max(maxVal, slot1.scenario.purchase.house.purchase_price);
+    if (overlaySlots[2] && slot2?.scenario) maxVal = Math.max(maxVal, slot2.scenario.purchase.house.purchase_price);
+    if (overlaySlots[3] && slot3?.scenario) maxVal = Math.max(maxVal, slot3.scenario.purchase.house.purchase_price);
+    return Math.max(maxVal, 100_000);
   });
 
   // Chart dimensions
@@ -38,19 +49,19 @@
     return padTop + chartH - (val / maxBalance) * chartH;
   }
 
-  // SVG Path Builders
-  const totalBalancePath = $derived.by(() => {
-    if (monthlyData.length === 0) return '';
-    return monthlyData
+  function buildBalancePath(monthly: typeof monthlyData) {
+    if (!monthly || monthly.length === 0) return '';
+    return monthly
       .map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(d.month).toFixed(1)} ${getY(d.total_remaining_balance).toFixed(1)}`)
       .join(' ');
-  });
+  }
+
+  // Active Scenario Path
+  const totalBalancePath = $derived(buildBalancePath(monthlyData));
 
   const totalAreaPath = $derived.by(() => {
     if (monthlyData.length === 0) return '';
-    const line = monthlyData
-      .map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(d.month).toFixed(1)} ${getY(d.total_remaining_balance).toFixed(1)}`)
-      .join(' ');
+    const line = buildBalancePath(monthlyData);
     const lastX = getX(monthlyData[monthlyData.length - 1].month);
     const firstX = getX(monthlyData[0].month);
     const bottomY = padTop + chartH;
@@ -64,15 +75,17 @@
       .join(' ');
   });
 
-  // Comparison Alternative Path
-  const altBalancePath = $derived.by(() => {
-    if (!showComparisonOverlay || !altScenario) return '';
-    const altMonthly = altScenario.monthly_statement;
-    if (altMonthly.length === 0) return '';
-    return altMonthly
-      .map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(d.month).toFixed(1)} ${getY(d.total_remaining_balance).toFixed(1)}`)
-      .join(' ');
-  });
+  // Overlay Paths for all 3 slots
+  const s1Path = $derived(overlaySlots[1] && appState.activeSlotId !== 1 && slot1?.scenario ? buildBalancePath(slot1.scenario.monthly_statement) : '');
+  const s2Path = $derived(overlaySlots[2] && appState.activeSlotId !== 2 && slot2?.scenario ? buildBalancePath(slot2.scenario.monthly_statement) : '');
+  const s3Path = $derived(overlaySlots[3] && appState.activeSlotId !== 3 && slot3?.scenario ? buildBalancePath(slot3.scenario.monthly_statement) : '');
+
+  // Other slot IDs to render overlay buttons for
+  const otherSlotIds = $derived(([1, 2, 3] as const).filter((id): id is 1 | 2 | 3 => id !== appState.activeSlotId));
+
+  function toggleOverlay(slotId: 1 | 2 | 3) {
+    overlaySlots[slotId] = !overlaySlots[slotId];
+  }
 
   // Hover data
   const hoveredData = $derived.by(() => {
@@ -113,14 +126,18 @@
 <Card icon="📉" title="Amortization Balance Trajectory">
   {#snippet headerRight()}
     <div class="flex items-center gap-2">
-      <!-- Compare toggle -->
-      <button
-        class="px-2.5 py-1 text-[11px] font-medium rounded-lg border transition-colors flex items-center gap-1.5 {showComparisonOverlay ? 'bg-indigo-950/80 border-indigo-700 text-indigo-300' : 'bg-zinc-900 border-zinc-800 text-zinc-500'}"
-        onclick={() => showComparisonOverlay = !showComparisonOverlay}
-        title="Toggle Comparison Overlay"
-      >
-        <span>⚖️ Overlay S{appState.comparisonAlternativeId}</span>
-      </button>
+      <!-- Overlay toggle buttons for all other slots -->
+      {#each otherSlotIds as otherId}
+        {@const otherSlot = appState.getSlot(otherId)}
+        {@const isEnabled = overlaySlots[otherId]}
+        <button
+          class="px-2.5 py-1 text-[11px] font-medium rounded-lg border transition-colors flex items-center gap-1.5 {isEnabled ? (otherId === 2 ? 'bg-indigo-950/80 border-indigo-700 text-indigo-300' : otherId === 3 ? 'bg-amber-950/80 border-amber-700 text-amber-300' : 'bg-emerald-950/80 border-emerald-700 text-emerald-300') : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300'}"
+          onclick={() => toggleOverlay(otherId)}
+          title="Toggle Comparison Overlay for Slot {otherId}"
+        >
+          <span>⚖️ Overlay S{otherId}</span>
+        </button>
+      {/each}
     </div>
   {/snippet}
 
@@ -160,19 +177,43 @@
         </text>
       {/each}
 
-      <!-- Shaded Area -->
+      <!-- Shaded Area for active scenario -->
       {#if totalAreaPath}
         <path d={totalAreaPath} fill="url(#emeraldArea)" />
       {/if}
 
-      <!-- Alternative Comparison Curve (if enabled) -->
-      {#if altBalancePath}
+      <!-- Slot 1 Overlay Curve (if enabled and not active) -->
+      {#if s1Path}
         <path
-          d={altBalancePath}
+          d={s1Path}
+          fill="none"
+          stroke="#34d399"
+          stroke-width="2.5"
+          stroke-dasharray="6 3"
+          stroke-linecap="round"
+        />
+      {/if}
+
+      <!-- Slot 2 Overlay Curve (if enabled and not active) -->
+      {#if s2Path}
+        <path
+          d={s2Path}
           fill="none"
           stroke="#818cf8"
           stroke-width="2.5"
           stroke-dasharray="6 3"
+          stroke-linecap="round"
+        />
+      {/if}
+
+      <!-- Slot 3 Overlay Curve (if enabled and not active) -->
+      {#if s3Path}
+        <path
+          d={s3Path}
+          fill="none"
+          stroke="#fbbf24"
+          stroke-width="2.5"
+          stroke-dasharray="4 3"
           stroke-linecap="round"
         />
       {/if}
@@ -247,22 +288,36 @@
     {/if}
   </div>
 
-  <!-- Legend Bar -->
-  <div class="flex flex-wrap items-center justify-between text-xs font-mono text-zinc-400 pt-2 border-t border-zinc-800/60">
-    <div class="flex items-center gap-4">
+  <!-- Legend Bar (Direct Scenario Names, Note Removed) -->
+  <div class="flex flex-wrap items-center gap-4 text-xs font-mono text-zinc-400 pt-2 border-t border-zinc-800/60">
+    <!-- Active Scenario Legend Item -->
+    <span class="flex items-center gap-1.5">
+      <span class="w-3 h-1 bg-emerald-500 rounded"></span>
+      <span class="text-zinc-200 font-semibold">{slot.name}</span>
+    </span>
+
+    <!-- Overlay S1 Legend Item -->
+    {#if overlaySlots[1] && appState.activeSlotId !== 1 && slot1?.scenario}
       <span class="flex items-center gap-1.5">
-        <span class="w-3 h-1 bg-emerald-500 rounded"></span>
-        <span class="text-zinc-200">Active ({slot.name})</span>
+        <span class="w-3 h-1 bg-emerald-400 rounded border-dashed"></span>
+        <span class="text-emerald-300">{slot1.name}</span>
       </span>
-      {#if showComparisonOverlay && altScenario}
-        <span class="flex items-center gap-1.5">
-          <span class="w-3 h-1 bg-indigo-400 rounded border-dashed"></span>
-          <span class="text-indigo-300">Alt ({appState.getSlot(appState.comparisonAlternativeId).name})</span>
-        </span>
-      {/if}
-    </div>
-    <div class="text-[11px] text-zinc-500">
-      Hover crosshair to inspect month balance
-    </div>
+    {/if}
+
+    <!-- Overlay S2 Legend Item -->
+    {#if overlaySlots[2] && appState.activeSlotId !== 2 && slot2?.scenario}
+      <span class="flex items-center gap-1.5">
+        <span class="w-3 h-1 bg-indigo-400 rounded border-dashed"></span>
+        <span class="text-indigo-300">{slot2.name}</span>
+      </span>
+    {/if}
+
+    <!-- Overlay S3 Legend Item -->
+    {#if overlaySlots[3] && appState.activeSlotId !== 3 && slot3?.scenario}
+      <span class="flex items-center gap-1.5">
+        <span class="w-3 h-1 bg-amber-400 rounded border-dashed"></span>
+        <span class="text-amber-300">{slot3.name}</span>
+      </span>
+    {/if}
   </div>
 </Card>
