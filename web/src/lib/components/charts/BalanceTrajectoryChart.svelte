@@ -1,7 +1,7 @@
 <script lang="ts">
   import { appState } from '../../state/appState.svelte';
+  import Card from '../common/Card.svelte';
 
-  let timeHorizon = $state<'all' | '5y' | '10y' | 'payoff'>('all');
   let showComparisonOverlay = $state(true);
   let hoveredMonth = $state<number | null>(null);
 
@@ -11,19 +11,7 @@
   const altScenario = $derived(appState.getSlot(appState.comparisonAlternativeId).scenario);
 
   const monthlyData = $derived(scenario?.monthly_statement || []);
-  const maxMonth = $derived(monthlyData.length > 0 ? monthlyData[monthlyData.length - 1].month : 360);
-
-  // Filtered range based on timeHorizon
-  const visibleLimit = $derived.by(() => {
-    switch (timeHorizon) {
-      case '5y': return Math.min(60, maxMonth);
-      case '10y': return Math.min(120, maxMonth);
-      case 'payoff': return maxMonth;
-      case 'all': default: return Math.max(maxMonth, 360);
-    }
-  });
-
-  const filteredMonthly = $derived(monthlyData.filter(d => d.month <= visibleLimit));
+  const visibleLimit = 360;
 
   // Max balance for Y-axis scaling
   const maxBalance = $derived.by(() => {
@@ -43,8 +31,7 @@
   const chartH = $derived(height - padTop - padBottom);
 
   function getX(month: number): number {
-    const lim = visibleLimit > 0 ? visibleLimit : 360;
-    return padLeft + (month / lim) * chartW;
+    return padLeft + (month / visibleLimit) * chartW;
   }
 
   function getY(val: number): number {
@@ -53,26 +40,26 @@
 
   // SVG Path Builders
   const totalBalancePath = $derived.by(() => {
-    if (filteredMonthly.length === 0) return '';
-    return filteredMonthly
+    if (monthlyData.length === 0) return '';
+    return monthlyData
       .map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(d.month).toFixed(1)} ${getY(d.total_remaining_balance).toFixed(1)}`)
       .join(' ');
   });
 
   const totalAreaPath = $derived.by(() => {
-    if (filteredMonthly.length === 0) return '';
-    const line = filteredMonthly
+    if (monthlyData.length === 0) return '';
+    const line = monthlyData
       .map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(d.month).toFixed(1)} ${getY(d.total_remaining_balance).toFixed(1)}`)
       .join(' ');
-    const lastX = getX(filteredMonthly[filteredMonthly.length - 1].month);
-    const firstX = getX(filteredMonthly[0].month);
+    const lastX = getX(monthlyData[monthlyData.length - 1].month);
+    const firstX = getX(monthlyData[0].month);
     const bottomY = padTop + chartH;
     return `${line} L ${lastX} ${bottomY} L ${firstX} ${bottomY} Z`;
   });
 
   const mortgagePath = $derived.by(() => {
-    if (filteredMonthly.length === 0) return '';
-    return filteredMonthly
+    if (monthlyData.length === 0) return '';
+    return monthlyData
       .map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(d.month).toFixed(1)} ${getY(d.mortgage?.remaining_balance || 0).toFixed(1)}`)
       .join(' ');
   });
@@ -80,7 +67,7 @@
   // Comparison Alternative Path
   const altBalancePath = $derived.by(() => {
     if (!showComparisonOverlay || !altScenario) return '';
-    const altMonthly = altScenario.monthly_statement.filter(d => d.month <= visibleLimit);
+    const altMonthly = altScenario.monthly_statement;
     if (altMonthly.length === 0) return '';
     return altMonthly
       .map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(d.month).toFixed(1)} ${getY(d.total_remaining_balance).toFixed(1)}`)
@@ -121,43 +108,14 @@
   function handleMouseLeave() {
     hoveredMonth = null;
   }
-  import Card from '../common/Card.svelte';
 </script>
 
 <Card icon="📉" title="Amortization Balance Trajectory">
   {#snippet headerRight()}
     <div class="flex items-center gap-2">
-      <!-- Horizon Switcher -->
-      <div class="flex items-center bg-zinc-950 p-0.5 rounded-lg border border-zinc-800 text-[11px] font-mono">
-        <button
-          class="px-2 py-1 rounded transition-colors {timeHorizon === 'all' ? 'bg-zinc-800 text-white font-bold' : 'text-zinc-400 hover:text-zinc-200'}"
-          onclick={() => timeHorizon = 'all'}
-        >
-          30Y
-        </button>
-        <button
-          class="px-2 py-1 rounded transition-colors {timeHorizon === '10y' ? 'bg-zinc-800 text-white font-bold' : 'text-zinc-400 hover:text-zinc-200'}"
-          onclick={() => timeHorizon = '10y'}
-        >
-          10Y
-        </button>
-        <button
-          class="px-2 py-1 rounded transition-colors {timeHorizon === '5y' ? 'bg-zinc-800 text-white font-bold' : 'text-zinc-400 hover:text-zinc-200'}"
-          onclick={() => timeHorizon = '5y'}
-        >
-          5Y
-        </button>
-        <button
-          class="px-2 py-1 rounded transition-colors {timeHorizon === 'payoff' ? 'bg-zinc-800 text-white font-bold' : 'text-zinc-400 hover:text-zinc-200'}"
-          onclick={() => timeHorizon = 'payoff'}
-        >
-          Payoff
-        </button>
-      </div>
-
       <!-- Compare toggle -->
       <button
-        class="px-2 py-1 text-[11px] font-medium rounded-lg border transition-colors flex items-center gap-1 {showComparisonOverlay ? 'bg-indigo-950/80 border-indigo-700 text-indigo-300' : 'bg-zinc-900 border-zinc-800 text-zinc-500'}"
+        class="px-2.5 py-1 text-[11px] font-medium rounded-lg border transition-colors flex items-center gap-1.5 {showComparisonOverlay ? 'bg-indigo-950/80 border-indigo-700 text-indigo-300' : 'bg-zinc-900 border-zinc-800 text-zinc-500'}"
         onclick={() => showComparisonOverlay = !showComparisonOverlay}
         title="Toggle Comparison Overlay"
       >
@@ -195,13 +153,11 @@
 
       <!-- X Grid Lines & Labels -->
       {#each [0, 60, 120, 180, 240, 300, 360] as m}
-        {#if m <= visibleLimit}
-          {@const x = getX(m)}
-          <line x1={x} y1={padTop} x2={x} y2={padTop + chartH} stroke="#27272a" stroke-width="1" stroke-dasharray="4 4" />
-          <text x={x} y={padTop + chartH + 20} fill="#71717a" font-size="10" font-family="monospace" text-anchor="middle">
-            {m === 0 ? 'M0' : `Yr ${m / 12}`}
-          </text>
-        {/if}
+        {@const x = getX(m)}
+        <line x1={x} y1={padTop} x2={x} y2={padTop + chartH} stroke="#27272a" stroke-width="1" stroke-dasharray="4 4" />
+        <text x={x} y={padTop + chartH + 20} fill="#71717a" font-size="10" font-family="monospace" text-anchor="middle">
+          {m === 0 ? 'M0' : `Yr ${m / 12}`}
+        </text>
       {/each}
 
       <!-- Shaded Area -->
