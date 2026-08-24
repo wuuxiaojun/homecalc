@@ -61,7 +61,7 @@ checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 
 [[package]]
 name = "cli"
-version = "1.1.0"
+version = "2.0.0"
 dependencies = [
  "anyhow",
  "comfy-table",
@@ -158,14 +158,14 @@ checksum = "d0881ea181b1df73ff77ffaaf9c7544ecc11e82fba9b5f27b262a3c73a332555"
 
 [[package]]
 name = "engine"
-version = "1.1.0"
+version = "2.0.0"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "engine-wasm"
-version = "1.1.0"
+version = "2.0.0"
 dependencies = [
  "engine",
  "serde",

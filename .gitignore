@@ -1,8 +1,58 @@
-/target/
-/products
-/.agents/
-temp/
-/scenarios/
+# ==========================================
+# 1. Multi-Agent & Orchestration Cache
+# ==========================================
+.agents/
+
+# ==========================================
+# 2. Rust & Cargo Build Artifacts (Cleans ~3GB bloat)
+# ==========================================
+target/
+**/*.rs.bk
+Cargo.lock.lock
+
+# ==========================================
+# 3. WebAssembly / wasm-pack Artifacts
+# ==========================================
+crates/engine-wasm/pkg/
+web/src/lib/wasm/*.wasm.d.ts.lock
+
+# ==========================================
+# 4. Node.js & Svelte / Vite Build Outputs
+# ==========================================
+web/node_modules/
 node_modules/
-dist/
-.svelte-kit/
+web/dist/
+web/build/
+web/.svelte-kit/
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==========================================
+# 5. Playwright & Test Artifacts
+# ==========================================
+web/test-results/
+web/playwright-report/
+web/blob-report/
+web/playwright/.cache/
+
+# ==========================================
+# 6. Environment & Local Storage Configs
+# ==========================================
+.env
+.env.*
+!.env.example
+*.local
+
+# ==========================================
+# 7. OS & Editor Metadata
+# ==========================================
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
