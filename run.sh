@@ -6,7 +6,7 @@ cd "$REPO_ROOT/web"
 
 # Auto-build production dist if missing
 if [ ! -d "dist" ]; then
-    echo "Building Homecalc v2.0.0 production bundle..."
+    echo "Building Homecalc v2.0.2 production bundle..."
     npm run build
 fi
 
