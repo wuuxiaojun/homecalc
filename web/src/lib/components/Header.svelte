@@ -1,5 +1,6 @@
 <script lang="ts">
   import { appState } from '../state/appState.svelte';
+  import { getEngineVersion } from '../engine/engineBridge';
   import type { SlotId } from '../state/types';
 
   let { onOpenLibrary, onOpenExport, onOpenImport }: {
@@ -7,6 +8,8 @@
     onOpenExport?: () => void;
     onOpenImport?: () => void;
   } = $props();
+
+  const version = $derived(appState.isInitialized ? getEngineVersion() : '2.0.2');
 
   const slots: { id: SlotId; label: string }[] = [
     { id: 1, label: 'Slot 1' },
@@ -30,7 +33,7 @@
         <div class="flex items-center gap-2 sm:gap-2.5">
           <span class="font-black text-xl sm:text-2xl tracking-tight text-white">Homecalc</span>
           <span class="text-xs uppercase tracking-wider px-2 py-0.5 rounded-md font-mono font-bold bg-zinc-800 text-zinc-200 border border-zinc-700/80 shadow-sm">
-            v2.0.0
+            v{version}
           </span>
           <span class="inline-flex items-center gap-1.5 text-xs px-2.5 py-0.5 rounded-full font-mono bg-emerald-950/90 text-emerald-300 border border-emerald-800/70 font-semibold shadow-sm">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
