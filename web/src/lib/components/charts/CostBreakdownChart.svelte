@@ -126,7 +126,7 @@
           <span>Tax Savings</span>
         </div>
         <div class="mt-1">
-          <div class="text-xs sm:text-sm font-bold text-emerald-400 tabular-nums">-{formatCurrency(totalTaxSavings)}</div>
+          <div class="text-xs sm:text-sm font-bold text-emerald-400 tabular-nums">{formatCurrency(totalTaxSavings)}</div>
           <div class="text-[10px] text-zinc-500">IRS offset</div>
         </div>
       </div>
@@ -138,7 +138,7 @@
           <span>Cash Yield</span>
         </div>
         <div class="mt-1">
-          <div class="text-xs sm:text-sm font-bold text-cyan-400 tabular-nums">-{formatCurrency(totalCashInterest)}</div>
+          <div class="text-xs sm:text-sm font-bold text-cyan-400 tabular-nums">{formatCurrency(totalCashInterest)}</div>
           <div class="text-[10px] text-zinc-500">Cash growth</div>
         </div>
       </div>
@@ -150,7 +150,7 @@
           <span>Net Benefit</span>
         </div>
         <div class="mt-1">
-          <div class="text-xs sm:text-sm font-bold text-teal-300 tabular-nums">-{formatCurrency(combinedBenefit)}</div>
+          <div class="text-xs sm:text-sm font-bold text-teal-300 tabular-nums">{formatCurrency(combinedBenefit)}</div>
           <div class="text-[10px] text-zinc-500">Tax + yield</div>
         </div>
       </div>
