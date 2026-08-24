@@ -1,0 +1,41 @@
+{
+  "name": "Dual Loan Staggered Payoff",
+  "house": {
+    "purchase_price": 1600000.0,
+    "annual_property_tax_rate": 1.2,
+    "annual_insurance": 3200.0,
+    "monthly_hoa": 120.0
+  },
+  "tools": [
+    {
+      "Cash": {
+        "amount": 300000.0,
+        "rate": 4.0
+      }
+    },
+    {
+      "Mortgage": {
+        "amount": 1000000.0,
+        "rate": 6.0,
+        "term": 30
+      }
+    },
+    {
+      "Loc": {
+        "amount": 300000.0,
+        "rate": 7.0
+      }
+    }
+  ],
+  "mortgage_repay": {
+    "36": 100000.0,
+    "48": 100000.0,
+    "60": 100000.0
+  },
+  "loc_repay": {
+    "6": 50000.0,
+    "12": 50000.0,
+    "18": 100000.0,
+    "24": 100000.0
+  }
+}

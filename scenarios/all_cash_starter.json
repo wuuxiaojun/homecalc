@@ -1,0 +1,19 @@
+{
+  "name": "All Cash Starter",
+  "house": {
+    "purchase_price": 450000.0,
+    "annual_property_tax_rate": 1.15,
+    "annual_insurance": 1200.0,
+    "monthly_hoa": 50.0
+  },
+  "tools": [
+    {
+      "Cash": {
+        "amount": 450000.0,
+        "rate": 4.25
+      }
+    }
+  ],
+  "mortgage_repay": {},
+  "loc_repay": {}
+}

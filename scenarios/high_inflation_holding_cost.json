@@ -1,0 +1,26 @@
+{
+  "name": "High Inflation Holding Cost",
+  "house": {
+    "purchase_price": 1200000.0,
+    "annual_property_tax_rate": 2.5,
+    "annual_insurance": 6000.0,
+    "monthly_hoa": 800.0
+  },
+  "tools": [
+    {
+      "Cash": {
+        "amount": 240000.0,
+        "rate": 4.5
+      }
+    },
+    {
+      "Mortgage": {
+        "amount": 960000.0,
+        "rate": 6.5,
+        "term": 30
+      }
+    }
+  ],
+  "mortgage_repay": {},
+  "loc_repay": {}
+}

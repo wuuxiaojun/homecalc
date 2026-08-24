@@ -35,8 +35,6 @@ export class AppState {
   comparisonBaselineId = $state<SlotId>(1);
   comparisonAlternativeId = $state<SlotId>(2);
   activeView = $state<'overview' | 'charts' | 'statements' | 'comparison'>('overview');
-  activeParamTab = $state<'property' | 'tools' | 'repayments'>('property');
-  selectedMonth = $state<number | null>(null);
 
   // Scenario slots storage (All 3 initialized with exact name "Standard 30Y Mortgage")
   slot1 = $state<ScenarioSlot>({

@@ -1,0 +1,26 @@
+{
+  "name": "Low Down FHA Style",
+  "house": {
+    "purchase_price": 400000.0,
+    "annual_property_tax_rate": 1.3,
+    "annual_insurance": 1500.0,
+    "monthly_hoa": 60.0
+  },
+  "tools": [
+    {
+      "Cash": {
+        "amount": 14000.0,
+        "rate": 3.5
+      }
+    },
+    {
+      "Mortgage": {
+        "amount": 386000.0,
+        "rate": 6.8,
+        "term": 30
+      }
+    }
+  ],
+  "mortgage_repay": {},
+  "loc_repay": {}
+}

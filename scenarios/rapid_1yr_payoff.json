@@ -1,0 +1,39 @@
+{
+  "name": "Rapid 1yr Payoff",
+  "house": {
+    "purchase_price": 600000.0,
+    "annual_property_tax_rate": 1.1,
+    "annual_insurance": 1200.0,
+    "monthly_hoa": 0.0
+  },
+  "tools": [
+    {
+      "Cash": {
+        "amount": 100000.0,
+        "rate": 4.0
+      }
+    },
+    {
+      "Mortgage": {
+        "amount": 500000.0,
+        "rate": 6.0,
+        "term": 30
+      }
+    }
+  ],
+  "mortgage_repay": {
+    "1": 42000.0,
+    "2": 42000.0,
+    "3": 42000.0,
+    "4": 42000.0,
+    "5": 42000.0,
+    "6": 42000.0,
+    "7": 42000.0,
+    "8": 42000.0,
+    "9": 42000.0,
+    "10": 42000.0,
+    "11": 42000.0,
+    "12": 42000.0
+  },
+  "loc_repay": {}
+}
