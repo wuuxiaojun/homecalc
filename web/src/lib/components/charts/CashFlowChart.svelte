@@ -92,19 +92,4 @@
       {/each}
     </svg>
   </div>
-
-  <!-- Legend -->
-  <div class="flex items-center justify-between text-xs font-mono text-zinc-400 pt-1 border-t border-zinc-800/60">
-    <div class="flex items-center gap-4">
-      <span class="flex items-center gap-1.5">
-        <span class="w-2.5 h-2.5 rounded bg-indigo-500"></span>
-        <span>Standard Year Outflow</span>
-      </span>
-      <span class="flex items-center gap-1.5">
-        <span class="w-2.5 h-2.5 rounded bg-emerald-500"></span>
-        <span>Final Payoff Year</span>
-      </span>
-    </div>
-    <span class="text-[11px] text-zinc-500">Hover bar for details</span>
-  </div>
 </Card>

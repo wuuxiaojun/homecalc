@@ -2,11 +2,11 @@
   import { appState } from '../../state/appState.svelte';
   import Card from '../common/Card.svelte';
 
-  // Independent toggle state for overlays
+  // Independent toggle state for overlays (off by default)
   let overlaySlots = $state<Record<number, boolean>>({
     1: false,
-    2: true,
-    3: true
+    2: false,
+    3: false
   });
 
   let hoveredMonth = $state<number | null>(null);
@@ -66,13 +66,6 @@
     const firstX = getX(monthlyData[0].month);
     const bottomY = padTop + chartH;
     return `${line} L ${lastX} ${bottomY} L ${firstX} ${bottomY} Z`;
-  });
-
-  const mortgagePath = $derived.by(() => {
-    if (monthlyData.length === 0) return '';
-    return monthlyData
-      .map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(d.month).toFixed(1)} ${getY(d.mortgage?.remaining_balance || 0).toFixed(1)}`)
-      .join(' ');
   });
 
   // Overlay Paths for all 3 slots
@@ -215,18 +208,6 @@
           stroke-width="2.5"
           stroke-dasharray="4 3"
           stroke-linecap="round"
-        />
-      {/if}
-
-      <!-- Mortgage Component Line -->
-      {#if mortgagePath && scenario?.purchase.tools.some(t => 'Loc' in t)}
-        <path
-          d={mortgagePath}
-          fill="none"
-          stroke="#6366f1"
-          stroke-width="1.5"
-          stroke-linecap="round"
-          opacity="0.6"
         />
       {/if}
 
