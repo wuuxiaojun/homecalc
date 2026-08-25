@@ -215,13 +215,14 @@
 
             <!-- Present Value -->
             <tr class="hover:bg-zinc-800/20 transition-colors">
-              <td class="py-2.5 px-4 font-sans text-zinc-300 font-medium">📊 Present Value Outflow (PV @ 4.0%)</td>
+              <td class="py-2.5 px-4 font-sans text-zinc-300 font-medium">📊 Present Value Outflow (PV @ 6.5%)</td>
               <td class="py-2.5 px-4 text-right text-indigo-300 tabular-nums">{formatCurrency(comparison.baseline_pv)}</td>
               <td class="py-2.5 px-4 text-right text-indigo-300 tabular-nums">{formatCurrency(comparison.alternative_pv)}</td>
               <td class="py-2.5 px-4 text-right font-bold tabular-nums {formatDeltaCurrency(comparison.delta_pv).isPositive ? 'text-emerald-400' : formatDeltaCurrency(comparison.delta_pv).isNeutral ? 'text-zinc-400' : 'text-rose-400'}">
                 {formatDeltaCurrency(comparison.delta_pv).text}
               </td>
             </tr>
+
 
             <!-- Strategy IRR -->
             <tr class="hover:bg-zinc-800/20 transition-colors">
