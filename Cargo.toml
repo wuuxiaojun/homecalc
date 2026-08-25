@@ -3,7 +3,9 @@ members = [
     "crates/cli",
     "crates/engine",
     "crates/engine-wasm",
+    "simulations",
 ]
+
 resolver = "2"
 
 [workspace.package]
