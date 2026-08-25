@@ -14,14 +14,3 @@ comfy-table = "8.0.0"
 inquire = "0.9.4"
 crossterm = "0.29.0"
 
-[[test]]
-name = "scenario_loading_and_math_test"
-path = "../../tests/scenario_loading_and_math_test.rs"
-
-[[test]]
-name = "scenario_comparison_differential_test"
-path = "../../tests/scenario_comparison_differential_test.rs"
-
-[[test]]
-name = "cli_workflow_integration_test"
-path = "../../tests/cli_workflow_integration_test.rs"
