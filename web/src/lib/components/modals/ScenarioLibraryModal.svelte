@@ -72,7 +72,7 @@
                 </span>
               </div>
               <p class="text-xs text-zinc-400 mt-1 leading-relaxed">
-                Standard 30-Year Fixed Mortgage ($800k @ 6.50%), 20% Cash Down Payment ($200k @ 4.0% yield), baseline Property Tax (1.20%), Insurance ($2,400/yr), and HOA ($120/mo).
+                Standard 30-Year Fixed Mortgage ($800k @ 6.50%), 20% Cash Down Payment ($200k @ 4.0% yield), baseline Property Tax (1.20%), Insurance ($2,400/yr), and HOA ($100/mo).
               </p>
             </div>
             <div class="text-right font-mono shrink-0">
@@ -95,7 +95,7 @@
               🛡️ $2,400/yr Ins
             </span>
             <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700/50">
-              🏢 $120/mo HOA
+              🏢 $100/mo HOA
             </span>
           </div>
 

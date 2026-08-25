@@ -16,7 +16,7 @@ export function createDefaultScenario(name = 'Standard 30Y Mortgage'): Purchase 
       purchase_price: 1_000_000,
       annual_property_tax_rate: 1.20,
       annual_insurance: 2_400,
-      monthly_hoa: 120
+      monthly_hoa: 100
     },
     tools: [
       { Cash: { amount: 200_000, rate: 4.0 } },

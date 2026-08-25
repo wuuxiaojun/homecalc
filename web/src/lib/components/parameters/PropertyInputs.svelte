@@ -7,7 +7,7 @@
     purchase_price: 1_000_000,
     annual_property_tax_rate: 1.20,
     annual_insurance: 2400,
-    monthly_hoa: 120
+    monthly_hoa: 100
   });
 
   const monthlyTax = $derived((house.purchase_price * house.annual_property_tax_rate * 0.01) / 12);
