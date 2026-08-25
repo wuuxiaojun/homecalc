@@ -2,9 +2,9 @@ import { chromium } from 'playwright';
 import { preview } from 'vite';
 
 async function run() {
-  console.log("Starting End-to-End Visual & Functional Validation (v2.0.2 Milestone)...");
+  console.log("Starting End-to-End Visual & Functional Validation (v2.1.0 Milestone)...");
 
-  // Spin up local Vite preview server on port 5173
+  // Spin up local Vite preview server on port 4173
   const previewServer = await preview({
     preview: { port: 4173, host: '127.0.0.1' }
   });
@@ -27,9 +27,9 @@ async function run() {
     console.log("Page title:", title);
     if (!title.includes("Homecalc")) throw new Error("Incorrect page title");
 
-    const versionBadge = await page.$('text=v2.0.2');
-    if (!versionBadge) throw new Error("v2.0.2 badge missing from Header");
-    console.log("✓ Dynamic Header version badge verified (v2.0.2).");
+    const versionBadge = await page.$('text=v2.1.0');
+    if (!versionBadge) throw new Error("v2.1.0 badge missing from Header");
+    console.log("✓ Dynamic Header version badge verified (v2.1.0).");
 
     // Verify KPI cards populated
     const kpiCards = await page.$$('.tabular-nums');
@@ -74,8 +74,8 @@ async function run() {
     if (!compareTable) throw new Error("Compare view missing");
     console.log("✓ Compare Differential workspace rendered successfully.");
 
-    // 6. Test Parameter Manipulation
-    console.log("Testing reactive parameter update...");
+    // 6. Test Parameter Manipulation & House Parity Guard in Compare View
+    console.log("Testing reactive parameter update & House Parity Guard...");
     await page.click('button:has-text("Dashboard")');
     await page.waitForTimeout(300);
     const priceInput = await page.$('#purchase-price-input');
@@ -83,10 +83,20 @@ async function run() {
     await priceInput.fill('1200000');
     await priceInput.evaluate(e => e.blur());
     await page.waitForTimeout(300);
-    console.log("✓ Reactive parameter adjustment triggered.");
+
+    // Verify House Parity Guard: Slot 1 ($1.2M) vs Slot 2 ($1.0M) must render N/A for IRR
+    await page.click('button:has-text("Compare")');
+    await page.waitForTimeout(500);
+    const irrElement = await page.$('text=Strategy IRR');
+    if (!irrElement) throw new Error("Strategy IRR indicator missing in Compare view");
+    const naBadge = await page.$('span:has-text("N/A")');
+    if (!naBadge) throw new Error("House Parity Guard failed: expected N/A for mismatched property prices");
+    console.log("✓ House Parity Guard verified in UI: mismatched property price displays N/A for Strategy IRR.");
 
     // 7. Test Save to Library & Scenario Library Modal
     console.log("Testing Save to Library...");
+    await page.click('button:has-text("Dashboard")');
+    await page.waitForTimeout(300);
     await page.click('button:has-text("💾 Save")');
     await page.waitForTimeout(300);
 
@@ -123,16 +133,18 @@ async function run() {
     await page.click('button:has-text("✕")');
     await page.waitForTimeout(300);
 
-    console.log("🎉 ALL DEFAULT SCENARIO & UI ADJUSTMENT TESTS PASSED WITH 100% SUCCESS!");
+    console.log("🎉 ALL DEFAULT SCENARIO, IRR GUARD & UI TESTS PASSED WITH 100% SUCCESS!");
   } finally {
     await browser.close();
     previewServer.httpServer.close();
-    process.exit(0);
   }
 }
 
-run().catch(err => {
-  console.error("E2E Test Failure:", err);
-  process.exit(1);
-});
+run()
+  .then(() => process.exit(0))
+  .catch(err => {
+    console.error("E2E Test Failure:", err);
+    process.exit(1);
+  });
+
 

@@ -1,7 +1,8 @@
 //! comparison.rs
-//! Scenario comparison
+//! Scenario comparison and differential analytics
 
 use crate::config::constant::DEFAULT_DISCOUNT_RATE;
+use crate::domain::house::House;
 use crate::domain::scenario::Scenario;
 use crate::service::utility::clamp_zero;
 use serde::{Deserialize, Serialize};
@@ -40,6 +41,14 @@ pub struct ScenarioComparison {
     pub alternative_pv: f64,
     pub delta_pv: f64,
     pub irr: Option<f64>,
+}
+
+/// Checks if all property attributes match between two scenarios for valid IRR strategy evaluation
+pub fn house_matches(h1: &House, h2: &House) -> bool {
+    (h1.purchase_price - h2.purchase_price).abs() < 1e-4
+        && (h1.annual_property_tax_rate - h2.annual_property_tax_rate).abs() < 1e-4
+        && (h1.annual_insurance - h2.annual_insurance).abs() < 1e-4
+        && (h1.monthly_hoa - h2.monthly_hoa).abs() < 1e-4
 }
 
 /// Compute scenarios comparison metrics
@@ -112,7 +121,7 @@ pub fn compare_scenarios(baseline: &Scenario, alternative: &Scenario) -> Scenari
     }
 }
 
-/// Calculate the present value (pv)
+/// Calculate the present value (pv) of scenario cash outflows
 pub fn calculate_scenario_pv(scenario: &Scenario) -> f64 {
     let monthly_r = DEFAULT_DISCOUNT_RATE / 12.0;
     let mut total_pv = 0.0;
@@ -129,88 +138,96 @@ pub fn calculate_scenario_pv(scenario: &Scenario) -> f64 {
     clamp_zero(total_pv)
 }
 
-/// Calculates the internal rate of return (irr)
+/// Computes net debt service outflow (debt payment + extra principal - tax deductions) for a scenario at a given month
+fn get_net_debt_outflow(scenario: &Scenario, month_idx: usize) -> f64 {
+    let row = match scenario.monthly_statement.get(month_idx) {
+        Some(r) => r,
+        None => return 0.0,
+    };
+
+    if row.month == 0 {
+        return row.total_paid; // Initial capital / down payment at month 0
+    }
+
+    let debt_service = row.total_debt_paid + row.total_extra_payment;
+    let current_month = row.month;
+    let annual_tax_savings = if current_month > 0
+        && (current_month % 12 == 0 || month_idx == scenario.monthly_statement.len() - 1)
+    {
+        let year_idx = ((current_month - 1) / 12) as usize;
+        scenario
+            .yearly_statement
+            .get(year_idx)
+            .map_or(0.0, |y| y.annual_tax_savings)
+    } else {
+        0.0
+    };
+
+    (debt_service - annual_tax_savings).max(0.0)
+}
+
+/// Calculates the internal rate of return (IRR) on the incremental investment of Alternative (B) over Baseline (A)
 pub fn calculate_strategy_irr(baseline: &Scenario, alternative: &Scenario) -> Option<f64> {
-    let max_len = baseline
-        .monthly_statement
-        .len()
-        .max(alternative.monthly_statement.len());
-    if max_len == 0 {
+    // 1. House Parity Guard: If property parameters differ, IRR is non-comparable
+    if !house_matches(&baseline.purchase.house, &alternative.purchase.house) {
+        return None;
+    }
+
+    let len_a = baseline.monthly_statement.len();
+    let len_b = alternative.monthly_statement.len();
+    let max_len = len_a.max(len_b);
+    if max_len <= 1 {
         return None;
     }
 
     let mut delta_cash_flows = Vec::with_capacity(max_len);
 
     for month_idx in 0..max_len {
-        let outflow_a = extract_monthly_outflow(baseline, month_idx);
-        let outflow_b = extract_monthly_outflow(alternative, month_idx);
+        let net_a = get_net_debt_outflow(baseline, month_idx);
+        let net_b = get_net_debt_outflow(alternative, month_idx);
 
-        let delta = outflow_b - outflow_a;
+        // Incremental cash flow: delta_C_t = -(C_{B,t} - C_{A,t}) = C_{A,t} - C_{B,t}
+        let delta = net_a - net_b;
         delta_cash_flows.push(delta);
     }
 
-    solve_irr_newton_raphson(&delta_cash_flows)
+    // 2. Terminal equity difference at final comparison horizon T
+    let last_idx = max_len - 1;
+    let ending_debt_a = baseline
+        .monthly_statement
+        .get(last_idx)
+        .map_or(0.0, |r| r.total_remaining_balance);
+    let ending_debt_b = alternative
+        .monthly_statement
+        .get(last_idx)
+        .map_or(0.0, |r| r.total_remaining_balance);
+
+    // Terminal net equity difference: (NetEquity_B - NetEquity_A) = (Debt_A - Debt_B)
+    let terminal_equity_diff = ending_debt_a - ending_debt_b;
+    delta_cash_flows[last_idx] += terminal_equity_diff;
+
+    solve_irr_hybrid(&delta_cash_flows)
 }
 
-/// Robust multi-start Newton-Raphson solver with bisection fallback for IRR
-pub fn solve_irr_newton_raphson(cash_flows: &[f64]) -> Option<f64> {
-    // Check if there is at least one positive and one negative cash flow
+/// Robust bounded Hybrid Newton-Raphson / Bisection solver over monthly rate bracket [-0.99, 1.0]
+pub fn solve_irr_hybrid(cash_flows: &[f64]) -> Option<f64> {
+    // Check if there is at least one positive and one negative cash flow (sign change)
     let has_positive = cash_flows.iter().any(|&f| f > 1e-4);
     let has_negative = cash_flows.iter().any(|&f| f < -1e-4);
     if !has_positive || !has_negative {
         return None;
     }
 
-    // Try multi-start Newton-Raphson across a grid of initial guesses
-    let initial_guesses: [f64; 8] = [0.005, 0.01, 0.02, 0.05, 0.10, -0.005, -0.01, 0.001];
+    let min_rate = -0.99;
+    let max_rate = 1.00;
+    let tolerance = 1e-7;
 
-    for &initial_rate in &initial_guesses {
-        let mut rate: f64 = initial_rate;
-        let max_iterations = 100;
-        let tolerance = 1e-7;
-
-        for _ in 0..max_iterations {
-            if rate <= -0.99 {
-                rate = -0.90;
-            }
-
-            let mut npv = 0.0;
-            let mut derivative = 0.0;
-            let base: f64 = 1.0 + rate;
-
-            for (m, &flow) in cash_flows.iter().enumerate() {
-                if m == 0 {
-                    npv += flow;
-                } else {
-                    let factor = base.powi(m as i32);
-                    npv += flow / factor;
-                    derivative -= (m as f64) * flow / (factor * base);
-                }
-            }
-
-            if npv.abs() < tolerance {
-                let annual_irr = (1.0 + rate).powi(12) - 1.0;
-                if annual_irr.is_finite() {
-                    return Some(annual_irr);
-                }
-            }
-
-            if derivative.abs() < 1e-10 || derivative.is_nan() {
-                break;
-            }
-
-            let step = npv / derivative;
-            rate -= step;
-
-            if rate.is_nan() || rate.is_infinite() {
-                break;
-            }
-        }
-    }
-
-    // Fallback: Bisection search across standard financial rate interval [-0.5, 2.0]
+    // Evaluates Net Present Value at a monthly rate r
     let npv_at = |r: f64| -> f64 {
         let base = 1.0 + r;
+        if base <= 0.0 {
+            return f64::NAN;
+        }
         cash_flows.iter().enumerate().fold(0.0, |acc, (m, &flow)| {
             if m == 0 {
                 acc + flow
@@ -220,24 +237,85 @@ pub fn solve_irr_newton_raphson(cash_flows: &[f64]) -> Option<f64> {
         })
     };
 
-    let grid = [
-        -0.5, -0.3, -0.1, -0.05, -0.01, 0.0, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0,
+    // Evaluates derivative d(NPV)/dr at monthly rate r
+    let dnpv_at = |r: f64| -> f64 {
+        let base = 1.0 + r;
+        if base <= 0.0 {
+            return f64::NAN;
+        }
+        cash_flows.iter().enumerate().fold(0.0, |acc, (m, &flow)| {
+            if m == 0 {
+                acc
+            } else {
+                let factor = base.powi(m as i32);
+                acc - (m as f64) * flow / (factor * base)
+            }
+        })
+    };
+
+    // 1. Multi-start bounded Newton-Raphson (evaluating standard positive financial returns first)
+    let initial_guesses: [f64; 12] = [
+        0.005, 0.01, 0.02, 0.04, 0.06, 0.08, 0.10, 0.001, 0.0, 0.20, -0.005, -0.01,
     ];
-    for w in grid.windows(2) {
+
+    for &initial_rate in &initial_guesses {
+        let mut rate = initial_rate;
+        for _ in 0..60 {
+            if rate < min_rate || rate > max_rate || rate.is_nan() {
+                break;
+            }
+
+            let npv = npv_at(rate);
+            if npv.abs() < tolerance {
+                let annual_irr = (1.0 + rate).powi(12) - 1.0;
+                if annual_irr.is_finite() {
+                    return Some(annual_irr);
+                }
+            }
+
+            let derivative = dnpv_at(rate);
+            if derivative.abs() < 1e-12 || derivative.is_nan() {
+                break;
+            }
+
+            let step = npv / derivative;
+            let next_rate = rate - step;
+
+            // Reject steps outside bounds
+            if next_rate < min_rate || next_rate > max_rate || next_rate.is_nan() {
+                break;
+            }
+
+            rate = next_rate;
+        }
+    }
+
+    // 2. Bisection search across positive rates first, then negative rates
+    let grid_positive: [f64; 13] = [
+        0.0, 0.002, 0.005, 0.01, 0.02, 0.04, 0.06, 0.08, 0.10, 0.15, 0.25, 0.50, 1.00,
+    ];
+
+    for w in grid_positive.windows(2) {
         let r_low = w[0];
         let r_high = w[1];
         let npv_low = npv_at(r_low);
         let npv_high = npv_at(r_high);
 
+        if npv_low.is_nan() || npv_high.is_nan() {
+            continue;
+        }
+
         if npv_low * npv_high <= 0.0 {
             let mut a = r_low;
             let mut b = r_high;
-            for _ in 0..60 {
-                let mid = (a + b) * 0.5;
+            for _ in 0..80 {
+                let mid: f64 = (a + b) * 0.5;
                 let npv_mid = npv_at(mid);
-                if npv_mid.abs() < 1e-7 {
+                if npv_mid.abs() < tolerance || (b - a).abs() < 1e-9 {
                     let annual_irr = (1.0 + mid).powi(12) - 1.0;
-                    return Some(annual_irr);
+                    if annual_irr.is_finite() {
+                        return Some(annual_irr);
+                    }
                 }
                 if npv_at(a) * npv_mid <= 0.0 {
                     b = mid;
@@ -245,17 +323,65 @@ pub fn solve_irr_newton_raphson(cash_flows: &[f64]) -> Option<f64> {
                     a = mid;
                 }
             }
-            let root = (a + b) * 0.5;
+            let root: f64 = (a + b) * 0.5;
             let annual_irr = (1.0 + root).powi(12) - 1.0;
-            return Some(annual_irr);
+            if annual_irr.is_finite() {
+                return Some(annual_irr);
+            }
         }
     }
+
+    let grid_negative: [f64; 9] = [
+        0.0, -0.01, -0.02, -0.05, -0.10, -0.20, -0.40, -0.70, -0.99,
+    ];
+
+    for w in grid_negative.windows(2) {
+        let r_low: f64 = w[0].min(w[1]);
+        let r_high: f64 = w[0].max(w[1]);
+        let npv_low = npv_at(r_low);
+        let npv_high = npv_at(r_high);
+
+        if npv_low.is_nan() || npv_high.is_nan() {
+            continue;
+        }
+
+        if npv_low * npv_high <= 0.0 {
+            let mut a = r_low;
+            let mut b = r_high;
+            for _ in 0..80 {
+                let mid: f64 = (a + b) * 0.5;
+                let npv_mid = npv_at(mid);
+                if npv_mid.abs() < tolerance || (b - a).abs() < 1e-9 {
+                    let annual_irr = (1.0 + mid).powi(12) - 1.0;
+                    if annual_irr.is_finite() {
+                        return Some(annual_irr);
+                    }
+                }
+                if npv_at(a) * npv_mid <= 0.0 {
+                    b = mid;
+                } else {
+                    a = mid;
+                }
+            }
+            let root: f64 = (a + b) * 0.5;
+            let annual_irr = (1.0 + root).powi(12) - 1.0;
+            if annual_irr.is_finite() {
+                return Some(annual_irr);
+            }
+        }
+    }
+
 
     None
 }
 
-/// Extracts monthly outflow
-/// Auxiliary function for irr & pv calculation
+
+/// Backwards-compatible alias for solve_irr_hybrid
+pub fn solve_irr_newton_raphson(cash_flows: &[f64]) -> Option<f64> {
+    solve_irr_hybrid(cash_flows)
+}
+
+/// Extracts monthly outflow for PV and IRR calculations
 pub fn extract_monthly_outflow(scenario: &Scenario, month_idx: usize) -> f64 {
     let monthly_row = match scenario.monthly_statement.get(month_idx) {
         Some(row) => row,
@@ -372,6 +498,160 @@ mod tests {
     }
 
     #[test]
+    fn test_house_matches_parity_guard() {
+        let h1 = House {
+            purchase_price: 1_000_000.0,
+            annual_property_tax_rate: 1.25,
+            annual_insurance: 2_400.0,
+            monthly_hoa: 150.0,
+        };
+
+        // Identical house
+        let h2 = h1.clone();
+        assert!(house_matches(&h1, &h2));
+
+        // Different purchase price
+        let mut h_diff_price = h1.clone();
+        h_diff_price.purchase_price = 1_050_000.0;
+        assert!(!house_matches(&h1, &h_diff_price));
+
+        // Different property tax rate
+        let mut h_diff_tax = h1.clone();
+        h_diff_tax.annual_property_tax_rate = 1.30;
+        assert!(!house_matches(&h1, &h_diff_tax));
+
+        // Different insurance
+        let mut h_diff_ins = h1.clone();
+        h_diff_ins.annual_insurance = 3_000.0;
+        assert!(!house_matches(&h1, &h_diff_ins));
+
+        // Different HOA
+        let mut h_diff_hoa = h1.clone();
+        h_diff_hoa.monthly_hoa = 200.0;
+        assert!(!house_matches(&h1, &h_diff_hoa));
+    }
+
+    #[test]
+    fn test_house_parity_guard_blocks_irr_on_different_homes() {
+        let p1 = Purchase {
+            name: "Home A".to_string(),
+            house: House {
+                purchase_price: 800_000.0,
+                annual_property_tax_rate: 1.2,
+                annual_insurance: 2_000.0,
+                monthly_hoa: 50.0,
+            },
+            tools: vec![
+                Tool::Cash(Cash {
+                    amount: 160_000.0,
+                    rate: 4.0,
+                }),
+                Tool::Mortgage(Mortgage {
+                    amount: 640_000.0,
+                    rate: 6.5,
+                    term: 30,
+                }),
+            ],
+            mortgage_repay: BTreeMap::new(),
+            loc_repay: BTreeMap::new(),
+        };
+
+        let p2 = Purchase {
+            name: "Home B (Higher Price)".to_string(),
+            house: House {
+                purchase_price: 900_000.0,
+                annual_property_tax_rate: 1.2,
+                annual_insurance: 2_000.0,
+                monthly_hoa: 50.0,
+            },
+            tools: vec![
+                Tool::Cash(Cash {
+                    amount: 180_000.0,
+                    rate: 4.0,
+                }),
+                Tool::Mortgage(Mortgage {
+                    amount: 720_000.0,
+                    rate: 6.5,
+                    term: 30,
+                }),
+            ],
+            mortgage_repay: BTreeMap::new(),
+            loc_repay: BTreeMap::new(),
+        };
+
+        let s1 = create_scenario(p1);
+        let s2 = create_scenario(p2);
+
+        let comparison = compare_scenarios(&s1, &s2);
+        assert_eq!(comparison.irr, None, "IRR must be None when houses differ");
+    }
+
+    #[test]
+    fn test_prepayment_strategy_irr_identical_house() {
+        let house = House {
+            purchase_price: 1_000_000.0,
+            annual_property_tax_rate: 1.25,
+            annual_insurance: 2_400.0,
+            monthly_hoa: 100.0,
+        };
+
+        // Scenario A: Standard 30yr Mortgage ($800k @ 6.0%)
+        let purchase_a = Purchase {
+            name: "Baseline 30yr".to_string(),
+            house: house.clone(),
+            tools: vec![
+                Tool::Cash(Cash {
+                    amount: 200_000.0,
+                    rate: 4.0,
+                }),
+                Tool::Mortgage(Mortgage {
+                    amount: 800_000.0,
+                    rate: 6.0,
+                    term: 30,
+                }),
+            ],
+            mortgage_repay: BTreeMap::new(),
+            loc_repay: BTreeMap::new(),
+        };
+
+        // Scenario B: Same house, same mortgage, but with $500/mo extra prepayment
+        let mut mortgage_repay = BTreeMap::new();
+        for m in 1..=360 {
+            mortgage_repay.insert(m, 500.0);
+        }
+
+        let purchase_b = Purchase {
+            name: "Prepayment Strategy".to_string(),
+            house,
+            tools: vec![
+                Tool::Cash(Cash {
+                    amount: 200_000.0,
+                    rate: 4.0,
+                }),
+                Tool::Mortgage(Mortgage {
+                    amount: 800_000.0,
+                    rate: 6.0,
+                    term: 30,
+                }),
+            ],
+            mortgage_repay,
+            loc_repay: BTreeMap::new(),
+        };
+
+        let scenario_a = create_scenario(purchase_a);
+        let scenario_b = create_scenario(purchase_b);
+
+        let comparison = compare_scenarios(&scenario_a, &scenario_b);
+
+        assert!(comparison.irr.is_some(), "Expected IRR to be Some for prepayment strategy");
+        let irr = comparison.irr.unwrap();
+        // Return on mortgage prepayment is directly anchored around the mortgage note rate (6.0%)
+        assert!(irr > 0.04 && irr < 0.08, "Expected IRR near 6%, got {}", irr);
+        assert!(comparison.months_saved > 0);
+    }
+
+    #[test]
+
     fn test_extract_monthly_outflow_bounds() {
         let scenario = create_mock_scenario(12, 1000.0, 0.0);
         assert_eq!(extract_monthly_outflow(&scenario, 0), 100_000.0); // Month 0
@@ -405,10 +685,10 @@ mod tests {
     }
 
     #[test]
-    fn test_solve_irr_newton_raphson() {
+    fn test_solve_irr_hybrid() {
         // Known stream: -100 upfront, +110 in month 1 -> monthly rate r = 10%
         let cash_flows = vec![-100.0, 110.0];
-        let result = solve_irr_newton_raphson(&cash_flows);
+        let result = solve_irr_hybrid(&cash_flows);
         assert!(result.is_some());
         let annual_irr = result.unwrap();
         let expected_annual = (1.10_f64).powi(12) - 1.0;
@@ -416,7 +696,14 @@ mod tests {
 
         // Non-convergent stream: all positive cash flows
         let bad_flows = vec![100.0, 100.0, 100.0];
-        assert!(solve_irr_newton_raphson(&bad_flows).is_none());
+        assert!(solve_irr_hybrid(&bad_flows).is_none());
+
+        // Negative monthly return stream: -100 upfront, +50 in month 1 -> -50% monthly
+        let neg_flows = vec![-100.0, 50.0];
+        let neg_res = solve_irr_hybrid(&neg_flows);
+        assert!(neg_res.is_some());
+        let expected_neg_annual = (0.50_f64).powi(12) - 1.0;
+        assert!((neg_res.unwrap() - expected_neg_annual).abs() < 1e-4);
     }
 
     #[test]

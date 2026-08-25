@@ -7,8 +7,9 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "2.0.2"
+version = "2.1.0"
 edition = "2024"
 authors = ["Yanjun Wu wuyj1996@gmail.com"]
 description = "Mortgage and Loc scenario calculator CLI"
 license = "MIT"
+
