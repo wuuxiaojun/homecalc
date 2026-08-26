@@ -41,6 +41,9 @@ wasm-pack build "$REPO_ROOT/crates/engine-wasm" \
     --out-name engine_wasm \
     --release
 
+# Remove auto-generated .gitignore from wasm-pack so wasm assets can be tracked for Vercel
+rm -f "$REPO_ROOT/web/src/lib/wasm/.gitignore"
+
 echo -e "${GREEN}  ✓ WASM engine build complete.${NC}"
 
 # -----------------------------------------------------------------------------

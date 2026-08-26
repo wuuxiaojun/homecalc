@@ -1,58 +1,98 @@
-# ==========================================
-# 1. Multi-Agent & Orchestration Cache
-# ==========================================
-.agents/
+# =============================================================================
+# HomeCalc Comprehensive .gitignore
+# =============================================================================
 
-# ==========================================
-# 2. Rust & Cargo Build Artifacts (Cleans ~3GB bloat)
-# ==========================================
+# -----------------------------------------------------------------------------
+# 1. Rust / Cargo Build Artifacts
+# -----------------------------------------------------------------------------
 target/
+**/target/
 **/*.rs.bk
 Cargo.lock.lock
 
-# ==========================================
-# 3. WebAssembly / wasm-pack Artifacts
-# ==========================================
-crates/engine-wasm/pkg/
-web/src/lib/wasm/*.wasm.d.ts.lock
-
-# ==========================================
-# 4. Node.js & Svelte / Vite Build Outputs
-# ==========================================
-web/node_modules/
+# -----------------------------------------------------------------------------
+# 2. Node.js / Vite / Svelte Frontend Build Outputs
+# -----------------------------------------------------------------------------
 node_modules/
-web/dist/
-web/build/
-web/.svelte-kit/
+**/node_modules/
+dist/
+**/dist/
+build/
+**/build/
+.svelte-kit/
+**/.svelte-kit/
 .vite/
+**/.vite/
+
+# Node package manager logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+lerna-debug.log*
 
-# ==========================================
-# 5. Playwright & Test Artifacts
-# ==========================================
+# -----------------------------------------------------------------------------
+# 3. WebAssembly Build Artifacts
+# -----------------------------------------------------------------------------
+# Ignore intermediate wasm-pack output inside crates
+crates/engine-wasm/pkg/
+
+# NOTE: web/src/lib/wasm/ MUST BE TRACKED so Vercel / Netlify / CI can build
+# the frontend using Node.js without needing a Rust / wasm-pack toolchain.
+!web/src/lib/wasm/
+!web/src/lib/wasm/*
+web/src/lib/wasm/*.wasm.d.ts.lock
+
+# -----------------------------------------------------------------------------
+# 4. macOS App Bundle & Packaging Artifacts
+# -----------------------------------------------------------------------------
+mac/HomeCalc.app/
+**/*.app/
+mac/HomeCalc-macOS.zip
+**/*.zip
+
+# -----------------------------------------------------------------------------
+# 5. Vercel, Netlify & Deployment Caches
+# -----------------------------------------------------------------------------
+.vercel/
+.netlify/
+.turbo/
+
+# -----------------------------------------------------------------------------
+# 6. Test, Coverage & Playwright Artifacts
+# -----------------------------------------------------------------------------
 web/test-results/
 web/playwright-report/
 web/blob-report/
 web/playwright/.cache/
+coverage/
+*.lcov
 
-# ==========================================
-# 6. Environment & Local Storage Configs
-# ==========================================
+# -----------------------------------------------------------------------------
+# 7. Environment & Local Secrets
+# -----------------------------------------------------------------------------
 .env
 .env.*
 !.env.example
 *.local
 
-# ==========================================
-# 7. OS & Editor Metadata
-# ==========================================
+# -----------------------------------------------------------------------------
+# 8. OS Metadata & Editor Configurations
+# -----------------------------------------------------------------------------
 .DS_Store
+.DS_Store?
+._*
 Thumbs.db
+desktop.ini
 .idea/
 .vscode/
 *.swp
 *.swo
 *~
+*.sublime-workspace
+*.sublime-project
+
+# -----------------------------------------------------------------------------
+# 9. AI Agent & Orchestration Cache
+# -----------------------------------------------------------------------------
+.agents/

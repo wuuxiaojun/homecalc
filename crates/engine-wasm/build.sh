@@ -14,4 +14,7 @@ wasm-pack build "$SCRIPT_DIR" \
     --out-name engine_wasm \
     --release
 
+# Remove auto-generated .gitignore from wasm-pack so wasm assets can be tracked for Vercel/web deploys
+rm -f "$OUT_DIR/.gitignore"
+
 echo "WASM build complete. Artifacts written to $OUT_DIR"

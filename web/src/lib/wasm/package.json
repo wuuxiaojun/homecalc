@@ -1,0 +1,19 @@
+{
+  "name": "engine-wasm",
+  "type": "module",
+  "collaborators": [
+    "Yanjun Wu wuyj1996@gmail.com"
+  ],
+  "version": "2.1.0",
+  "license": "MIT",
+  "files": [
+    "engine_wasm_bg.wasm",
+    "engine_wasm.js",
+    "engine_wasm.d.ts"
+  ],
+  "main": "engine_wasm.js",
+  "types": "engine_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
