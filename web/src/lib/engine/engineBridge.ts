@@ -66,7 +66,7 @@ export function getEngineVersion(): string {
   try {
     return wasm_engine_version();
   } catch {
-    return '2.0.2';
+    return '2.1.1';
   }
 }
 

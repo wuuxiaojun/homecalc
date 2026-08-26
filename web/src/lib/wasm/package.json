@@ -4,7 +4,7 @@
   "collaborators": [
     "Yanjun Wu wuyj1996@gmail.com"
   ],
-  "version": "2.1.0",
+  "version": "2.1.1",
   "license": "MIT",
   "files": [
     "engine_wasm_bg.wasm",

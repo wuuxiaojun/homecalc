@@ -9,7 +9,7 @@
     onOpenImport?: () => void;
   } = $props();
 
-  const version = $derived(appState.isInitialized ? getEngineVersion() : '2.1.0');
+  const version = $derived(appState.isInitialized ? getEngineVersion() : '2.1.1');
 
 
   const slots: { id: SlotId; label: string }[] = [

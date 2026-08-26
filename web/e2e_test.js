@@ -47,9 +47,9 @@ async function run() {
     console.log("Page title:", title);
     if (!title.includes("Homecalc")) throw new Error("Incorrect page title");
 
-    const versionBadge = await desktopPage.$('text=v2.1.0');
-    if (!versionBadge) throw new Error("v2.1.0 badge missing from Header");
-    console.log("✓ Dynamic Header version badge verified (v2.1.0).");
+    const versionBadge = await desktopPage.$('text=v2.1.1');
+    if (!versionBadge) throw new Error("v2.1.1 badge missing from Header");
+    console.log("✓ Dynamic Header version badge verified (v2.1.1).");
 
     // Verify Desktop SplitPane Side-by-Side Layout
     const desktopAsideBox = await desktopPage.locator('aside').boundingBox();
@@ -212,7 +212,7 @@ async function run() {
     const mobileHeaderBrand = await mobilePage.$('text=Homecalc');
     if (!mobileHeaderBrand) throw new Error("Brand title missing in mobile header");
 
-    const mobileVersion = await mobilePage.$('text=v2.1.0');
+    const mobileVersion = await mobilePage.$('text=v2.1.1');
     if (!mobileVersion) throw new Error("Version badge missing in mobile header");
 
     // Verify slot switching on mobile
