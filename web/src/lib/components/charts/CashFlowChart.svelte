@@ -36,7 +36,7 @@
   }
 </script>
 
-<Card icon="📊" title="Annual Cash Outflow Trajectory">
+<Card icon="📊" title="Annual Outflow">
   {#snippet headerRight()}
     <span class="text-xs font-mono text-zinc-400">
       {yearlyData.length} Years Horizon

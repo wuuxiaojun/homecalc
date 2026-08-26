@@ -39,9 +39,9 @@
 
     <!-- Selectors -->
     <div class="flex items-center gap-3">
-      <!-- Baseline Selector -->
+      <!-- Slot A Selector -->
       <div class="flex items-center gap-1.5 bg-zinc-950 px-2.5 py-1.5 rounded-xl border border-zinc-800 text-xs">
-        <span class="text-zinc-500 font-mono">Baseline (A):</span>
+        <span class="text-zinc-500 font-mono">A:</span>
         <select
           class="bg-transparent text-zinc-200 font-semibold focus:outline-none cursor-pointer"
           value={appState.comparisonBaselineId}
@@ -55,9 +55,9 @@
 
       <span class="text-zinc-500 font-mono text-xs">vs</span>
 
-      <!-- Alternative Selector -->
+      <!-- Slot B Selector -->
       <div class="flex items-center gap-1.5 bg-zinc-950 px-2.5 py-1.5 rounded-xl border border-zinc-800 text-xs">
-        <span class="text-zinc-500 font-mono">Alternative (B):</span>
+        <span class="text-zinc-500 font-mono">B:</span>
         <select
           class="bg-transparent text-indigo-300 font-semibold focus:outline-none cursor-pointer"
           value={appState.comparisonAlternativeId}
@@ -74,9 +74,9 @@
   {#if comparison}
     <!-- Top Comparison Highlight KPI Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <!-- 1. Total Paid (Gross Lifetime Total) -->
+      <!-- 1. Gross Outlay (Gross Lifetime Total) -->
       <div class="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80">
-        <div class="text-xs font-semibold text-zinc-400">💳 Total Paid</div>
+        <div class="text-xs font-semibold text-zinc-400">💳 Gross Outlay</div>
         <div class="mt-2 text-2xl font-bold font-mono tracking-tight tabular-nums {formatDeltaCurrency(comparison.delta_gross_paid).isPositive ? 'text-emerald-400' : formatDeltaCurrency(comparison.delta_gross_paid).isNeutral ? 'text-zinc-300' : 'text-rose-400'}">
           {formatDeltaCurrency(comparison.delta_gross_paid).text}
         </div>
@@ -85,9 +85,9 @@
         </div>
       </div>
 
-      <!-- 2. Total Interest Paid -->
+      <!-- 2. Interest Paid -->
       <div class="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80">
-        <div class="text-xs font-semibold text-zinc-400">📉 Total Interest Paid</div>
+        <div class="text-xs font-semibold text-zinc-400">📉 Interest Paid</div>
         <div class="mt-2 text-2xl font-bold font-mono tracking-tight tabular-nums {formatDeltaCurrency(comparison.delta_interest_paid).isPositive ? 'text-emerald-400' : formatDeltaCurrency(comparison.delta_interest_paid).isNeutral ? 'text-zinc-300' : 'text-rose-400'}">
           {formatDeltaCurrency(comparison.delta_interest_paid).text}
         </div>
@@ -96,9 +96,9 @@
         </div>
       </div>
 
-      <!-- 3. Present Value (PV) -->
+      <!-- 3. Present Value -->
       <div class="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80">
-        <div class="text-xs font-semibold text-zinc-400">📊 Present Value (PV)</div>
+        <div class="text-xs font-semibold text-zinc-400">📊 Present Value</div>
         <div class="mt-2 text-2xl font-bold font-mono tracking-tight tabular-nums {formatDeltaCurrency(comparison.delta_pv).isPositive ? 'text-emerald-400' : formatDeltaCurrency(comparison.delta_pv).isNeutral ? 'text-zinc-300' : 'text-rose-400'}">
           {formatDeltaCurrency(comparison.delta_pv).text}
         </div>
@@ -107,9 +107,9 @@
         </div>
       </div>
 
-      <!-- 4. Strategy IRR -->
+      <!-- 4. Internal Rate of Return -->
       <div class="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80">
-        <div class="text-xs font-semibold text-zinc-400">📈 Strategy IRR</div>
+        <div class="text-xs font-semibold text-zinc-400">📈 Internal Rate of Return</div>
         <div class="mt-2 text-2xl font-bold font-mono tracking-tight text-indigo-400 tabular-nums">
           {#if isValidNumber(comparison.irr)}
             {formatPercent(comparison.irr * 100, 2)}
@@ -126,8 +126,8 @@
     <!-- 4-Column Side-by-Side Comparison Table -->
     <div class="rounded-2xl bg-zinc-900/60 border border-zinc-800/80 overflow-hidden shadow-sm">
       <div class="p-4 border-b border-zinc-800/60 bg-zinc-950/40 flex items-center justify-between">
-        <h3 class="text-sm font-semibold text-zinc-200">📊 Comprehensive Metric Differential Table</h3>
-        <span class="text-xs font-mono text-zinc-500">Delta = Alternative (B) - Baseline (A)</span>
+        <h3 class="text-sm font-semibold text-zinc-200">📊 Metric Differential Table</h3>
+        <span class="text-xs font-mono text-zinc-500">Delta = B - A</span>
       </div>
 
       <div class="overflow-x-auto">
@@ -135,8 +135,8 @@
           <thead>
             <tr class="border-b border-zinc-800/80 bg-zinc-950/70 text-zinc-400 text-left">
               <th class="py-3 px-4 font-semibold">Metric Category</th>
-              <th class="py-3 px-4 font-semibold text-right">Baseline (A: {baselineSlot.name})</th>
-              <th class="py-3 px-4 font-semibold text-right">Alternative (B: {alternativeSlot.name})</th>
+              <th class="py-3 px-4 font-semibold text-right">A: {baselineSlot.name}</th>
+              <th class="py-3 px-4 font-semibold text-right">B: {alternativeSlot.name}</th>
               <th class="py-3 px-4 font-semibold text-right">Delta (B - A)</th>
             </tr>
           </thead>

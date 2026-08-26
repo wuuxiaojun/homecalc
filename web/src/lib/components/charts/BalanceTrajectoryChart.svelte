@@ -116,7 +116,7 @@
   }
 </script>
 
-<Card icon="📉" title="Amortization Balance Trajectory">
+<Card icon="📉" title="Balance Trajectory">
   {#snippet headerRight()}
     <div class="flex items-center gap-2">
       <!-- Overlay toggle buttons for all other slots -->

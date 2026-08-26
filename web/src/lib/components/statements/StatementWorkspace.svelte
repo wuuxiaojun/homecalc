@@ -11,7 +11,7 @@
     <div class="flex items-center gap-2">
       <span class="text-xl">📅</span>
       <div>
-        <h2 class="text-base font-bold text-white">Amortization & Financial Statement Ledger</h2>
+        <h2 class="text-base font-bold text-white">Statement Ledger</h2>
         <p class="text-xs text-zinc-400">Granular monthly breakdown schedule and yearly aggregated ledger</p>
       </div>
     </div>
@@ -22,7 +22,7 @@
         onclick={() => activeTab = 'monthly'}
       >
         <span>📅</span>
-        <span>Monthly Schedule</span>
+        <span>Monthly Statement</span>
       </button>
       <button
         class="px-3.5 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center gap-1.5 {activeTab === 'yearly' ? 'bg-zinc-800 text-white shadow-sm font-semibold' : 'text-zinc-400 hover:text-zinc-200'}"

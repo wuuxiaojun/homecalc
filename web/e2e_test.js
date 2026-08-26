@@ -70,9 +70,21 @@ async function run() {
     console.log("Testing Compare view navigation in right pane...");
     await page.click('button:has-text("Compare")');
     await page.waitForTimeout(500);
-    const compareTable = await page.$('text=Scenario Differential Analysis');
-    if (!compareTable) throw new Error("Compare view missing");
-    console.log("✓ Compare Differential workspace rendered successfully.");
+    const compareHeader = await page.$('text=Scenario Differential Analysis');
+    if (!compareHeader) throw new Error("Compare view missing");
+    const grossOutlay = await page.$('text=Gross Outlay');
+    if (!grossOutlay) throw new Error("Gross Outlay KPI card missing in Compare view");
+    const interestPaid = await page.$('text=Interest Paid');
+    if (!interestPaid) throw new Error("Interest Paid KPI card missing in Compare view");
+    const presentValue = await page.$('text=Present Value');
+    if (!presentValue) throw new Error("Present Value KPI card missing in Compare view");
+    const irrKpi = await page.$('text=Internal Rate of Return');
+    if (!irrKpi) throw new Error("Internal Rate of Return KPI card missing in Compare view");
+    const diffTable = await page.$('text=Metric Differential Table');
+    if (!diffTable) throw new Error("Metric Differential Table title missing in Compare view");
+    const deltaFormula = await page.$('text=Delta = B - A');
+    if (!deltaFormula) throw new Error("Delta = B - A text missing in Compare view");
+    console.log("✓ Compare Differential workspace and updated KPI/table terminology rendered successfully.");
 
     // 6. Test Parameter Manipulation & House Parity Guard in Compare View
     console.log("Testing reactive parameter update & House Parity Guard...");
@@ -87,11 +99,11 @@ async function run() {
     // Verify House Parity Guard: Slot 1 ($1.2M) vs Slot 2 ($1.0M) must render N/A for IRR
     await page.click('button:has-text("Compare")');
     await page.waitForTimeout(500);
-    const irrElement = await page.$('text=Strategy IRR');
-    if (!irrElement) throw new Error("Strategy IRR indicator missing in Compare view");
+    const irrElement = await page.$('text=Internal Rate of Return');
+    if (!irrElement) throw new Error("Internal Rate of Return indicator missing in Compare view");
     const naBadge = await page.$('span:has-text("N/A")');
     if (!naBadge) throw new Error("House Parity Guard failed: expected N/A for mismatched property prices");
-    console.log("✓ House Parity Guard verified in UI: mismatched property price displays N/A for Strategy IRR.");
+    console.log("✓ House Parity Guard verified in UI: mismatched property price displays N/A for Internal Rate of Return.");
 
     // 7. Test Save to Library & Scenario Library Modal
     console.log("Testing Save to Library...");

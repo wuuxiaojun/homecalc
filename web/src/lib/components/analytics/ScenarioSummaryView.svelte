@@ -100,7 +100,7 @@
   <!-- ========================================================================= -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <!-- 1. Property Details Table Card -->
-    <Card icon="🏡" title="Property">
+    <Card icon="🏡" title="Property Information">
       <table class="w-full text-xs">
         <tbody class="divide-y divide-zinc-800/40 font-mono">
           <tr class="py-2 flex justify-between">
@@ -190,7 +190,7 @@
   <!-- ========================================================================= -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- 3-Stage Monthly Cash Flow Progression Card -->
-    <Card icon="📊" title="Monthly Payment Split" class="lg:col-span-2">
+    <Card icon="📊" title="Payment Split" class="lg:col-span-2">
       {#snippet headerRight()}
         <span class="text-xs font-mono text-zinc-400">
           {payoffMonth > 0 ? `Payoff in Month ${payoffMonth}` : 'All-Cash / Debt-Free'}
@@ -318,7 +318,7 @@
     </Card>
 
     <!-- 2. Total Interest Paid & Waste Ratio -->
-    <Card icon="📉" title="Total Interest">
+    <Card icon="📉" title="Interest Paid">
       {#snippet headerRight()}
         <span class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-rose-950 text-rose-300 border border-rose-800/40">
           Waste: {formatPercent(wasteRatio)}

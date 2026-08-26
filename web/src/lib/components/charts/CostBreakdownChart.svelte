@@ -26,7 +26,7 @@
   const pctHolding = $derived(grossCost > 0 ? (totalHolding / grossCost) * 100 : 0);
 </script>
 
-<Card icon="🍩" title="Lifetime Cost Breakdown">
+<Card icon="🍩" title="Lifetime Breakdown">
   {#snippet headerRight()}
     <div class="text-right font-mono">
       <span class="text-[10px] text-zinc-400 mr-1.5">Gross Outflow:</span>
