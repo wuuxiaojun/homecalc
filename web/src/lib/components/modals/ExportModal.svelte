@@ -49,7 +49,7 @@
     <div class="p-6 space-y-6 overflow-y-auto">
       <!-- Export Actions Grid -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <!-- 1. CLI JSON -->
+        <!-- 1. Scenario JSON -->
         <button
           class="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800/80 hover:border-emerald-500/60 transition-all text-left space-y-1.5 group"
           onclick={async () => {
@@ -60,7 +60,7 @@
           <div class="flex items-center justify-between">
             <span class="text-sm font-semibold text-white group-hover:text-emerald-400 transition-colors flex items-center gap-2">
               <span>📄</span>
-              <span>CLI Scenario JSON</span>
+              <span>Scenario JSON</span>
             </span>
             <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800/50">
               .json
