@@ -54,13 +54,13 @@
 </script>
 
 {#if purchase}
-  <div class="space-y-4">
+  <div class="space-y-3 sm:space-y-4 min-w-0">
     <!-- Scenario Name Card -->
     <Card icon="📝" title="Scenario Name">
       <input
         id="scenario-name"
         type="text"
-        class="w-full px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-sm font-medium text-white transition-all focus:outline-none"
+        class="w-full px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-xs sm:text-sm font-medium text-white transition-all focus:outline-none"
         value={purchase.name}
         onblur={(e) => updateName(e.currentTarget.value.trim() || 'Untitled Scenario')}
         onkeydown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
@@ -79,7 +79,7 @@
             step="10000"
             min="0"
             max="100000000"
-            class="w-32 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-sm font-mono font-bold text-emerald-400 tabular-nums focus:border-emerald-500 focus:outline-none"
+            class="w-28 sm:w-32 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-xs sm:text-sm font-mono font-bold text-emerald-400 tabular-nums focus:border-emerald-500 focus:outline-none"
             value={house.purchase_price}
             onblur={(e) => {
               const val = parseFloat(e.currentTarget.value);
@@ -103,7 +103,7 @@
             step="0.05"
             min="0"
             max="10"
-            class="w-24 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
+            class="w-20 sm:w-24 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
             value={house.annual_property_tax_rate}
             onblur={(e) => {
               const val = parseFloat(e.currentTarget.value);
@@ -117,9 +117,9 @@
         </div>
       {/snippet}
 
-      <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500">
-        <span>${Math.round(house.purchase_price * house.annual_property_tax_rate * 0.01).toLocaleString()}/yr</span>
-        <span class="text-zinc-300 font-medium">${Math.round(monthlyTax).toLocaleString()}/mo</span>
+      <div class="flex items-center justify-between gap-2 text-[11px] font-mono text-zinc-500">
+        <span class="truncate">${Math.round(house.purchase_price * house.annual_property_tax_rate * 0.01).toLocaleString()}/yr</span>
+        <span class="text-zinc-300 font-medium shrink-0">${Math.round(monthlyTax).toLocaleString()}/mo</span>
       </div>
     </Card>
 
@@ -134,7 +134,7 @@
             step="100"
             min="0"
             max="100000"
-            class="w-24 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
+            class="w-20 sm:w-24 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
             value={house.annual_insurance}
             onblur={(e) => {
               const val = parseFloat(e.currentTarget.value);
@@ -148,9 +148,9 @@
         </div>
       {/snippet}
 
-      <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500">
-        <span>${Math.round(house.annual_insurance).toLocaleString()}/yr</span>
-        <span class="text-zinc-300 font-medium">${Math.round(monthlyInsurance).toLocaleString()}/mo</span>
+      <div class="flex items-center justify-between gap-2 text-[11px] font-mono text-zinc-500">
+        <span class="truncate">${Math.round(house.annual_insurance).toLocaleString()}/yr</span>
+        <span class="text-zinc-300 font-medium shrink-0">${Math.round(monthlyInsurance).toLocaleString()}/mo</span>
       </div>
     </Card>
 
@@ -165,7 +165,7 @@
             step="25"
             min="0"
             max="10000"
-            class="w-24 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
+            class="w-20 sm:w-24 px-2 py-1 text-right rounded-md bg-zinc-950 border border-zinc-800 text-xs font-mono font-semibold text-zinc-200 tabular-nums focus:border-emerald-500 focus:outline-none"
             value={house.monthly_hoa}
             onblur={(e) => {
               const val = parseFloat(e.currentTarget.value);
@@ -179,9 +179,9 @@
         </div>
       {/snippet}
 
-      <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500">
-        <span>${Math.round(house.monthly_hoa * 12).toLocaleString()}/yr</span>
-        <span class="text-zinc-300 font-medium">${Math.round(house.monthly_hoa).toLocaleString()}/mo</span>
+      <div class="flex items-center justify-between gap-2 text-[11px] font-mono text-zinc-500">
+        <span class="truncate">${Math.round(house.monthly_hoa * 12).toLocaleString()}/yr</span>
+        <span class="text-zinc-300 font-medium shrink-0">${Math.round(house.monthly_hoa).toLocaleString()}/mo</span>
       </div>
     </Card>
 
@@ -189,15 +189,15 @@
     <Card icon="🏚️" title="Initial Holding Cost">
       {#snippet headerRight()}
         <div class="text-right">
-          <div class="text-sm font-bold font-mono text-amber-400 tabular-nums">
+          <div class="text-xs sm:text-sm font-bold font-mono text-amber-400 tabular-nums">
             ${Math.round(totalMonthlyHolding).toLocaleString()} <span class="text-[10px] font-normal text-zinc-400">/mo</span>
           </div>
         </div>
       {/snippet}
 
-      <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500">
-        <span>Tax + Insurance + HOA</span>
-        <span>${Math.round(totalMonthlyHolding * 12).toLocaleString()} /yr</span>
+      <div class="flex items-center justify-between gap-2 text-[11px] font-mono text-zinc-500">
+        <span class="truncate">Tax + Insurance + HOA</span>
+        <span class="shrink-0">${Math.round(totalMonthlyHolding * 12).toLocaleString()} /yr</span>
       </div>
     </Card>
   </div>

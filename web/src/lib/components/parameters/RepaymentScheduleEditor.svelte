@@ -50,18 +50,18 @@
 </script>
 
 {#if purchase}
-  <div class="space-y-4">
+  <div class="space-y-3 sm:space-y-4 min-w-0">
     <!-- Header summary Card -->
     <Card icon="⚡" title="Scheduled Prepayments">
       {#snippet headerRight()}
-        <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-zinc-800 text-zinc-300">
+        <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-zinc-800 text-zinc-300 shrink-0">
           {repaymentsList.length} scheduled
         </span>
       {/snippet}
 
-      <div class="flex items-center justify-between">
-        <span class="text-xs text-zinc-400">Applied directly to principal</span>
-        <span class="text-sm font-bold font-mono text-emerald-400 tabular-nums">
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-xs text-zinc-400 truncate">Applied directly to principal</span>
+        <span class="text-xs sm:text-sm font-bold font-mono text-emerald-400 tabular-nums shrink-0">
           ${totalExtraPrincipal.toLocaleString()}
         </span>
       </div>
@@ -72,23 +72,23 @@
       <!-- Loan Selector -->
       <div class="grid grid-cols-2 gap-2">
         <button
-          class="py-1.5 text-xs font-medium rounded-lg border transition-all flex items-center justify-center gap-1.5 {targetTool === 'mortgage' ? 'bg-indigo-950/80 border-indigo-600 text-indigo-200 font-semibold shadow-sm' : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200'}"
+          class="py-1.5 px-2 text-xs font-medium rounded-lg border transition-all flex items-center justify-center gap-1.5 min-w-0 {targetTool === 'mortgage' ? 'bg-indigo-950/80 border-indigo-600 text-indigo-200 font-semibold shadow-sm' : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200'}"
           onclick={() => targetTool = 'mortgage'}
         >
-          <span>🏦</span>
-          <span>Mortgage</span>
+          <span class="shrink-0">🏦</span>
+          <span class="truncate">Mortgage</span>
         </button>
         <button
-          class="py-1.5 text-xs font-medium rounded-lg border transition-all flex items-center justify-center gap-1.5 {targetTool === 'loc' ? 'bg-amber-950/80 border-amber-600 text-amber-200 font-semibold shadow-sm' : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200'}"
+          class="py-1.5 px-2 text-xs font-medium rounded-lg border transition-all flex items-center justify-center gap-1.5 min-w-0 {targetTool === 'loc' ? 'bg-amber-950/80 border-amber-600 text-amber-200 font-semibold shadow-sm' : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200'}"
           onclick={() => targetTool = 'loc'}
         >
-          <span>💳</span>
-          <span>LOC</span>
+          <span class="shrink-0">💳</span>
+          <span class="truncate">LOC</span>
         </button>
       </div>
 
-      <!-- Month & Amount Inputs -->
-      <div class="grid grid-cols-2 gap-3">
+      <!-- Month & Amount Inputs (stack on mobile, side-by-side on sm+) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
         <div>
           <label for="repay-month-input" class="text-[11px] text-zinc-400 block mb-1">Month (1-360)</label>
           <input
@@ -137,11 +137,11 @@
       </div>
 
       <button
-        class="w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-sm transition-colors flex items-center justify-center gap-1.5"
+        class="w-full py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-sm transition-colors flex items-center justify-center gap-1.5 text-center"
         onclick={handleAddOneTime}
       >
-        <span>⚡</span>
-        <span>Add Prepayment Entry</span>
+        <span class="shrink-0">⚡</span>
+        <span class="truncate">Add Prepayment Entry</span>
       </button>
     </Card>
 
@@ -150,7 +150,7 @@
       <Card icon="📋" title="Active Schedule ({repaymentsList.length})">
         {#snippet headerRight()}
           <button
-            class="text-[11px] text-rose-400 hover:text-rose-300 transition-colors font-medium"
+            class="text-[11px] text-rose-400 hover:text-rose-300 transition-colors font-medium shrink-0"
             onclick={handleClearAll}
           >
             Clear All
@@ -159,18 +159,18 @@
 
         <div class="max-h-56 overflow-y-auto space-y-1.5 pr-1">
           {#each repaymentsList as item}
-            <div class="p-2.5 rounded-lg bg-zinc-950/70 border border-zinc-800/80 flex items-center justify-between text-xs">
-              <div class="flex items-center gap-2">
-                <span class="text-sm">{item.tool === 'mortgage' ? '🏦' : '💳'}</span>
-                <span class="font-mono text-zinc-200 font-semibold">Month {item.month}</span>
-                <span class="text-[10px] text-zinc-500 font-mono">(Yr {Math.ceil(item.month / 12)})</span>
+            <div class="p-2 sm:p-2.5 rounded-lg bg-zinc-950/70 border border-zinc-800/80 flex items-center justify-between gap-2 text-xs min-w-0">
+              <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                <span class="text-sm shrink-0">{item.tool === 'mortgage' ? '🏦' : '💳'}</span>
+                <span class="font-mono text-zinc-200 font-semibold truncate">Month {item.month}</span>
+                <span class="text-[10px] text-zinc-500 font-mono shrink-0">(Yr {Math.ceil(item.month / 12)})</span>
               </div>
-              <div class="flex items-center gap-2.5">
-                <span class="font-mono font-bold text-emerald-400 tabular-nums">
+              <div class="flex items-center gap-2 sm:gap-2.5 shrink-0">
+                <span class="font-mono font-bold text-emerald-400 tabular-nums text-xs sm:text-sm">
                   +${item.amount.toLocaleString()}
                 </span>
                 <button
-                  class="w-6 h-6 rounded hover:bg-zinc-800 text-zinc-500 hover:text-rose-400 flex items-center justify-center transition-colors text-sm"
+                  class="w-6 h-6 rounded hover:bg-zinc-800 text-zinc-500 hover:text-rose-400 flex items-center justify-center transition-colors text-sm shrink-0"
                   onclick={() => handleRemove(item.tool, item.month)}
                   title="Delete entry"
                 >

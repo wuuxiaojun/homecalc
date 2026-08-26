@@ -65,9 +65,9 @@
 
 <div class="space-y-4">
   <!-- Controls Bar -->
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
     <!-- Filter Mode -->
-    <div class="flex items-center bg-zinc-950 p-1 rounded-lg border border-zinc-800 text-xs">
+    <div class="flex flex-wrap items-center bg-zinc-950 p-1 rounded-lg border border-zinc-800 text-xs">
       <button
         class="px-2.5 py-1 rounded transition-colors {filterMode === 'all' ? 'bg-zinc-800 text-white font-medium' : 'text-zinc-400 hover:text-zinc-200'}"
         onclick={() => { filterMode = 'all'; page = 1; }}
@@ -84,7 +84,7 @@
         class="px-2.5 py-1 rounded transition-colors {filterMode === 'milestones' ? 'bg-zinc-800 text-white font-medium' : 'text-zinc-400 hover:text-zinc-200'}"
         onclick={() => { filterMode = 'milestones'; page = 1; }}
       >
-        Yearly Milestones
+        Milestones
       </button>
     </div>
 
@@ -113,10 +113,10 @@
 
   <!-- Tabular Schedule -->
   <div class="rounded-xl border border-zinc-800/80 bg-zinc-900/40 overflow-hidden shadow-sm">
-    <div class="overflow-x-auto">
-      <table class="w-full text-xs font-mono">
+    <div class="overflow-x-auto custom-scrollbar" style="-webkit-overflow-scrolling: touch;">
+      <table class="w-full text-xs font-mono min-w-[760px]">
         <thead>
-          <tr class="border-b border-zinc-800/80 bg-zinc-950/80 text-zinc-400 text-left">
+          <tr class="border-b border-zinc-800/80 bg-zinc-950/80 text-zinc-400 text-left whitespace-nowrap">
             <th class="py-2.5 px-3 font-semibold text-center w-16">Month</th>
             <th class="py-2.5 px-3 font-semibold text-right">Cash Yield</th>
             <th class="py-2.5 px-3 font-semibold text-right">Mortgage PMT</th>
@@ -128,7 +128,7 @@
             <th class="py-2.5 px-3 font-semibold text-right text-emerald-300">Remaining Balance</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-zinc-800/40 tabular-nums">
+        <tbody class="divide-y divide-zinc-800/40 tabular-nums whitespace-nowrap">
           {#each paginatedRows as row}
             {@const hasExtra = row.total_extra_payment > 0}
             <tr class="hover:bg-zinc-800/30 transition-colors {hasExtra ? 'bg-emerald-950/20' : row.month % 12 === 0 ? 'bg-zinc-950/40 font-semibold' : ''}">
@@ -167,8 +167,8 @@
 
     <!-- Pagination Footer -->
     {#if pageSize !== -1 && totalPages > 1}
-      <div class="p-3 bg-zinc-950/60 border-t border-zinc-800/80 flex items-center justify-between text-xs font-mono">
-        <span class="text-zinc-500">
+      <div class="p-3 bg-zinc-950/60 border-t border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs font-mono">
+        <span class="text-zinc-500 text-center sm:text-left">
           Showing {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, filteredRows.length)} of {filteredRows.length} months
         </span>
         <div class="flex items-center gap-1.5">

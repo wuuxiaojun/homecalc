@@ -44,10 +44,10 @@
 
 <div class="space-y-4">
   <!-- Controls Bar -->
-  <div class="flex items-center justify-between p-4 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
+  <div class="flex items-center justify-between p-3.5 sm:p-4 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
     <div class="text-xs font-semibold text-zinc-300 flex items-center gap-2">
       <span>📈 Yearly Statement Summary</span>
-      <span class="text-[11px] font-mono text-zinc-500">({yearlyRows.length} Annual Periods)</span>
+      <span class="text-[11px] font-mono text-zinc-500 hidden sm:inline">({yearlyRows.length} Annual Periods)</span>
     </div>
     <button
       class="px-3 py-1 text-xs rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-medium transition-colors flex items-center gap-1.5"
@@ -60,10 +60,10 @@
 
   <!-- Table -->
   <div class="rounded-xl border border-zinc-800/80 bg-zinc-900/40 overflow-hidden shadow-sm">
-    <div class="overflow-x-auto">
-      <table class="w-full text-xs font-mono">
+    <div class="overflow-x-auto custom-scrollbar" style="-webkit-overflow-scrolling: touch;">
+      <table class="w-full text-xs font-mono min-w-[760px]">
         <thead>
-          <tr class="border-b border-zinc-800/80 bg-zinc-950/80 text-zinc-400 text-left">
+          <tr class="border-b border-zinc-800/80 bg-zinc-950/80 text-zinc-400 text-left whitespace-nowrap">
             <th class="py-3 px-3 font-semibold text-center w-14">Year</th>
             <th class="py-3 px-3 font-semibold text-right">Cash Yield</th>
             <th class="py-3 px-3 font-semibold text-right text-rose-300">Interest Paid</th>
@@ -75,7 +75,7 @@
             <th class="py-3 px-3 font-semibold text-right text-emerald-300">Ending Balance</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-zinc-800/40 tabular-nums">
+        <tbody class="divide-y divide-zinc-800/40 tabular-nums whitespace-nowrap">
           {#each yearlyRows as row}
             <tr class="hover:bg-zinc-800/30 transition-colors {row.annual_extra_payment > 0 ? 'bg-emerald-950/10' : ''}">
               <td class="py-2.5 px-3 text-center text-zinc-300 font-bold">
@@ -112,7 +112,7 @@
         <!-- Lifetime Totals Footer -->
         {#if totalStatement}
           <tfoot>
-            <tr class="border-t-2 border-zinc-700 bg-zinc-950 font-bold text-white tabular-nums">
+            <tr class="border-t-2 border-zinc-700 bg-zinc-950 font-bold text-white tabular-nums whitespace-nowrap">
               <td class="py-3 px-3 text-center text-emerald-400 font-mono">TOTAL</td>
               <td class="py-3 px-3 text-right text-cyan-400">+{formatCurrency(totalStatement.total_cash_interest)}</td>
               <td class="py-3 px-3 text-right text-rose-400">{formatCurrency(totalStatement.total_interest_paid)}</td>

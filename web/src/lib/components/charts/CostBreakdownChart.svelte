@@ -29,8 +29,8 @@
 <Card icon="🍩" title="Lifetime Breakdown">
   {#snippet headerRight()}
     <div class="text-right font-mono">
-      <span class="text-[10px] text-zinc-400 mr-1.5">Gross Outflow:</span>
-      <span class="text-sm font-bold text-zinc-200 tabular-nums">{formatCurrency(grossCost)}</span>
+      <span class="text-[10px] text-zinc-400 mr-1.5 hidden sm:inline">Gross Outflow:</span>
+      <span class="text-xs sm:text-sm font-bold text-zinc-200 tabular-nums">{formatCurrency(grossCost)}</span>
     </div>
   {/snippet}
 

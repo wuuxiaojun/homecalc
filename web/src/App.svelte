@@ -21,7 +21,7 @@
   });
 </script>
 
-<div class="h-screen w-screen flex flex-col bg-[#09090b] text-zinc-100 font-sans selection:bg-emerald-500/30 selection:text-emerald-200 overflow-hidden">
+<div class="min-h-screen md:h-screen w-full flex flex-col bg-[#09090b] text-zinc-100 font-sans selection:bg-emerald-500/30 selection:text-emerald-200 md:overflow-hidden">
   <Header
     onOpenLibrary={() => isLibraryOpen = true}
     onOpenExport={() => isExportOpen = true}
@@ -37,12 +37,12 @@
       <div class="w-full space-y-6">
         <!-- View Switcher / Title Banner -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/60 pb-4">
-          <div>
+          <div class="min-w-0">
             <div class="flex items-center gap-2">
-              <span class="text-xs font-mono px-2 py-0.5 rounded font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-800/60">
+              <span class="text-xs font-mono px-2 py-0.5 rounded font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-800/60 shrink-0">
                 Slot {appState.activeSlotId}
               </span>
-              <h1 class="text-xl font-bold text-white tracking-tight">
+              <h1 class="text-lg sm:text-xl font-bold text-white tracking-tight truncate">
                 {appState.activeSlot.purchase.name}
               </h1>
             </div>
@@ -50,27 +50,27 @@
           </div>
 
           <!-- Quick view selector on canvas -->
-          <div class="flex items-center gap-1.5 bg-zinc-900/90 p-1 rounded-xl border border-zinc-800/80 text-xs">
+          <div class="flex items-center gap-1 sm:gap-1.5 bg-zinc-900/90 p-1 rounded-xl border border-zinc-800/80 text-xs overflow-x-auto max-w-full custom-scrollbar shrink-0">
             <button
-              class="px-3 py-1 rounded-lg transition-all {appState.activeView === 'overview' ? 'bg-zinc-800 text-white font-medium shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}"
+              class="px-2.5 sm:px-3 py-1.5 rounded-lg transition-all whitespace-nowrap shrink-0 {appState.activeView === 'overview' ? 'bg-zinc-800 text-white font-medium shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}"
               onclick={() => appState.activeView = 'overview'}
             >
               Dashboard
             </button>
             <button
-              class="px-3 py-1 rounded-lg transition-all {appState.activeView === 'charts' ? 'bg-zinc-800 text-white font-medium shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}"
+              class="px-2.5 sm:px-3 py-1.5 rounded-lg transition-all whitespace-nowrap shrink-0 {appState.activeView === 'charts' ? 'bg-zinc-800 text-white font-medium shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}"
               onclick={() => appState.activeView = 'charts'}
             >
               Charts
             </button>
             <button
-              class="px-3 py-1 rounded-lg transition-all {appState.activeView === 'statements' ? 'bg-zinc-800 text-white font-medium shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}"
+              class="px-2.5 sm:px-3 py-1.5 rounded-lg transition-all whitespace-nowrap shrink-0 {appState.activeView === 'statements' ? 'bg-zinc-800 text-white font-medium shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}"
               onclick={() => appState.activeView = 'statements'}
             >
               Statements
             </button>
             <button
-              class="px-3 py-1 rounded-lg transition-all {appState.activeView === 'comparison' ? 'bg-zinc-800 text-white font-medium shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}"
+              class="px-2.5 sm:px-3 py-1.5 rounded-lg transition-all whitespace-nowrap shrink-0 {appState.activeView === 'comparison' ? 'bg-zinc-800 text-white font-medium shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}"
               onclick={() => {
                 appState.activeView = 'comparison';
                 appState.isComparisonMode = true;

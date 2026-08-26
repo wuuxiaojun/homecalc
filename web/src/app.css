@@ -3,8 +3,12 @@
 @tailwind utilities;
 
 @layer base {
-  html, body, #app {
-    @apply bg-[#09090b] text-zinc-100 h-full overflow-hidden font-sans;
+  html, body {
+    @apply bg-[#09090b] text-zinc-100 min-h-full md:h-full md:overflow-hidden font-sans;
+  }
+  
+  #app {
+    @apply min-h-screen md:h-full md:overflow-hidden;
   }
   
   /* Modern custom scrollbar styling */

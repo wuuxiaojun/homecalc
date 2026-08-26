@@ -27,31 +27,31 @@
   }
 </script>
 
-<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-  <div class="relative w-full max-w-2xl max-h-[85vh] rounded-2xl bg-zinc-950 border border-zinc-800 shadow-2xl flex flex-col overflow-hidden">
+<div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+  <div class="relative w-full max-w-2xl max-h-[90vh] rounded-2xl bg-zinc-950 border border-zinc-800 shadow-2xl flex flex-col overflow-hidden">
     <!-- Header -->
-    <div class="p-5 border-b border-zinc-800/80 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <span class="text-2xl">📤</span>
-        <div>
-          <h2 class="text-base font-bold text-white">Export Scenario & Reports</h2>
-          <p class="text-xs text-zinc-400">Download CLI-compatible JSON scenario files or comprehensive analytical reports</p>
+    <div class="p-4 sm:p-5 border-b border-zinc-800/80 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+        <span class="text-xl sm:text-2xl shrink-0">📤</span>
+        <div class="min-w-0">
+          <h2 class="text-sm sm:text-base font-bold text-white truncate">Export Scenario & Reports</h2>
+          <p class="text-[11px] sm:text-xs text-zinc-400 truncate">Download CLI-compatible JSON scenario files or analytical reports</p>
         </div>
       </div>
       <button
-        class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition-colors text-base"
+        class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition-colors text-base shrink-0"
         onclick={onClose}
       >
         ✕
       </button>
     </div>
 
-    <div class="p-6 space-y-6 overflow-y-auto">
+    <div class="p-4 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto">
       <!-- Export Actions Grid -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <!-- 1. Scenario JSON -->
         <button
-          class="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800/80 hover:border-emerald-500/60 transition-all text-left space-y-1.5 group"
+          class="p-3.5 sm:p-4 rounded-xl bg-zinc-900/60 border border-zinc-800/80 hover:border-emerald-500/60 transition-all text-left space-y-1.5 group"
           onclick={async () => {
             await exportPurchaseToJson(purchase);
             onClose();
@@ -71,7 +71,7 @@
 
         <!-- 2. Full Analytical Report -->
         <button
-          class="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800/80 hover:border-indigo-500/60 transition-all text-left space-y-1.5 group"
+          class="p-3.5 sm:p-4 rounded-xl bg-zinc-900/60 border border-zinc-800/80 hover:border-indigo-500/60 transition-all text-left space-y-1.5 group"
           onclick={async () => {
             await exportFullReportJson(slot);
             onClose();
@@ -91,7 +91,7 @@
       </div>
 
       <!-- Save Local & Quick Copy -->
-      <div class="flex items-center justify-between pt-2">
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-2">
         <button
           class="px-3.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-200 text-xs font-medium transition-colors flex items-center gap-2"
           onclick={handleSaveLocal}
@@ -112,7 +112,7 @@
       <!-- JSON Preview Box -->
       <div class="space-y-2">
         <span class="text-xs font-semibold text-zinc-400">JSON Schema Preview</span>
-        <pre class="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 text-[11px] font-mono text-zinc-300 max-h-48 overflow-y-auto selection:bg-emerald-500/30"><code>{jsonSnippet}</code></pre>
+        <pre class="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 text-[11px] font-mono text-zinc-300 max-h-40 sm:max-h-48 overflow-y-auto selection:bg-emerald-500/30"><code>{jsonSnippet}</code></pre>
       </div>
     </div>
   </div>

@@ -94,37 +94,35 @@
   const taxSavingsRatio = $derived(isValidNumber(analysis?.tax_savings_ratio) ? (analysis.tax_savings_ratio * 100) : null);
 </script>
 
-<div class="space-y-6">
+<div class="space-y-4 sm:space-y-6">
   <!-- ========================================================================= -->
   <!-- PART 1: STRUCTURAL FOUNDATION (Top Row: Property + Financing)             -->
   <!-- ========================================================================= -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
     <!-- 1. Property Details Table Card -->
     <Card icon="🏡" title="Property Information">
-      <table class="w-full text-xs">
-        <tbody class="divide-y divide-zinc-800/40 font-mono">
-          <tr class="py-2 flex justify-between">
-            <td class="text-zinc-400">Purchase Price</td>
-            <td class="text-zinc-200 font-semibold tabular-nums">{formatCurrency(house.purchase_price)}</td>
-          </tr>
-          <tr class="py-2 flex justify-between">
-            <td class="text-zinc-400">Annual Property Tax Rate</td>
-            <td class="text-zinc-200 font-semibold tabular-nums">{formatPercent(house.annual_property_tax_rate, 2)} ({formatCurrency(monthlyTax)}/mo)</td>
-          </tr>
-          <tr class="py-2 flex justify-between">
-            <td class="text-zinc-400">Annual Home Insurance</td>
-            <td class="text-zinc-200 font-semibold tabular-nums">{formatCurrency(house.annual_insurance)} ({formatCurrency(monthlyIns)}/mo)</td>
-          </tr>
-          <tr class="py-2 flex justify-between">
-            <td class="text-zinc-400">Monthly HOA Fee</td>
-            <td class="text-zinc-200 font-semibold tabular-nums">{formatCurrency(house.monthly_hoa)}/mo</td>
-          </tr>
-          <tr class="py-2 flex justify-between">
-            <td class="text-amber-400 font-medium">Initial Monthly Holding Cost</td>
-            <td class="text-amber-400 font-bold tabular-nums">{formatCurrency(initialHolding)}/mo</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="space-y-2 text-xs font-mono">
+        <div class="py-1.5 flex flex-wrap sm:flex-nowrap items-center justify-between gap-1 border-b border-zinc-800/40">
+          <span class="text-zinc-400">Purchase Price</span>
+          <span class="text-zinc-200 font-semibold tabular-nums">{formatCurrency(house.purchase_price)}</span>
+        </div>
+        <div class="py-1.5 flex flex-wrap sm:flex-nowrap items-center justify-between gap-1 border-b border-zinc-800/40">
+          <span class="text-zinc-400">Annual Property Tax Rate</span>
+          <span class="text-zinc-200 font-semibold tabular-nums text-right">{formatPercent(house.annual_property_tax_rate, 2)} ({formatCurrency(monthlyTax)}/mo)</span>
+        </div>
+        <div class="py-1.5 flex flex-wrap sm:flex-nowrap items-center justify-between gap-1 border-b border-zinc-800/40">
+          <span class="text-zinc-400">Annual Home Insurance</span>
+          <span class="text-zinc-200 font-semibold tabular-nums text-right">{formatCurrency(house.annual_insurance)} ({formatCurrency(monthlyIns)}/mo)</span>
+        </div>
+        <div class="py-1.5 flex flex-wrap sm:flex-nowrap items-center justify-between gap-1 border-b border-zinc-800/40">
+          <span class="text-zinc-400">Monthly HOA Fee</span>
+          <span class="text-zinc-200 font-semibold tabular-nums">{formatCurrency(house.monthly_hoa)}/mo</span>
+        </div>
+        <div class="py-1.5 flex flex-wrap sm:flex-nowrap items-center justify-between gap-1">
+          <span class="text-amber-400 font-medium">Initial Monthly Holding Cost</span>
+          <span class="text-amber-400 font-bold tabular-nums">{formatCurrency(initialHolding)}/mo</span>
+        </div>
+      </div>
     </Card>
 
     <!-- 2. Financial Tools Table Card -->
@@ -138,43 +136,43 @@
       <div class="space-y-3">
         {#each displayPurchase.tools as tool}
           {#if 'Cash' in tool && tool.Cash}
-            <div class="p-3 rounded-xl bg-zinc-950/80 border border-zinc-800/60 flex items-center justify-between text-xs">
-              <div class="flex items-center gap-2.5">
-                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <div>
-                  <div class="font-semibold text-zinc-200">Cash Down Payment</div>
+            <div class="p-3 rounded-xl bg-zinc-950/80 border border-zinc-800/60 flex items-center justify-between text-xs gap-2">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+                <div class="min-w-0">
+                  <div class="font-semibold text-zinc-200 truncate">Cash Down Payment</div>
                   <div class="text-[11px] text-zinc-500 font-mono">Yield: {formatPercent(tool.Cash.rate, 2)} APR</div>
                 </div>
               </div>
-              <div class="text-right font-mono">
+              <div class="text-right font-mono shrink-0">
                 <div class="font-bold text-emerald-400 tabular-nums">{formatCurrency(tool.Cash.amount)}</div>
                 <div class="text-[10px] text-zinc-500">{house.purchase_price > 0 ? ((tool.Cash.amount / house.purchase_price) * 100).toFixed(1) : '0.0'}% of price</div>
               </div>
             </div>
           {:else if 'Mortgage' in tool && tool.Mortgage}
-            <div class="p-3 rounded-xl bg-zinc-950/80 border border-zinc-800/60 flex items-center justify-between text-xs">
-              <div class="flex items-center gap-2.5">
-                <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
-                <div>
-                  <div class="font-semibold text-zinc-200">Mortgage Loan ({tool.Mortgage.term} Years)</div>
+            <div class="p-3 rounded-xl bg-zinc-950/80 border border-zinc-800/60 flex items-center justify-between text-xs gap-2">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="w-2 h-2 rounded-full bg-indigo-400 shrink-0"></span>
+                <div class="min-w-0">
+                  <div class="font-semibold text-zinc-200 truncate">Mortgage ({tool.Mortgage.term}Y)</div>
                   <div class="text-[11px] text-zinc-500 font-mono">Rate: {formatPercent(tool.Mortgage.rate, 2)} Fixed</div>
                 </div>
               </div>
-              <div class="text-right font-mono">
+              <div class="text-right font-mono shrink-0">
                 <div class="font-bold text-indigo-300 tabular-nums">{formatCurrency(tool.Mortgage.amount)}</div>
                 <div class="text-[10px] text-zinc-500">{house.purchase_price > 0 ? ((tool.Mortgage.amount / house.purchase_price) * 100).toFixed(1) : '0.0'}% of price</div>
               </div>
             </div>
           {:else if 'Loc' in tool && tool.Loc}
-            <div class="p-3 rounded-xl bg-zinc-950/80 border border-zinc-800/60 flex items-center justify-between text-xs">
-              <div class="flex items-center gap-2.5">
-                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-                <div>
-                  <div class="font-semibold text-zinc-200">Line of Credit (LOC)</div>
+            <div class="p-3 rounded-xl bg-zinc-950/80 border border-zinc-800/60 flex items-center justify-between text-xs gap-2">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
+                <div class="min-w-0">
+                  <div class="font-semibold text-zinc-200 truncate">Line of Credit (LOC)</div>
                   <div class="text-[11px] text-zinc-500 font-mono">Rate: {formatPercent(tool.Loc.rate, 2)} Fixed</div>
                 </div>
               </div>
-              <div class="text-right font-mono">
+              <div class="text-right font-mono shrink-0">
                 <div class="font-bold text-amber-300 tabular-nums">{formatCurrency(tool.Loc.amount)}</div>
                 <div class="text-[10px] text-zinc-500">{house.purchase_price > 0 ? ((tool.Loc.amount / house.purchase_price) * 100).toFixed(1) : '0.0'}% of price</div>
               </div>
@@ -188,7 +186,7 @@
   <!-- ========================================================================= -->
   <!-- PART 2: MONTHLY CASH FLOW DYNAMICS (3 Stages + Effective Monthly Outlay)  -->
   <!-- ========================================================================= -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
     <!-- 3-Stage Monthly Cash Flow Progression Card -->
     <Card icon="📊" title="Payment Split" class="lg:col-span-2">
       {#snippet headerRight()}
@@ -209,7 +207,7 @@
               <!-- Net Outlay -->
               <div class="pt-2">
                 <div class="text-xs text-zinc-500 font-mono">Net Outlay</div>
-                <div class="text-lg font-bold font-mono text-white tabular-nums">
+                <div class="text-base sm:text-lg font-bold font-mono text-white tabular-nums">
                   {formatCurrency(stage.netOutlay)}<span class="text-xs text-zinc-400 font-normal">/mo</span>
                 </div>
               </div>
@@ -232,21 +230,21 @@
                 {#if hasDebt}
                   <div class="flex justify-between">
                     <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>Principal</span>
-                    <span class="text-zinc-200 font-semibold">{formatCurrency(stage.principal)}</span>
+                    <span class="text-zinc-200 font-semibold tabular-nums">{formatCurrency(stage.principal)}</span>
                   </div>
                   <div class="flex justify-between">
                     <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Interest</span>
-                    <span class="text-zinc-200 font-semibold">{formatCurrency(stage.interest)}</span>
+                    <span class="text-zinc-200 font-semibold tabular-nums">{formatCurrency(stage.interest)}</span>
                   </div>
                 {/if}
                 <div class="flex justify-between">
                   <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Holding</span>
-                  <span class="text-zinc-200 font-semibold">{formatCurrency(stage.holding)}</span>
+                  <span class="text-zinc-200 font-semibold tabular-nums">{formatCurrency(stage.holding)}</span>
                 </div>
                 {#if stage.cashYield > 0}
                   <div class="flex justify-between text-emerald-400">
                     <span>- Cash Yield</span>
-                    <span class="font-semibold">-{formatCurrency(stage.cashYield)}</span>
+                    <span class="font-semibold tabular-nums">-{formatCurrency(stage.cashYield)}</span>
                   </div>
                 {/if}
               </div>
@@ -266,7 +264,7 @@
 
       <div class="space-y-3 flex-1 flex flex-col justify-between">
         <div>
-          <div class="text-2xl lg:text-3xl font-bold font-mono tracking-tight text-indigo-300 tabular-nums">
+          <div class="text-xl sm:text-2xl lg:text-3xl font-bold font-mono tracking-tight text-indigo-300 tabular-nums">
             {formatCurrency(analysis?.effective_monthly_cost)}<span class="text-xs text-zinc-400 font-normal"> / month</span>
           </div>
           <p class="text-xs text-zinc-400 leading-relaxed mt-2">
@@ -277,7 +275,7 @@
         <div class="p-3 rounded-xl bg-zinc-950/70 border border-zinc-800/50 space-y-1.5 text-xs font-mono">
           <div class="flex justify-between text-zinc-400">
             <span>Lifetime Net Total:</span>
-            <span class="text-white font-semibold">{formatCurrency(total?.total_paid)}</span>
+            <span class="text-white font-semibold tabular-nums">{formatCurrency(total?.total_paid)}</span>
           </div>
           <div class="flex justify-between text-zinc-400">
             <span>Payoff Horizon:</span>
@@ -291,7 +289,7 @@
   <!-- ========================================================================= -->
   <!-- PART 3: LIFETIME FINANCIAL TOTALS (Payoff -> Interest -> Tax -> Total)    -->
   <!-- ========================================================================= -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
     <!-- 1. Payoff Timeline -->
     <Card icon="⏱️" title="Payoff Timeline">
       {#snippet headerRight()}
@@ -301,7 +299,7 @@
       {/snippet}
 
       <div class="flex items-baseline gap-2">
-        <span class="text-2xl lg:text-3xl font-bold font-mono tracking-tight text-white tabular-nums">
+        <span class="text-xl sm:text-2xl lg:text-3xl font-bold font-mono tracking-tight text-white tabular-nums">
           {formatYears(payoffMonth)}
         </span>
         <span class="text-xs text-zinc-400 font-medium">Years to Debt-Free</span>
@@ -326,7 +324,7 @@
       {/snippet}
 
       <div>
-        <span class="text-2xl lg:text-3xl font-bold font-mono tracking-tight text-rose-400 tabular-nums">
+        <span class="text-xl sm:text-2xl lg:text-3xl font-bold font-mono tracking-tight text-rose-400 tabular-nums">
           {formatCurrency(total?.total_interest_paid)}
         </span>
       </div>
@@ -344,7 +342,7 @@
       {/snippet}
 
       <div>
-        <span class="text-2xl lg:text-3xl font-bold font-mono tracking-tight text-emerald-400 tabular-nums">
+        <span class="text-xl sm:text-2xl lg:text-3xl font-bold font-mono tracking-tight text-emerald-400 tabular-nums">
           {formatCurrency(total?.total_tax_savings)}
         </span>
       </div>
@@ -362,7 +360,7 @@
       {/snippet}
 
       <div>
-        <span class="text-2xl lg:text-3xl font-bold font-mono tracking-tight text-white tabular-nums">
+        <span class="text-xl sm:text-2xl lg:text-3xl font-bold font-mono tracking-tight text-white tabular-nums">
           {formatCurrency(total?.total_paid)}
         </span>
       </div>

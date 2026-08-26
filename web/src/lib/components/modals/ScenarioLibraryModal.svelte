@@ -33,19 +33,19 @@
   }
 </script>
 
-<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-  <div class="relative w-full max-w-3xl max-h-[85vh] rounded-2xl bg-zinc-950 border border-zinc-800 shadow-2xl flex flex-col overflow-hidden">
+<div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+  <div class="relative w-full max-w-3xl max-h-[90vh] rounded-2xl bg-zinc-950 border border-zinc-800 shadow-2xl flex flex-col overflow-hidden">
     <!-- Header -->
-    <div class="p-5 border-b border-zinc-800/80 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <span class="text-2xl">📚</span>
-        <div>
-          <h2 class="text-base font-bold text-white">Scenario Library & Presets</h2>
-          <p class="text-xs text-zinc-400">Load the standard baseline scenario or your custom saved scenarios into any slot</p>
+    <div class="p-4 sm:p-5 border-b border-zinc-800/80 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+        <span class="text-xl sm:text-2xl shrink-0">📚</span>
+        <div class="min-w-0">
+          <h2 class="text-sm sm:text-base font-bold text-white truncate">Scenario Library & Presets</h2>
+          <p class="text-[11px] sm:text-xs text-zinc-400 truncate">Load baseline presets or custom saved scenarios into any slot</p>
         </div>
       </div>
       <button
-        class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition-colors text-base"
+        class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition-colors text-base shrink-0"
         onclick={onClose}
       >
         ✕
@@ -53,7 +53,7 @@
     </div>
 
     <!-- Modal Content -->
-    <div class="flex-1 overflow-y-auto p-5 space-y-6">
+    <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5 sm:space-y-6">
       <!-- Section 1: Standard Baseline Scenario -->
       <div class="space-y-3">
         <div class="flex items-center justify-between">
@@ -62,7 +62,7 @@
           </h3>
         </div>
 
-        <div class="p-4 rounded-xl bg-zinc-900/70 border border-emerald-500/30 shadow-sm shadow-emerald-950/20 space-y-3">
+        <div class="p-3.5 sm:p-4 rounded-xl bg-zinc-900/70 border border-emerald-500/30 shadow-sm shadow-emerald-950/20 space-y-3">
           <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
             <div>
               <div class="flex items-center gap-2">
@@ -75,7 +75,7 @@
                 Standard 30-Year Fixed Mortgage ($800k @ 6.50%), 20% Cash Down Payment ($200k @ 4.0% yield), baseline Property Tax (1.20%), Insurance ($2,400/yr), and HOA ($100/mo).
               </p>
             </div>
-            <div class="text-right font-mono shrink-0">
+            <div class="text-left sm:text-right font-mono shrink-0">
               <span class="text-base font-bold text-emerald-400 tabular-nums">$1,000,000</span>
               <div class="text-[10px] text-zinc-500">Purchase Price</div>
             </div>
@@ -99,7 +99,7 @@
             </span>
           </div>
 
-          <div class="pt-3 border-t border-zinc-800/80 flex items-center justify-between">
+          <div class="pt-3 border-t border-zinc-800/80 flex flex-wrap items-center justify-between gap-2">
             <span class="text-xs text-zinc-400 font-medium">Load baseline preset into:</span>
             <div class="flex items-center gap-1.5 font-mono">
               <button
@@ -143,7 +143,7 @@
         </div>
 
         {#if customList.length === 0}
-          <div class="p-8 rounded-xl bg-zinc-900/40 border border-zinc-800/80 text-center space-y-3">
+          <div class="p-6 sm:p-8 rounded-xl bg-zinc-900/40 border border-zinc-800/80 text-center space-y-3">
             <div class="text-2xl">💾</div>
             <div>
               <h4 class="text-sm font-semibold text-zinc-200">No Saved Custom Scenarios</h4>
@@ -162,13 +162,13 @@
             {/if}
           </div>
         {:else if filteredCustom.length === 0}
-          <div class="p-8 text-center text-zinc-500 text-xs font-mono">
+          <div class="p-6 sm:p-8 text-center text-zinc-500 text-xs font-mono">
             No scenarios match your search query "{searchQuery}".
           </div>
         {:else}
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             {#each filteredCustom as item}
-              <div class="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700 transition-all flex flex-col justify-between space-y-3">
+              <div class="p-3.5 sm:p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700 transition-all flex flex-col justify-between space-y-3">
                 <div>
                   <div class="flex items-start justify-between gap-2">
                     <h4 class="text-sm font-semibold text-white">{item.name}</h4>
@@ -210,7 +210,7 @@
                 </div>
 
                 <!-- Action Bar -->
-                <div class="pt-2 border-t border-zinc-800/60 flex items-center justify-between">
+                <div class="pt-2 border-t border-zinc-800/60 flex flex-wrap items-center justify-between gap-2">
                   <button
                     class="text-[11px] font-mono text-zinc-400 hover:text-zinc-200 transition-colors flex items-center gap-1"
                     onclick={() => exportPurchaseToJson(item.purchase)}

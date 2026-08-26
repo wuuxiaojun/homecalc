@@ -4,12 +4,12 @@
   import CashFlowChart from './CashFlowChart.svelte';
 </script>
 
-<div class="space-y-6">
+<div class="space-y-4 sm:space-y-6">
   <!-- Top: Amortization Balance Trajectory Curve -->
   <BalanceTrajectoryChart />
 
   <!-- Bottom: Cost Breakdown & Cash Flow Columns -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
     <CostBreakdownChart />
     <CashFlowChart />
   </div>

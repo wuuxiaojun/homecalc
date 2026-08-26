@@ -54,28 +54,28 @@
   }
 </script>
 
-<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-  <div class="relative w-full max-w-xl max-h-[85vh] rounded-2xl bg-zinc-950 border border-zinc-800 shadow-2xl flex flex-col overflow-hidden">
+<div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+  <div class="relative w-full max-w-xl max-h-[90vh] rounded-2xl bg-zinc-950 border border-zinc-800 shadow-2xl flex flex-col overflow-hidden">
     <!-- Header -->
-    <div class="p-5 border-b border-zinc-800/80 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <span class="text-2xl">📥</span>
-        <div>
-          <h2 class="text-base font-bold text-white">Import Scenario File</h2>
-          <p class="text-xs text-zinc-400">Load a CLI .json scenario file directly into any workspace slot</p>
+    <div class="p-4 sm:p-5 border-b border-zinc-800/80 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+        <span class="text-xl sm:text-2xl shrink-0">📥</span>
+        <div class="min-w-0">
+          <h2 class="text-sm sm:text-base font-bold text-white truncate">Import Scenario File</h2>
+          <p class="text-[11px] sm:text-xs text-zinc-400 truncate">Load a CLI .json scenario file into any workspace slot</p>
         </div>
       </div>
       <button
-        class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition-colors text-base"
+        class="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition-colors text-base shrink-0"
         onclick={onClose}
       >
         ✕
       </button>
     </div>
 
-    <div class="p-6 space-y-5 overflow-y-auto">
+    <div class="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto">
       <!-- Target Slot Selection -->
-      <div class="flex items-center justify-between p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-xs">
+      <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 text-xs">
         <span class="font-semibold text-zinc-300">Target Workspace Slot:</span>
         <div class="flex items-center gap-1.5 font-mono">
           <button
@@ -101,7 +101,7 @@
 
       <!-- Drag & Drop Zone -->
       <div
-        class="border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer {isDragging ? 'border-emerald-500 bg-emerald-950/20' : 'border-zinc-800 hover:border-zinc-700 bg-zinc-900/20'}"
+        class="border-2 border-dashed rounded-2xl p-4 sm:p-6 text-center transition-all cursor-pointer {isDragging ? 'border-emerald-500 bg-emerald-950/20' : 'border-zinc-800 hover:border-zinc-700 bg-zinc-900/20'}"
         ondragover={(e) => { e.preventDefault(); isDragging = true; }}
         ondragleave={() => isDragging = false}
         ondrop={handleDrop}
@@ -109,7 +109,7 @@
         aria-label="Scenario JSON file drop zone"
       >
         <label for="scenario-file-input" class="cursor-pointer space-y-2 block">
-          <div class="text-3xl">📁</div>
+          <div class="text-2xl sm:text-3xl">📁</div>
           <div class="text-xs font-semibold text-zinc-200">
             Click to browse or drag & drop scenario <span class="font-mono text-emerald-400">.json</span> file
           </div>

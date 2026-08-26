@@ -93,11 +93,11 @@
 </script>
 
 {#if purchase}
-  <div class="space-y-4">
+  <div class="space-y-3 sm:space-y-4 min-w-0">
     <!-- Capital Structure Segmented Bar Card -->
     <Card icon="📊" title="Capital Structure">
       {#snippet headerRight()}
-        <span class="font-mono text-zinc-400 font-medium text-xs">Total: ${totalFunding.toLocaleString()}</span>
+        <span class="font-mono text-zinc-400 font-medium text-[11px] sm:text-xs shrink-0">Total: ${totalFunding.toLocaleString()}</span>
       {/snippet}
 
       <!-- Visual Stacked Bar -->
@@ -126,15 +126,15 @@
       </div>
 
       <!-- Legend -->
-      <div class="flex items-center gap-3 text-[11px] font-mono text-zinc-400 pt-1">
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-mono text-zinc-400 pt-1">
         {#if cashPercent > 0}
-          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Cash {cashPercent.toFixed(0)}%</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span> Cash {cashPercent.toFixed(0)}%</span>
         {/if}
         {#if mortgagePercent > 0}
-          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-400"></span> Mort {mortgagePercent.toFixed(0)}%</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-indigo-400 shrink-0"></span> Mort {mortgagePercent.toFixed(0)}%</span>
         {/if}
         {#if locPercent > 0}
-          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span> LOC {locPercent.toFixed(0)}%</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span> LOC {locPercent.toFixed(0)}%</span>
         {/if}
       </div>
     </Card>
@@ -142,14 +142,14 @@
     <!-- 1. Cash Down Payment Card -->
     <Card icon="💵" title="Cash Down Payment">
       {#snippet headerRight()}
-        <div class="text-sm font-mono font-bold text-emerald-400 tabular-nums">
+        <div class="text-xs sm:text-sm font-mono font-bold text-emerald-400 tabular-nums">
           ${cashAmount.toLocaleString()}
         </div>
       {/snippet}
 
-      <div class="flex items-center justify-between text-xs">
-        <label for="cash-yield-input" class="text-zinc-400 text-[11px]">Annual Cash Yield</label>
-        <div class="flex items-center gap-1">
+      <div class="flex items-center justify-between gap-2 text-xs">
+        <label for="cash-yield-input" class="text-zinc-400 text-[11px] truncate">Annual Cash Yield</label>
+        <div class="flex items-center gap-1 shrink-0">
           <input
             id="cash-yield-input"
             type="number"
@@ -190,9 +190,9 @@
 
       {#if mortgageTool}
         <!-- Principal Amount -->
-        <div class="flex items-center justify-between text-xs">
-          <label for="mortgage-principal-input" class="text-zinc-400">Loan Principal</label>
-          <div class="flex items-center gap-1">
+        <div class="flex items-center justify-between gap-2 text-xs">
+          <label for="mortgage-principal-input" class="text-zinc-400 truncate">Loan Principal</label>
+          <div class="flex items-center gap-1 shrink-0">
             <span class="text-xs font-mono text-zinc-500">$</span>
             <input
               id="mortgage-principal-input"
@@ -200,7 +200,7 @@
               step="10000"
               min="0"
               max={housePrice}
-              class="w-28 px-1.5 py-0.5 text-right rounded bg-zinc-950 border border-zinc-800 text-xs font-mono font-bold text-indigo-300 tabular-nums focus:border-indigo-500 focus:outline-none"
+              class="w-24 sm:w-28 px-1.5 py-0.5 text-right rounded bg-zinc-950 border border-zinc-800 text-xs font-mono font-bold text-indigo-300 tabular-nums focus:border-indigo-500 focus:outline-none"
               value={mortgageTool.amount}
               onblur={(e) => {
                 const val = parseFloat(e.currentTarget.value);
@@ -214,7 +214,7 @@
         </div>
 
         <!-- Rate & Term Grid -->
-        <div class="grid grid-cols-2 gap-3 pt-1">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 pt-1">
           <!-- Interest Rate -->
           <div class="space-y-1">
             <label for="mortgage-rate-input" class="text-[11px] text-zinc-400 block">Interest Rate</label>
@@ -265,7 +265,7 @@
         </div>
 
         <!-- Monthly PMT Pill -->
-        <div class="p-2.5 rounded-lg bg-indigo-950/40 border border-indigo-800/40 flex items-center justify-between text-xs">
+        <div class="p-2.5 rounded-lg bg-indigo-950/40 border border-indigo-800/40 flex flex-wrap items-center justify-between gap-1 text-xs">
           <span class="text-indigo-300 font-medium">Estimated Monthly PMT</span>
           <span class="font-mono font-bold text-indigo-200 tabular-nums">
             ${Math.round(estimatedMortgagePmt).toLocaleString()} /mo
@@ -293,9 +293,9 @@
 
       {#if locTool}
         <!-- Principal Amount -->
-        <div class="flex items-center justify-between text-xs">
-          <label for="loc-amount-input" class="text-zinc-400">LOC Credit Amount</label>
-          <div class="flex items-center gap-1">
+        <div class="flex items-center justify-between gap-2 text-xs">
+          <label for="loc-amount-input" class="text-zinc-400 truncate">LOC Credit Amount</label>
+          <div class="flex items-center gap-1 shrink-0">
             <span class="text-xs font-mono text-zinc-500">$</span>
             <input
               id="loc-amount-input"
@@ -303,7 +303,7 @@
               step="10000"
               min="0"
               max={housePrice}
-              class="w-28 px-1.5 py-0.5 text-right rounded bg-zinc-950 border border-zinc-800 text-xs font-mono font-bold text-amber-300 tabular-nums focus:border-amber-500 focus:outline-none"
+              class="w-24 sm:w-28 px-1.5 py-0.5 text-right rounded bg-zinc-950 border border-zinc-800 text-xs font-mono font-bold text-amber-300 tabular-nums focus:border-amber-500 focus:outline-none"
               value={locTool.amount}
               onblur={(e) => {
                 const val = parseFloat(e.currentTarget.value);
@@ -317,9 +317,9 @@
         </div>
 
         <!-- Rate -->
-        <div class="flex items-center justify-between text-xs pt-1">
-          <label for="loc-rate-input" class="text-zinc-400 text-[11px]">Interest Rate</label>
-          <div class="flex items-center gap-1">
+        <div class="flex items-center justify-between gap-2 text-xs pt-1">
+          <label for="loc-rate-input" class="text-zinc-400 text-[11px] truncate">Interest Rate</label>
+          <div class="flex items-center gap-1 shrink-0">
             <input
               id="loc-rate-input"
               type="number"
@@ -341,7 +341,7 @@
         </div>
 
         <!-- Monthly Interest-only Pill -->
-        <div class="p-2.5 rounded-lg bg-amber-950/40 border border-amber-800/40 flex items-center justify-between text-xs">
+        <div class="p-2.5 rounded-lg bg-amber-950/40 border border-amber-800/40 flex flex-wrap items-center justify-between gap-1 text-xs">
           <span class="text-amber-300 font-medium">Monthly Interest Payment</span>
           <span class="font-mono font-bold text-amber-200 tabular-nums">
             ${Math.round(estimatedLocPmt).toLocaleString()} /mo

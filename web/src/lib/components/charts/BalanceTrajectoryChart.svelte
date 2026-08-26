@@ -111,6 +111,32 @@
     hoveredMonth = Math.max(0, Math.min(visibleLimit, exactMonth));
   }
 
+  function handleTouchMove(e: TouchEvent) {
+    if (e.touches.length === 0) return;
+    const touch = e.touches[0];
+    const target = e.currentTarget as SVGSVGElement | null;
+    if (!target) return;
+
+    const ctm = target.getScreenCTM();
+    if (!ctm) return;
+
+    const pt = target.createSVGPoint();
+    pt.x = touch.clientX;
+    pt.y = touch.clientY;
+    const svgPoint = pt.matrixTransform(ctm.inverse());
+
+    const svgX = svgPoint.x;
+    const relX = svgX - padLeft;
+
+    if (relX < 0 || relX > chartW) {
+      hoveredMonth = null;
+      return;
+    }
+    const monthRatio = relX / chartW;
+    const exactMonth = Math.round(monthRatio * visibleLimit);
+    hoveredMonth = Math.max(0, Math.min(visibleLimit, exactMonth));
+  }
+
   function handleMouseLeave() {
     hoveredMonth = null;
   }
@@ -118,13 +144,13 @@
 
 <Card icon="📉" title="Balance Trajectory">
   {#snippet headerRight()}
-    <div class="flex items-center gap-2">
+    <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
       <!-- Overlay toggle buttons for all other slots -->
       {#each otherSlotIds as otherId}
         {@const otherSlot = appState.getSlot(otherId)}
         {@const isEnabled = overlaySlots[otherId]}
         <button
-          class="px-2.5 py-1 text-[11px] font-medium rounded-lg border transition-colors flex items-center gap-1.5 {isEnabled ? (otherId === 2 ? 'bg-indigo-950/80 border-indigo-700 text-indigo-300' : otherId === 3 ? 'bg-amber-950/80 border-amber-700 text-amber-300' : 'bg-emerald-950/80 border-emerald-700 text-emerald-300') : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300'}"
+          class="px-2 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-medium rounded-lg border transition-colors flex items-center gap-1 sm:gap-1.5 {isEnabled ? (otherId === 2 ? 'bg-indigo-950/80 border-indigo-700 text-indigo-300' : otherId === 3 ? 'bg-amber-950/80 border-amber-700 text-amber-300' : 'bg-emerald-950/80 border-emerald-700 text-emerald-300') : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300'}"
           onclick={() => toggleOverlay(otherId)}
           title="Toggle Comparison Overlay for Slot {otherId}"
         >
@@ -143,6 +169,8 @@
       class="w-full h-auto max-h-[420px] select-none cursor-crosshair"
       onmousemove={handleMouseMove}
       onmouseleave={handleMouseLeave}
+      ontouchmove={handleTouchMove}
+      ontouchend={handleMouseLeave}
     >
       <defs>
         <linearGradient id="emeraldArea" x1="0" y1="0" x2="0" y2="1">
@@ -237,7 +265,7 @@
     <!-- Floating Hover Tooltip -->
     {#if hoveredData}
       <div
-        class="absolute top-3 left-20 bg-zinc-950/95 border border-zinc-700/80 p-3 rounded-xl shadow-2xl text-xs font-mono backdrop-blur-md pointer-events-none space-y-1 z-20"
+        class="absolute top-2 left-2 sm:top-3 sm:left-20 max-w-[calc(100%-1rem)] sm:max-w-xs bg-zinc-950/95 border border-zinc-700/80 p-2.5 sm:p-3 rounded-xl shadow-2xl text-xs font-mono backdrop-blur-md pointer-events-none space-y-1 z-20"
       >
         <div class="font-bold text-white flex items-center justify-between gap-4 border-b border-zinc-800 pb-1">
           <span>Month {hoveredData.month}</span>
@@ -270,7 +298,7 @@
   </div>
 
   <!-- Legend Bar (Direct Scenario Names, Note Removed) -->
-  <div class="flex flex-wrap items-center gap-4 text-xs font-mono text-zinc-400 pt-2 border-t border-zinc-800/60">
+  <div class="flex flex-wrap items-center gap-2.5 sm:gap-4 text-xs font-mono text-zinc-400 pt-2 border-t border-zinc-800/60">
     <!-- Active Scenario Legend Item -->
     <span class="flex items-center gap-1.5">
       <span class="w-3 h-1 bg-emerald-500 rounded"></span>
