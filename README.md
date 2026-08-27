@@ -1,68 +1,53 @@
-# 🏡 HomeCalc
+# HomeCalc
 
-[![Rust](https://img.shields.io/badge/Rust-2024%20Edition-black?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
-[![WebAssembly](https://img.shields.io/badge/WebAssembly-WASM-654FF0?style=for-the-badge&logo=webassembly&logoColor=white)](https://webassembly.org/)
-[![Svelte 5](https://img.shields.io/badge/Svelte_5-Runes-FF3E00?style=for-the-badge&logo=svelte&logoColor=white)](https://svelte.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://homecalc-six.vercel.app)
-[![License](https://img.shields.io/badge/License-MIT-emerald?style=for-the-badge)](LICENSE)
+A high-precision mortgage and real estate financing scenario calculator powered by Rust WebAssembly and Svelte 5.
 
-👉 **Live App**: [https://homecalc-six.vercel.app](https://homecalc-six.vercel.app)
+[![Rust](https://img.shields.io/badge/Rust-2024-black?style=flat-square&logo=rust&logoColor=white)](https://www.rust-lang.org/)
+[![WebAssembly](https://img.shields.io/badge/WebAssembly-WASM-654FF0?style=flat-square&logo=webassembly&logoColor=white)](https://webassembly.org/)
+[![Svelte 5](https://img.shields.io/badge/Svelte_5-Runes-FF3E00?style=flat-square&logo=svelte&logoColor=white)](https://svelte.dev/)
+[![Vercel](https://img.shields.io/badge/Vercel-Live_App-000000?style=flat-square&logo=vercel&logoColor=white)](https://homecalc-six.vercel.app)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
-**HomeCalc** is a deterministic, high-precision mortgage and real estate financing scenario calculator. Powered by a high-performance Rust WebAssembly simulation core and a reactive Svelte 5 interface, it enables homebuyers and investors to accurately model complex capital stacks, optimize prepayment schedules, and benchmark financing strategies with mathematical rigor.
+🌐 **Live Web App**: [https://homecalc-six.vercel.app](https://homecalc-six.vercel.app)
 
 ---
 
-## ✨ Key Features
+## ✨ Features
 
-- **3-Slot Concurrent Modeling**: Test, clone, and switch between 3 independent financing scenarios with live state persistence.
-- **Multi-Instrument Financing**: Structure multi-tier capital stacks combining Conventional Mortgages, Lines of Credit (LOC / HELOC), Cash Down Payments, and custom Prepayment schedules (lump sums or recurring velocity).
-- **Comprehensive Analytics**: Interactive SVG balance trajectory charts with hover scrubbing, lifetime cost breakdowns, and annual cash outflow distributions.
-- **Financial Statement Ledger**: Detailed month-by-month and year-by-year amortization schedules with instant CSV export.
-- **Scenario Comparison & IRR**: Side-by-side differential analysis ($\Delta = B - A$), Net Present Value (NPV), and Strategy Internal Rate of Return (IRR) with House Parity Guard.
+- **Multi-Instrument Financing**: Model mortgages, lines of credit (LOC/HELOC), down payments, and custom prepayment schedules.
+- **3-Slot Comparison**: Compare scenarios side-by-side with difference metrics ($\Delta$) and state persistence.
+- **Interactive Charts**: Responsive SVG trajectory charts, annual cash outflow distributions, and cost breakdowns.
+- **Statement Ledger**: Full month-by-month and year-by-year amortization schedules with CSV export.
+- **IRR & House Parity Guard**: Accurate scenario Net Present Value (NPV) and Strategy Internal Rate of Return (IRR) validation.
+- **Mobile Responsive**: Clean, modern interface optimized for desktop and mobile screens.
 
----
+## 🛠️ Tech Stack
 
-## ⚡ Quickstart & Local Development
+- **Core Simulation**: Rust (`crates/engine`)
+- **WebAssembly**: `wasm-bindgen` (`crates/engine-wasm`)
+- **Frontend**: Svelte 5 (Runes), TypeScript, Tailwind CSS (`web`)
+- **Terminal CLI**: Rust interactive terminal app (`crates/cli`)
 
-### Web Application
+## 💻 Local Development
 
+### Web App
 ```bash
-# Automated build & preview
-./run.sh
-
-# Or run the development server directly
-cd web && npm install && npm run dev
+cd web
+npm install
+npm run dev
 ```
 
-### Interactive Terminal CLI
-
+### Terminal CLI
 ```bash
 cargo run -p cli
 ```
 
-### Running Tests
-
+### Running Tests & Type Checks
 ```bash
-# Rust engine & CLI tests
 cargo test
-
-# Playwright end-to-end test suite
-cd web && npm run test:e2e
+cd web && npm run check
 ```
-
----
-
-## 🛠️ Tech Stack
-
-- **Core Engine**: Pure Rust zero-deviation financial simulation core ([`crates/engine`](crates/engine))
-- **WASM Bridge**: High-throughput bindings via `wasm-bindgen` ([`crates/engine-wasm`](crates/engine-wasm))
-- **Frontend UI**: Svelte 5 (Runes), TypeScript, and Tailwind CSS ([`web`](web))
-- **Terminal CLI**: Interactive wizard powered by `crossterm` and `comfy-table` ([`crates/cli`](crates/cli))
-
----
 
 ## 📄 License
 
-Distributed under the [MIT License](LICENSE).
+This project is licensed under the [MIT License](LICENSE).
